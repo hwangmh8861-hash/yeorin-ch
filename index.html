@@ -51,6 +51,14 @@
 .my-header{text-align:center;padding:24px 0;}.my-avatar{width:72px;height:72px;border-radius:50%;background:var(--b1);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;}.my-name{font-size:22px;font-weight:800;}.my-bio{font-size:14px;color:var(--b5);margin-top:3px;}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}.stat-item{text-align:center;padding:12px 4px;background:var(--b0);border-radius:12px;}.stat-num{font-size:22px;font-weight:800;color:var(--b7);}.stat-label{font-size:11px;color:var(--b5);margin-top:2px;}.my-menu-item{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--b1);font-size:16px;font-weight:500;cursor:pointer;}.my-menu-item:last-child{border-bottom:none;}.my-menu-item .mi-icon{font-size:20px;width:28px;text-align:center;}
 .mini-cal{margin-bottom:14px;}.mini-cal .mc-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}.mini-cal .mc-hdr div{text-align:center;font-size:11px;font-weight:600;color:var(--b5);padding:3px;}.mini-cal .mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}.mini-cal .mc-cell{text-align:center;padding:6px 2px;font-size:12px;border-radius:4px;cursor:pointer;}.mini-cal .mc-cell.has{background:var(--gold);color:#fff;font-weight:700;}.mini-cal .mc-cell.sel{border:2px solid var(--b7);}
 .yeorin-img{height:22px;vertical-align:middle;border-radius:50%;margin-right:4px;}.yeorin-img-lg{height:28px;border-radius:50%;margin-right:6px;}
+/* 🚀 스켈레톤 UI */
+.sk-box{background:linear-gradient(90deg,#EFEBE4 0%,#F7F4EE 50%,#EFEBE4 100%);background-size:200% 100%;animation:sk-shimmer 1.4s infinite;border-radius:4px;}
+@keyframes sk-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.verse-card{background:linear-gradient(135deg,#FAF6F0 0%,#F0EBE3 100%);border-radius:var(--r);border:1px solid #E8E0D8;padding:20px 18px;text-align:center;margin-bottom:14px;animation:fadeIn .4s;}
+.verse-label{font-size:11px;font-weight:700;color:#8B7E74;letter-spacing:1px;margin-bottom:10px;}
+.verse-text{font-size:15px;font-weight:500;line-height:1.7;color:#3E2723;margin-bottom:8px;}
+.verse-ref{font-size:12px;color:#C4A26E;font-weight:700;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -155,7 +163,70 @@ setTimeout(function(){try{tryAuto();}catch(e){}},500);
 
 async function doLogin(){var n=document.getElementById('loginName').value.trim(),p=document.getElementById('loginPw').value,err=document.getElementById('loginError');err.textContent='';if(!n||!p){err.textContent='이름과 비밀번호를 입력해주세요';return;}document.getElementById('loginBtn').textContent='로그인 중...';document.getElementById('onboarding').style.display='none';try{var r=await gas('loginUser',String(n),String(p));if(!r.success){err.textContent=r.error;document.getElementById('loginBtn').textContent='로그인';return;}CU=r.user;localStorage.setItem('yeorin_user',JSON.stringify({name:n,pw:p}));await enterApp();}catch(e){err.textContent='오류 발생';document.getElementById('loginBtn').textContent='로그인';}}
 async function doRegister(){var n=document.getElementById('regName').value.trim(),p=document.getElementById('regPw').value,p2=document.getElementById('regPw2').value,bio=document.getElementById('regBio').value.trim(),err=document.getElementById('regError');err.textContent='';if(!n){err.textContent='이름을 입력해주세요';return;}if(!p){err.textContent='비밀번호를 입력해주세요';return;}if(p!==p2){err.textContent='비밀번호 불일치';return;}if(p.length<4){err.textContent='4자 이상';return;}document.getElementById('regBtn').textContent='가입 중...';try{var r=await gas('registerUser',String(n),String(p),EMOJIS[selEmoji],bio);if(!r.success){err.textContent=r.error;document.getElementById('regBtn').textContent='가입하기';return;}CU=r.user;localStorage.setItem('yeorin_user',JSON.stringify({name:n,pw:p}));await enterApp();}catch(e){err.textContent='오류 발생';document.getElementById('regBtn').textContent='가입하기';}}
-async function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('registerScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('profileBtn').textContent=CU.emoji;if(obDont)try{await gas('setOnboardingSeen',CU.id);}catch(e){}document.getElementById('page-bible').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';try{AD=await gas('loadAllData',CU.id);qtPosts=AD.qtData.posts;qtMore=AD.qtData.hasMore;prPosts=AD.prayerData.posts;prMore=AD.prayerData.hasMore;newCounts=AD.newCounts||{qt:0,prayer:0};updateBadges();renderAll();}catch(e){document.getElementById('page-bible').innerHTML='<div class="loading">로딩 실패<br><br><button class="btn-primary" onclick="location.reload()">새로고침</button><br><button class="btn-primary" style="background:var(--coral);margin-top:8px" onclick="localStorage.removeItem(\'yeorin_user\');location.reload()">로그아웃</button></div>';}}
+// 🌿 로딩용 말씀 구절 (20개 랜덤)
+const VERSES=[
+  {t:'수고하고 무거운 짐 진 자들아<br>다 내게로 오라 내가 너희를 쉬게 하리라',r:'마태복음 11:28'},
+  {t:'여호와는 나의 목자시니<br>내게 부족함이 없으리로다',r:'시편 23:1'},
+  {t:'하나님이 세상을 이처럼 사랑하사<br>독생자를 주셨으니',r:'요한복음 3:16'},
+  {t:'내게 능력 주시는 자 안에서<br>내가 모든 것을 할 수 있느니라',r:'빌립보서 4:13'},
+  {t:'너는 마음을 다하여 여호와를 신뢰하고<br>네 명철을 의지하지 말라',r:'잠언 3:5'},
+  {t:'내가 산을 향하여 눈을 들리라<br>나의 도움이 어디서 올까',r:'시편 121:1'},
+  {t:'범사에 기한이 있고<br>천하 만사가 다 때가 있나니',r:'전도서 3:1'},
+  {t:'너희는 먼저 그의 나라와<br>그의 의를 구하라',r:'마태복음 6:33'},
+  {t:'아무것도 염려하지 말고<br>다만 모든 일에 기도와 간구로',r:'빌립보서 4:6'},
+  {t:'내 은혜가 네게 족하도다<br>이는 내 능력이 약한 데서 온전하여짐이라',r:'고린도후서 12:9'},
+  {t:'여호와께서 너를 지키시며<br>영혼을 지키시리로다',r:'시편 121:7'},
+  {t:'주의 말씀은 내 발에 등이요<br>내 길에 빛이니이다',r:'시편 119:105'},
+  {t:'믿음은 바라는 것들의 실상이요<br>보지 못하는 것들의 증거니',r:'히브리서 11:1'},
+  {t:'사랑은 오래 참고<br>사랑은 온유하며',r:'고린도전서 13:4'},
+  {t:'항상 기뻐하라<br>쉬지 말고 기도하라<br>범사에 감사하라',r:'데살로니가전서 5:16-18'},
+  {t:'두려워하지 말라<br>내가 너와 함께 함이라',r:'이사야 41:10'},
+  {t:'여호와를 앙망하는 자는<br>새 힘을 얻으리니',r:'이사야 40:31'},
+  {t:'너희 염려를 다 주께 맡기라<br>이는 그가 너희를 돌보심이라',r:'베드로전서 5:7'},
+  {t:'내가 새 일을 행하리니<br>이제 나타낼 것이라',r:'이사야 43:19'},
+  {t:'수고하는 것이 헛되지 않은 줄<br>앎이라',r:'고린도전서 15:58'}
+];
+function randomVerse(){return VERSES[Math.floor(Math.random()*VERSES.length)];}
+
+// 스켈레톤 UI 빌더
+function skeletonBible(){
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="flex:1"><div class="sk-box" style="width:70%;height:15px;margin-bottom:8px"></div><div class="sk-box" style="width:40%;height:12px"></div></div><div class="sk-box" style="width:50px;height:22px;border-radius:4px"></div></div><div class="sk-box" style="width:100%;height:10px;margin-top:10px;border-radius:5px"></div></div>'
+  +'<div class="card"><div class="sk-box" style="width:80px;height:14px;margin-bottom:12px"></div><div style="display:flex;flex-wrap:wrap;gap:6px">'+Array(8).fill('<div class="sk-box" style="width:72px;height:34px;border-radius:8px"></div>').join('')+'</div></div>'
+  +'<div class="card"><div class="sk-box" style="width:60px;height:14px;margin-bottom:12px"></div><div style="display:flex;flex-wrap:wrap;gap:6px">'+Array(6).fill('<div class="sk-box" style="width:62px;height:34px;border-radius:8px"></div>').join('')+'</div></div>';
+}
+function skeletonCards(n){
+  n=n||2;var html='';
+  for(var i=0;i<n;i++){
+    html+='<div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div class="sk-box" style="width:36px;height:36px;border-radius:50%"></div><div style="flex:1"><div class="sk-box" style="width:60px;height:12px;margin-bottom:6px"></div><div class="sk-box" style="width:40px;height:10px"></div></div></div><div class="sk-box" style="width:50%;height:14px;margin-bottom:10px"></div><div class="sk-box" style="width:100%;height:50px;border-radius:8px;margin-bottom:8px"></div><div class="sk-box" style="width:100%;height:36px;border-radius:8px;margin-bottom:10px"></div><div style="display:flex;gap:6px"><div class="sk-box" style="width:55px;height:22px;border-radius:11px"></div><div class="sk-box" style="width:55px;height:22px;border-radius:11px"></div><div class="sk-box" style="width:55px;height:22px;border-radius:11px"></div></div></div>';
+  }
+  return html;
+}
+function verseCard(){
+  var v=randomVerse();
+  return '<div class="verse-card"><div class="verse-label">오늘의 말씀</div><div class="verse-text">'+v.t+'</div><div class="verse-ref">— '+v.r+'</div></div>';
+}
+
+async function enterApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('registerScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('profileBtn').textContent=CU.emoji;
+  if(obDont)try{await gas('setOnboardingSeen',CU.id);}catch(e){}
+
+  // 🌿 최초 로그인: 말씀 구절 + 스켈레톤 표시
+  document.getElementById('page-bible').innerHTML=verseCard()+skeletonBible();
+
+  try{
+    AD=await gas('loadAllData',CU.id);
+    qtPosts=AD.qtData.posts;qtMore=AD.qtData.hasMore;
+    prPosts=AD.prayerData.posts;prMore=AD.prayerData.hasMore;
+    newCounts=AD.newCounts||{qt:0,prayer:0};
+    updateBadges();
+    renderAll();
+  }catch(e){
+    document.getElementById('page-bible').innerHTML='<div class="loading">로딩 실패<br><br><button class="btn-primary" onclick="location.reload()">새로고침</button><br><button class="btn-primary" style="background:var(--coral);margin-top:8px" onclick="localStorage.removeItem(\'yeorin_user\');location.reload()">로그아웃</button></div>';
+  }
+}
 function doLogout(){CU=null;AD=null;curTab='bible';localStorage.removeItem('yeorin_user');document.getElementById('app').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('loginName').value='';document.getElementById('loginPw').value='';}
 
 function updateBadges(){['qt','prayer'].forEach(function(t){var el=document.getElementById('badge-'+t);var c=newCounts[t]||0;if(c>0){el.textContent=c>99?'99+':c;el.style.display='flex';}else el.style.display='none';});}
