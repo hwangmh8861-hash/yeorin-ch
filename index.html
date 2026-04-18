@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>여린교회 신앙관리</title>
+<!-- ========== PWA 설정 ========== -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#5C4033">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="여린교회">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<!-- ========== GAS API URL (나중에 실제 URL로 바꿈) ========== -->
+<script>
+  window.GAS_URL = 'https://script.google.com/macros/s/AKfycbx1K1avG4jzQQOA5nhy8tlkLvXFB5Qx8NHrvv-hqGakFiQFAvDv4m_TdUUaoLF0Anph/exec';
+</script>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+:root{--bg:#FAF6F0;--card:#fff;--b9:#3E2723;--b7:#5C4033;--b5:#8B7E74;--b3:#D4CBB8;--b1:#F0EBE3;--b0:#FAF8F5;--gold:#C4A26E;--green:#7BAF7B;--purple:#9080C0;--coral:#C07050;--blue:#7B8FC0;--shadow:0 2px 12px rgba(92,64,51,.06);--r:16px;--max:640px;}
+*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Pretendard Variable','Noto Sans KR',sans-serif;background:linear-gradient(180deg,var(--bg),#F0EBE3);min-height:100vh;color:var(--b9);-webkit-tap-highlight-color:transparent;font-size:16px;line-height:1.6;overflow-x:hidden;}button{font-family:inherit;cursor:pointer;}input,textarea,select{font-family:inherit;}
+.onboarding{position:fixed;inset:0;z-index:1000;background:var(--bg);}.ob-slides{display:flex;width:400%;height:100%;transition:transform .4s;}.ob-slide{width:25%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;}.ob-icon{font-size:56px;margin-bottom:16px;}.ob-title{font-size:20px;font-weight:800;color:var(--b7);margin-bottom:8px;}.ob-desc{font-size:14px;color:var(--b5);line-height:1.7;max-width:300px;}.ob-dots{display:flex;gap:8px;margin-top:28px;}.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--b3);transition:.3s;}.ob-dot.active{background:var(--b7);width:24px;border-radius:4px;}.ob-btns{margin-top:20px;display:flex;gap:12px;}.ob-btn{padding:11px 28px;border-radius:12px;border:none;font-size:14px;font-weight:700;}.ob-skip{background:0;color:var(--b5);}.ob-next{background:var(--b7);color:#FAF0E6;}.ob-start{background:var(--gold);color:#fff;padding:14px 44px;font-size:15px;}
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}.auth-box{background:var(--card);border-radius:24px;padding:28px 22px;max-width:360px;width:100%;box-shadow:0 8px 32px rgba(92,64,51,.1);text-align:center;}.auth-box h1{font-size:18px;font-weight:800;color:var(--b7);margin-bottom:2px;}.auth-box .sub{font-size:11px;color:var(--b5);margin-bottom:16px;}.auth-toggle{font-size:12px;color:var(--b5);margin-top:14px;}.auth-toggle a{color:var(--b7);font-weight:700;cursor:pointer;text-decoration:none;}.emoji-grid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:10px;}.emoji-opt{width:40px;height:40px;border-radius:50%;border:3px solid var(--b1);background:var(--b0);font-size:17px;display:flex;align-items:center;justify-content:center;transition:.2s;}.emoji-opt.sel{border-color:var(--b7);background:var(--b1);transform:scale(1.1);}.error-msg{color:var(--coral);font-size:11px;margin-top:4px;min-height:14px;}
+.app{display:none;}.top-bar{background:linear-gradient(135deg,var(--b7),var(--b9));padding:16px 20px;color:#FAF0E6;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200;}.top-bar-left{display:flex;align-items:center;gap:10px;}.profile-btn{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:18px;display:flex;align-items:center;justify-content:center;}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #E8E0D8;z-index:200;padding:0 0 env(safe-area-inset-bottom,4px);}.bottom-inner{display:flex;max-width:var(--max);margin:0 auto;}.btab{flex:1;padding:10px 0;border:none;background:none;font-size:13px;color:var(--b5);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;transition:.15s;}.btab.active{color:var(--b7);font-weight:700;}.btab .bico{font-size:26px;line-height:1;}.badge{position:absolute;top:4px;right:calc(50% - 22px);background:var(--coral);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+.content{max-width:var(--max);margin:0 auto;padding:14px 16px 100px;}.page{display:none;animation:fadeUp .2s;}.page.active{display:block;}@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(min-width:768px){.content{padding:20px 28px 104px;}}@media(min-width:1024px){:root{--max:720px;}}
+.card{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);}.btn-primary{padding:12px 26px;border-radius:12px;border:none;background:var(--b7);color:#FAF0E6;font-size:15px;font-weight:600;}.btn-primary:disabled{opacity:.5;}.btn-full{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:700;}.btn-sm{padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;}.btn-dashed{width:100%;padding:14px;border-radius:14px;border:2px dashed var(--b3);background:0;color:var(--b7);font-size:15px;font-weight:600;margin-bottom:14px;}.btn-pill{padding:7px 16px;border-radius:20px;border:none;font-size:13px;font-weight:600;transition:.15s;}.btn-more{width:100%;padding:13px;border-radius:10px;border:1px solid var(--b3);background:var(--b0);color:var(--b5);font-size:14px;font-weight:600;margin-top:10px;}.input-field{width:100%;padding:13px;border-radius:10px;border:1px solid #E8E0D8;font-size:15px;outline:none;background:var(--b0);}.select-field{width:100%;padding:13px;border-radius:10px;border:1px solid #E8E0D8;font-size:15px;outline:none;background:var(--b0);cursor:pointer;appearance:none;}.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:var(--b1);}.fg{margin-bottom:14px;}.q-label{font-size:14px;font-weight:600;color:var(--b7);margin-bottom:5px;display:block;}
+.filter-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}.filter-tab{padding:8px 18px;border-radius:20px;border:none;font-size:14px;font-weight:600;transition:.15s;}.filter-tab.active{background:var(--b7);color:#FAF0E6;}.filter-tab:not(.active){background:var(--b1);color:var(--b7);}
+.reaction-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px;}.react-btn{padding:6px 13px;border-radius:18px;border:1px solid var(--b1);background:#fff;font-size:14px;transition:.15s;display:flex;align-items:center;gap:3px;}.react-btn.active{border-color:var(--b7);background:var(--b1);}.react-btn .cnt{font-size:12px;font-weight:700;color:var(--b5);}.rx-names{font-size:12px;color:var(--b5);margin-top:6px;line-height:1.5;}
+.comment-section{margin-top:12px;border-top:1px solid var(--b1);padding-top:10px;}.c-item{display:flex;gap:7px;margin-bottom:6px;}.c-av{width:26px;height:26px;border-radius:50%;background:var(--b1);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}.c-body{font-size:13px;color:#4A3F35;line-height:1.5;}.c-name{font-weight:700;margin-right:3px;}.c-date{font-size:11px;color:var(--b5);margin-left:4px;}.c-del{border:none;background:none;color:var(--b5);font-size:11px;margin-left:3px;text-decoration:underline;}.c-input-row{display:flex;gap:6px;margin-top:6px;}.c-input-row input{flex:1;padding:8px 14px;border-radius:18px;border:1px solid #E8E0D8;font-size:13px;outline:none;background:var(--b0);}.c-input-row button{padding:8px 16px;border-radius:18px;border:none;background:var(--b7);color:#FAF0E6;font-size:12px;font-weight:600;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}.popup{background:#fff;border-radius:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.15);position:relative;}.popup-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;border:none;background:var(--b1);font-size:15px;display:flex;align-items:center;justify-content:center;}.popup h3{font-size:17px;font-weight:700;margin-bottom:14px;}
+.loading{text-align:center;padding:36px;color:var(--b5);font-size:14px;}.spinner{width:32px;height:32px;border:3px solid var(--b1);border-top-color:var(--b7);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px;}@keyframes spin{to{transform:rotate(360deg)}}.submit-overlay{position:fixed;inset:0;background:rgba(250,246,240,.85);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;}.submit-overlay .spinner{width:40px;height:40px;}.submit-overlay p{font-size:15px;color:var(--b7);font-weight:600;margin-top:10px;}
+.progress-bar-bg{background:var(--b1);border-radius:8px;height:10px;overflow:hidden;}.progress-bar-fill{height:100%;border-radius:8px;transition:width .4s;}.cat-label{font-size:14px;font-weight:700;margin-bottom:6px;padding:0 4px;}.book-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}.book-tile{padding:8px 10px;border-radius:8px;border:none;font-size:13px;position:relative;overflow:hidden;transition:.2s;outline:none;}.book-tile .micro-bar{position:absolute;bottom:0;left:0;height:3px;border-radius:2px;}.chapter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px;}.ch-btn{aspect-ratio:1;border-radius:8px;border:none;font-size:14px;transition:.2s;width:100%;outline:none;position:relative;}.ch-btn.saving::after{content:'';position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1s infinite;}@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}.back-btn{background:none;border:none;color:var(--b7);font-size:15px;font-weight:600;margin-bottom:12px;padding:0;}
+/* 🚀 NEW: 작은 저장 상태 표시 (화면 안 가림) */
+.save-toast{position:fixed;bottom:80px;right:16px;background:rgba(62,39,35,.9);color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;z-index:300;display:flex;align-items:center;gap:6px;transition:opacity .3s;pointer-events:none;}
+.save-toast .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1s infinite;}
+.save-toast.success .dot{background:var(--green);animation:none;}
+.save-toast.error{background:var(--coral);}
+.sub-tabs{display:flex;background:var(--b1);border-radius:12px;padding:4px;margin-bottom:14px;}.sub-tab{flex:1;padding:10px 6px;border:none;border-radius:10px;background:0;font-size:14px;font-weight:500;color:var(--b5);transition:.2s;text-align:center;}.sub-tab.active{background:var(--card);color:var(--b7);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.accordion-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:12px 0;font-size:15px;font-weight:700;}.accordion-body{overflow:hidden;max-height:0;transition:max-height .3s;}.accordion-body.open{max-height:800px;}.member-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b1);cursor:pointer;}.member-row:last-child{border-bottom:none;}
+.ch-card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow);border-left:4px solid var(--gold);cursor:pointer;}.ch-meta{font-size:13px;color:var(--b5);margin-bottom:6px;}.ch-members{display:flex;align-items:center;margin-bottom:6px;}.ch-member-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid #fff;margin-left:-5px;background:var(--b1);}.ch-member-av:first-child{margin-left:0;}.ch-progress{display:flex;align-items:center;gap:7px;margin-bottom:4px;}.ch-progress .pname{font-size:13px;font-weight:600;min-width:52px;}.ch-progress .pct{font-size:12px;font-weight:700;color:var(--b5);min-width:34px;text-align:right;}
+.cert-log{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px;}.cert-dot{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;}
+.qt-section{margin-bottom:8px;padding:12px 14px;border-radius:10px;background:var(--b0);font-size:14px;line-height:1.6;color:#4A3F35;}.qt-section-label{font-size:12px;font-weight:700;color:var(--b5);margin-bottom:3px;}
+.cal-nav{display:flex;justify-content:space-between;align-items:center;}.cal-nav button{background:none;border:none;font-size:22px;color:var(--b7);}.cal-nav h2{font-size:18px;font-weight:700;}.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}.cal-hdr div{text-align:center;font-size:14px;font-weight:600;padding:5px;}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}.cal-cell{padding:4px 3px;min-height:76px;border-radius:6px;border:1px solid var(--b1);cursor:pointer;}.cal-cell.today{background:rgba(92,64,51,.06);border:2px solid var(--b7);}.cal-day{font-size:14px;text-align:center;margin-bottom:2px;font-weight:500;}.cal-ev{font-size:11px;padding:2px 3px;border-radius:3px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3;}.evt-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--b1);cursor:pointer;}.evt-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}.cat-tab{padding:7px 14px;border-radius:18px;border:none;font-size:13px;font-weight:600;transition:.15s;}
+.edit-menu-btn{background:none;border:none;font-size:20px;color:var(--b5);padding:4px 6px;}.edit-dropdown{position:absolute;right:8px;top:40px;background:#fff;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);overflow:hidden;z-index:50;}.edit-dropdown button{display:block;width:100%;padding:12px 18px;border:none;background:none;text-align:left;font-size:14px;}.edit-dropdown button:hover{background:var(--b1);}
+.my-header{text-align:center;padding:24px 0;}.my-avatar{width:72px;height:72px;border-radius:50%;background:var(--b1);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;}.my-name{font-size:22px;font-weight:800;}.my-bio{font-size:14px;color:var(--b5);margin-top:3px;}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;}.stat-item{text-align:center;padding:12px 4px;background:var(--b0);border-radius:12px;}.stat-num{font-size:22px;font-weight:800;color:var(--b7);}.stat-label{font-size:11px;color:var(--b5);margin-top:2px;}.my-menu-item{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--b1);font-size:16px;font-weight:500;cursor:pointer;}.my-menu-item:last-child{border-bottom:none;}.my-menu-item .mi-icon{font-size:20px;width:28px;text-align:center;}
+.mini-cal{margin-bottom:14px;}.mini-cal .mc-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}.mini-cal .mc-hdr div{text-align:center;font-size:11px;font-weight:600;color:var(--b5);padding:3px;}.mini-cal .mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}.mini-cal .mc-cell{text-align:center;padding:6px 2px;font-size:12px;border-radius:4px;cursor:pointer;}.mini-cal .mc-cell.has{background:var(--gold);color:#fff;font-weight:700;}.mini-cal .mc-cell.sel{border:2px solid var(--b7);}
+.yeorin-img{height:22px;vertical-align:middle;border-radius:50%;margin-right:4px;}.yeorin-img-lg{height:28px;border-radius:50%;margin-right:6px;}
+</style>
+</head>
+<body>
+<div id="onboarding" class="onboarding"><div class="ob-slides" id="obSlides">
+<div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:100px;object-fit:contain;margin-bottom:16px"><div class="ob-title">여린교회 신앙관리 시스템</div><div class="ob-desc">성경읽기 및 교재용 플랫폼에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
+<div class="ob-slide"><div class="ob-icon">📖</div><div class="ob-title">함께 읽는 성경</div><div class="ob-desc">66권 성경읽기표와 챌린지로 함께 읽어요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
+<div class="ob-slide"><div class="ob-icon">✍️</div><div class="ob-title">나누는 신앙</div><div class="ob-desc">QT 묵상, 기도·감사제목을 나누고 서로 공감해요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
+<div class="ob-slide"><div class="ob-icon">⛪</div><div class="ob-title">지금 시작하세요</div><div class="ob-desc">계정을 만들고 시작해보세요!</div><label style="display:flex;align-items:center;gap:6px;margin-top:16px;font-size:12px;color:var(--b5);cursor:pointer"><input type="checkbox" id="obDontShow"> 다시 보지 않기</label><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><div class="ob-btns"><button class="ob-btn ob-start" onclick="skipOb()">시작하기</button></div></div>
+</div></div>
+<div id="loginScreen" class="auth-screen" style="display:none"><div class="auth-box"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:80px;object-fit:contain;margin-bottom:10px"><h1>로그인</h1><p class="sub">여린교회 신앙관리 시스템</p><div class="fg"><input class="input-field" id="loginName" placeholder="이름" style="text-align:center;font-weight:600"></div><div class="fg"><input class="input-field" id="loginPw" type="password" placeholder="비밀번호" style="text-align:center"></div><div class="error-msg" id="loginError"></div><button class="btn-full btn-primary" onclick="doLogin()" id="loginBtn">로그인</button><div class="auth-toggle">계정이 없으신가요? <a onclick="showRegister()">회원가입</a></div></div></div>
+<div id="registerScreen" class="auth-screen" style="display:none"><div class="auth-box"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:80px;object-fit:contain;margin-bottom:10px"><h1>회원가입</h1><p class="sub">여린교회 신앙관리 시스템</p><div class="fg"><input class="input-field" id="regName" placeholder="이름" style="text-align:center;font-weight:600"></div><div class="fg"><input class="input-field" id="regPw" type="password" placeholder="비밀번호" style="text-align:center"></div><div class="fg"><input class="input-field" id="regPw2" type="password" placeholder="비밀번호 확인" style="text-align:center"></div><p style="font-size:10px;color:var(--b5);margin-bottom:4px">이모지 선택</p><div class="emoji-grid" id="emojiGrid"></div><div class="fg"><input class="input-field" id="regBio" placeholder="한 줄 소개 (선택)" style="text-align:center;font-size:12px"></div><div class="error-msg" id="regError"></div><button class="btn-full btn-primary" onclick="doRegister()" id="regBtn">가입하기</button><div class="auth-toggle">이미 계정이 있으신가요? <a onclick="showLogin()">로그인</a></div></div></div>
+<div id="app" class="app">
+<div class="top-bar"><div class="top-bar-left"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:44px;object-fit:contain"></div><div style="display:flex;align-items:center;gap:8px"><button id="noticeBtn" onclick="showNoticeList()" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer">🔔<span id="noticeDot" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--coral)"></span></button><button class="profile-btn" id="profileBtn" onclick="showMyPage()"></button></div></div>
+<div class="content"><div class="page active" id="page-bible"></div><div class="page" id="page-qt"></div><div class="page" id="page-prayer"></div><div class="page" id="page-calendar"></div><div class="page" id="page-mypage"></div></div>
+<div class="bottom-bar"><div class="bottom-inner">
+<button class="btab active" onclick="switchTab('bible')"><span class="bico">📖</span>성경읽기</button>
+<button class="btab" onclick="switchTab('qt')"><span class="bico">✍️</span>QT나눔<span class="badge" id="badge-qt" style="display:none"></span></button>
+<button class="btab" onclick="switchTab('prayer')"><span class="bico">🙏</span>기도/감사<span class="badge" id="badge-prayer" style="display:none"></span></button>
+<button class="btab" onclick="switchTab('calendar')"><span class="bico">📅</span>캘린더</button>
+</div></div></div>
+<div id="popupRoot"></div>
+<div id="submitOverlay" class="submit-overlay" style="display:none"><div class="spinner"></div><p id="submitMsg">등록 중...</p></div>
+<!-- 🚀 NEW: 작은 저장 토스트 -->
+<div id="saveToast" class="save-toast" style="display:none"><span class="dot"></span><span id="saveToastMsg">저장 중...</span></div>
+
+<script>
+const YIMG='https://lh3.googleusercontent.com/d/1E-j7s35Z4vNKOA5OxPEn7MZT-NC0sxYN';
+const LOGO='https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62';
+const EMOJIS=["🕊️","✝️","🌿","💛","☀️","🙏","⭐","🌸","🌊","🔥","🦋","🌈","💎","🎵","📖","🍞"];
+const BIBLE=[{n:"창세기",c:50,cat:"모세오경"},{n:"출애굽기",c:40,cat:"모세오경"},{n:"레위기",c:27,cat:"모세오경"},{n:"민수기",c:36,cat:"모세오경"},{n:"신명기",c:34,cat:"모세오경"},{n:"여호수아",c:24,cat:"역사서"},{n:"사사기",c:21,cat:"역사서"},{n:"룻기",c:4,cat:"역사서"},{n:"사무엘상",c:31,cat:"역사서"},{n:"사무엘하",c:24,cat:"역사서"},{n:"열왕기상",c:22,cat:"역사서"},{n:"열왕기하",c:25,cat:"역사서"},{n:"역대상",c:29,cat:"역사서"},{n:"역대하",c:36,cat:"역사서"},{n:"에스라",c:10,cat:"역사서"},{n:"느헤미야",c:13,cat:"역사서"},{n:"에스더",c:10,cat:"역사서"},{n:"욥기",c:42,cat:"시가서"},{n:"시편",c:150,cat:"시가서"},{n:"잠언",c:31,cat:"시가서"},{n:"전도서",c:12,cat:"시가서"},{n:"아가",c:8,cat:"시가서"},{n:"이사야",c:66,cat:"대선지서"},{n:"예레미야",c:52,cat:"대선지서"},{n:"예레미야애가",c:5,cat:"대선지서"},{n:"에스겔",c:48,cat:"대선지서"},{n:"다니엘",c:12,cat:"대선지서"},{n:"호세아",c:14,cat:"소선지서"},{n:"요엘",c:3,cat:"소선지서"},{n:"아모스",c:9,cat:"소선지서"},{n:"오바댜",c:1,cat:"소선지서"},{n:"요나",c:4,cat:"소선지서"},{n:"미가",c:7,cat:"소선지서"},{n:"나훔",c:3,cat:"소선지서"},{n:"하박국",c:3,cat:"소선지서"},{n:"스바냐",c:3,cat:"소선지서"},{n:"학개",c:2,cat:"소선지서"},{n:"스가랴",c:14,cat:"소선지서"},{n:"말라기",c:4,cat:"소선지서"},{n:"마태복음",c:28,cat:"복음서"},{n:"마가복음",c:16,cat:"복음서"},{n:"누가복음",c:24,cat:"복음서"},{n:"요한복음",c:21,cat:"복음서"},{n:"사도행전",c:28,cat:"역사서(신약)"},{n:"로마서",c:16,cat:"바울서신"},{n:"고린도전서",c:16,cat:"바울서신"},{n:"고린도후서",c:13,cat:"바울서신"},{n:"갈라디아서",c:6,cat:"바울서신"},{n:"에베소서",c:6,cat:"바울서신"},{n:"빌립보서",c:4,cat:"바울서신"},{n:"골로새서",c:4,cat:"바울서신"},{n:"데살로니가전서",c:5,cat:"바울서신"},{n:"데살로니가후서",c:3,cat:"바울서신"},{n:"디모데전서",c:6,cat:"바울서신"},{n:"디모데후서",c:4,cat:"바울서신"},{n:"디도서",c:3,cat:"바울서신"},{n:"빌레몬서",c:1,cat:"바울서신"},{n:"히브리서",c:13,cat:"공동서신"},{n:"야고보서",c:5,cat:"공동서신"},{n:"베드로전서",c:5,cat:"공동서신"},{n:"베드로후서",c:3,cat:"공동서신"},{n:"요한일서",c:5,cat:"공동서신"},{n:"요한이서",c:1,cat:"공동서신"},{n:"요한삼서",c:1,cat:"공동서신"},{n:"유다서",c:1,cat:"공동서신"},{n:"요한계시록",c:22,cat:"예언서(신약)"}];
+const CC={"모세오경":{bg:"#E8D5B7",t:"#6B4E2E",a:"#C4A26E"},"역사서":{bg:"#D4E6D4",t:"#2E5E3E",a:"#7BAF7B"},"시가서":{bg:"#E6D4E6",t:"#5E2E6E",a:"#B07EC0"},"대선지서":{bg:"#D4DAE6",t:"#2E3E6E",a:"#7B8FC0"},"소선지서":{bg:"#D4E2E6",t:"#2E5060",a:"#7BAAB8"},"복음서":{bg:"#F0DDD4",t:"#7E3E2E",a:"#D4886E"},"역사서(신약)":{bg:"#D4E6D4",t:"#2E5E3E",a:"#7BAF7B"},"바울서신":{bg:"#E6E0D4",t:"#5E5030",a:"#C0A870"},"공동서신":{bg:"#DAD4E6",t:"#40306E",a:"#9080C0"},"예언서(신약)":{bg:"#E6D4D4",t:"#6E2E2E",a:"#C07070"}};
+const CATS=["모세오경","역사서","시가서","대선지서","소선지서","복음서","역사서(신약)","바울서신","공동서신","예언서(신약)"];
+const ET={worship:{l:"예배",c:"#C07050",i:"⛪"},group:{l:"모임",c:"#7BAF7B",i:"👥"},prayer:{l:"기도",c:"#9080C0",i:"🙏"},special:{l:"특별",c:"#D4886E",i:"✨"},service:{l:"봉사",c:"#7BAAB8",i:"🤝"},study:{l:"공부",c:"#C0A870",i:"📖"},birthday:{l:"생일",c:"#E8A0B8",i:"🎂"},etc:{l:"기타",c:"#8B7E74",i:"📝"}};
+const QR=[{k:"like",e:"❤️",l:"좋아요"},{k:"amen",e:"🙏",l:"아멘"},{k:"touched",e:"💧",l:"감동"},{k:"strength",e:"💪",l:"힘이돼요"}];
+const PRD=[{k:"like",e:"❤️",l:"좋아요"},{k:"pray",e:"🙏",l:"함께기도"},{k:"hug",e:"🤗",l:"위로"},{k:"strength",e:"💪",l:"힘내세요"}];
+const BN=BIBLE.map(b=>b.n),TC=BIBLE.reduce((s,b)=>s+b.c,0),pd=n=>String(n).padStart(2,'0');
+
+let CU=null,AD=null,curTab='bible',bsub='reading',selBook=null,viewChId=null,groupOpen=false;
+let schf=false,sqf=false,spf=false,sef=false,emo=null,selEt='worship',selEmoji=0,busy=false,cef='all';
+const now=new Date();let cy=now.getFullYear(),cm=now.getMonth();
+let qtFilter='week',qtPage=0,qtPosts=[],qtMore=false,qtCalView=false;
+let prFilter='active',prPage=0,prPosts=[],prMore=false,prCalView=false;
+let evFD={t:'',d:'',s:'',e:'',ct:'',dt:''};let newCounts={qt:0,prayer:0};
+let chFilter='active';
+// 🚀 NEW: 성경 체크 진행 중 추적 (중복 클릭 방지)
+let savingChapters={};
+
+function gas(fn,...a){
+  // Vercel 모드: fetch로 GAS API 호출
+  return fetch(window.GAS_URL,{
+    method:'POST',
+    // GAS는 CORS 프리플라이트를 지원 안 해서 text/plain으로 보내야 함
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({fn:fn,args:a})
+  }).then(function(res){
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return res.json();
+  }).then(function(r){
+    if(r.error)throw new Error(r.error);
+    return r.data;
+  });
+}
+function gm(uid){if(!AD)return{name:'?',emoji:'🙂'};return AD.users.find(x=>x.id===String(uid))||{name:'?',emoji:'🙂'};}
+function td(){return new Date().toISOString().split('T')[0];}
+function showSub(m){document.getElementById('submitMsg').textContent=m||'등록 중...';document.getElementById('submitOverlay').style.display='flex';busy=true;}
+function hideSub(){document.getElementById('submitOverlay').style.display='none';busy=false;}
+function showPopup(h){document.getElementById('popupRoot').innerHTML='<div class="overlay" onclick="if(event.target===this)closePopup()"><div class="popup">'+h+'</div></div>';}
+function closePopup(){document.getElementById('popupRoot').innerHTML='';}
+
+// 🚀 NEW: 작은 토스트 (화면 안 가림)
+var toastTimer=null;
+function showToast(msg,type){
+  var t=document.getElementById('saveToast');
+  t.className='save-toast'+(type?' '+type:'');
+  document.getElementById('saveToastMsg').textContent=msg;
+  t.style.display='flex';
+  t.style.opacity='1';
+  if(toastTimer)clearTimeout(toastTimer);
+  if(type==='success'||type==='error'){
+    toastTimer=setTimeout(function(){
+      t.style.opacity='0';
+      setTimeout(function(){t.style.display='none';},300);
+    },type==='error'?2500:1200);
+  }
+}
+function hideToast(){
+  var t=document.getElementById('saveToast');
+  t.style.opacity='0';
+  setTimeout(function(){t.style.display='none';},300);
+}
+
+let obP=0,obDont=false;
+function nextOb(){obP=Math.min(obP+1,3);document.getElementById('obSlides').style.transform='translateX(-'+obP*25+'%)';}
+function skipOb(){var c=document.getElementById('obDontShow');obDont=c&&c.checked;document.getElementById('onboarding').style.display='none';document.getElementById('loginScreen').style.display='flex';}
+function initEmoji(){document.getElementById('emojiGrid').innerHTML=EMOJIS.map(function(e,i){return '<button class="emoji-opt'+(i===selEmoji?' sel':'')+'" onclick="selEmoji='+i+';initEmoji()">'+e+'</button>';}).join('');}
+initEmoji();
+function showLogin(){document.getElementById('registerScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';}
+function showRegister(){document.getElementById('loginScreen').style.display='none';document.getElementById('registerScreen').style.display='flex';}
+
+async function tryAuto(){var s=localStorage.getItem('yeorin_user');if(!s)return;try{var d=JSON.parse(s);document.getElementById('onboarding').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('loginName').value=d.name;document.getElementById('loginPw').value=d.pw;document.getElementById('loginBtn').textContent='자동 로그인 중...';var r=await gas('loginUser',String(d.name),String(d.pw));if(r.success){CU=r.user;await enterApp();}else{localStorage.removeItem('yeorin_user');document.getElementById('loginBtn').textContent='로그인';}}catch(e){localStorage.removeItem('yeorin_user');document.getElementById('loginBtn').textContent='로그인';}}
+setTimeout(function(){try{tryAuto();}catch(e){}},500);
+
+async function doLogin(){var n=document.getElementById('loginName').value.trim(),p=document.getElementById('loginPw').value,err=document.getElementById('loginError');err.textContent='';if(!n||!p){err.textContent='이름과 비밀번호를 입력해주세요';return;}document.getElementById('loginBtn').textContent='로그인 중...';document.getElementById('onboarding').style.display='none';try{var r=await gas('loginUser',String(n),String(p));if(!r.success){err.textContent=r.error;document.getElementById('loginBtn').textContent='로그인';return;}CU=r.user;localStorage.setItem('yeorin_user',JSON.stringify({name:n,pw:p}));await enterApp();}catch(e){err.textContent='오류 발생';document.getElementById('loginBtn').textContent='로그인';}}
+async function doRegister(){var n=document.getElementById('regName').value.trim(),p=document.getElementById('regPw').value,p2=document.getElementById('regPw2').value,bio=document.getElementById('regBio').value.trim(),err=document.getElementById('regError');err.textContent='';if(!n){err.textContent='이름을 입력해주세요';return;}if(!p){err.textContent='비밀번호를 입력해주세요';return;}if(p!==p2){err.textContent='비밀번호 불일치';return;}if(p.length<4){err.textContent='4자 이상';return;}document.getElementById('regBtn').textContent='가입 중...';try{var r=await gas('registerUser',String(n),String(p),EMOJIS[selEmoji],bio);if(!r.success){err.textContent=r.error;document.getElementById('regBtn').textContent='가입하기';return;}CU=r.user;localStorage.setItem('yeorin_user',JSON.stringify({name:n,pw:p}));await enterApp();}catch(e){err.textContent='오류 발생';document.getElementById('regBtn').textContent='가입하기';}}
+async function enterApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('registerScreen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('profileBtn').textContent=CU.emoji;if(obDont)try{await gas('setOnboardingSeen',CU.id);}catch(e){}document.getElementById('page-bible').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';try{AD=await gas('loadAllData',CU.id);qtPosts=AD.qtData.posts;qtMore=AD.qtData.hasMore;prPosts=AD.prayerData.posts;prMore=AD.prayerData.hasMore;newCounts=AD.newCounts||{qt:0,prayer:0};updateBadges();renderAll();}catch(e){document.getElementById('page-bible').innerHTML='<div class="loading">로딩 실패<br><br><button class="btn-primary" onclick="location.reload()">새로고침</button><br><button class="btn-primary" style="background:var(--coral);margin-top:8px" onclick="localStorage.removeItem(\'yeorin_user\');location.reload()">로그아웃</button></div>';}}
+function doLogout(){CU=null;AD=null;curTab='bible';localStorage.removeItem('yeorin_user');document.getElementById('app').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('loginName').value='';document.getElementById('loginPw').value='';}
+
+function updateBadges(){['qt','prayer'].forEach(function(t){var el=document.getElementById('badge-'+t);var c=newCounts[t]||0;if(c>0){el.textContent=c>99?'99+':c;el.style.display='flex';}else el.style.display='none';});}
+async function markRead(t){try{await gas('updateReadStatus',CU.id,t);newCounts[t]=0;updateBadges();}catch(e){}}
+function switchTab(id){if(busy)return;curTab=id;selBook=null;viewChId=null;document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.btab').forEach(function(b,i){b.classList.toggle('active',['bible','qt','prayer','calendar'][i]===id);});if(id==='qt'||id==='prayer')markRead(id);renderAll();}
+function showMyPage(){curTab='mypage';document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.getElementById('page-mypage').classList.add('active');document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});renderMyPage();}
+
+function renderRx(rx,defs,type,id){
+  var btns=defs.map(function(r){var l=rx[r.k]||[];var a=l.includes(CU.id);return '<button class="react-btn'+(a?' active':'')+'" onclick="event.stopPropagation();togRx(\''+type+'\',\''+id+'\',\''+r.k+'\')">'+r.e+' '+r.l+(l.length?' <span class="cnt">'+l.length+'</span>':'')+'</button>';}).join('');
+  var lines=defs.map(function(r){var l=rx[r.k]||[];if(!l.length)return'';return r.e+' '+l.map(function(u){return gm(u).name;}).join(', ');}).filter(function(x){return x;}).join(' · ');
+  return '<div class="reaction-row">'+btns+'</div>'+(lines?'<div class="rx-names">'+lines+'</div>':'');}
+
+// 🚀 CHANGED: 공감 — 실패 시 복구 로직 추가
+async function togRx(type,id,key){
+  var arr=type==='qt'?qtPosts:prPosts;
+  var it=arr.find(function(x){return x.id===String(id);});
+  if(!it)return;
+
+  // 원래 상태 백업 (실패 시 복구용)
+  var wasActive=it.reactions[key]&&it.reactions[key].includes(CU.id);
+
+  // 낙관적 업데이트: 화면 먼저 반영
+  if(!it.reactions[key])it.reactions[key]=[];
+  var idx=it.reactions[key].indexOf(CU.id);
+  if(idx>-1)it.reactions[key].splice(idx,1);
+  else it.reactions[key].push(CU.id);
+  type==='qt'?renderQt():renderPrayer();
+
+  // 서버 저장
+  try{
+    await gas('toggleReaction',type,id,key,CU.id);
+  }catch(e){
+    // 실패 시 원복
+    var idx2=it.reactions[key].indexOf(CU.id);
+    if(wasActive){
+      if(idx2===-1)it.reactions[key].push(CU.id);
+    }else{
+      if(idx2>-1)it.reactions[key].splice(idx2,1);
+    }
+    type==='qt'?renderQt():renderPrayer();
+    showToast('공감 저장 실패, 다시 시도해주세요','error');
+  }
+}
+
+function renderCm(cm,type,id){var items=(cm||[]).map(function(c){var m=gm(c.a),own=c.a===CU.id;return '<div class="c-item"><div class="c-av">'+m.emoji+'</div><div class="c-body"><span class="c-name">'+m.name+'</span>'+c.t+'<span class="c-date">'+(c.d||'')+'</span>'+(own?'<button class="c-del" onclick="delCm(\''+c.id+'\',\''+type+'\')">삭제</button>':'')+'</div></div>';}).join('');return '<div class="comment-section">'+items+'<div class="c-input-row"><input placeholder="댓글..." id="ci-'+type+'-'+id+'"><button onclick="addCm(\''+type+'\',\''+id+'\')">등록</button></div></div>';}
+
+// 🚀 CHANGED: 댓글 추가 — 실패 시 복구
+async function addCm(type,id){
+  if(busy)return;
+  var inp=document.getElementById('ci-'+type+'-'+id);
+  if(!inp||!inp.value.trim())return;
+  var t=inp.value.trim();
+  var arr=type==='qt'?qtPosts:prPosts;
+  var it=arr.find(function(x){return x.id===String(id);});
+  if(!it)return;
+
+  // 낙관적 업데이트 (임시 ID)
+  var tempId='t'+Date.now();
+  if(!it.comments)it.comments=[];
+  var tempCmt={id:tempId,a:CU.id,t:t,d:td()};
+  it.comments.push(tempCmt);
+  inp.value='';
+  type==='qt'?renderQt():renderPrayer();
+
+  // 서버 저장
+  try{
+    var res=await gas('addComment',type,id,CU.id,t);
+    // 성공 시 임시 ID를 실제 ID로 교체
+    if(res&&res.id){
+      var cmt=it.comments.find(function(c){return c.id===tempId;});
+      if(cmt)cmt.id=res.id;
+    }
+  }catch(e){
+    // 실패 시 임시 댓글 제거
+    it.comments=it.comments.filter(function(c){return c.id!==tempId;});
+    type==='qt'?renderQt():renderPrayer();
+    showToast('댓글 저장 실패, 다시 시도해주세요','error');
+  }
+}
+
+// 🚀 CHANGED: 댓글 삭제 — 실패 시 복구
+async function delCm(cid,type){
+  var arr=type==='qt'?qtPosts:prPosts;
+  // 원래 상태 백업
+  var backup=[];
+  arr.forEach(function(p){if(p.comments){p.comments.forEach(function(c){if(c.id===cid)backup.push({postId:p.id,cmt:JSON.parse(JSON.stringify(c))});});}});
+
+  // 낙관적 삭제
+  arr.forEach(function(p){if(p.comments)p.comments=p.comments.filter(function(c){return c.id!==cid;});});
+  type==='qt'?renderQt():renderPrayer();
+
+  try{
+    await gas('deleteComment',cid,CU.id);
+  }catch(e){
+    // 실패 시 복구
+    backup.forEach(function(b){
+      var p=arr.find(function(x){return x.id===b.postId;});
+      if(p){if(!p.comments)p.comments=[];p.comments.push(b.cmt);}
+    });
+    type==='qt'?renderQt():renderPrayer();
+    showToast('댓글 삭제 실패, 다시 시도해주세요','error');
+  }
+}
+
+// ===== 성경읽기 =====
+function renderBible(){
+  var el=document.getElementById('page-bible');if(!AD){el.innerHTML='<div class="loading"><div class="spinner"></div></div>';return;}
+  var myBP=AD.myBibleProgress||[],rc=myBP.length,pct=Math.round(rc/TC*100);
+  var myCard='<div class="card" style="cursor:pointer" onclick="showReadDetail(\''+CU.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:700">'+CU.emoji+' '+CU.name+'님의 성경읽기</div><div style="font-size:13px;color:var(--b5)">'+rc+'장 읽음</div></div><div style="font-size:22px;font-weight:800;color:var(--b7)">'+pct+'%</div></div><div class="progress-bar-bg" style="margin-top:8px"><div class="progress-bar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--gold),var(--b7))"></div></div><div style="text-align:center;font-size:11px;color:var(--b3);margin-top:4px">탭 → 상세</div></div>';
+  var subTabs='<div class="sub-tabs"><button class="sub-tab'+(bsub==='reading'?' active':'')+'" onclick="bsub=\'reading\';selBook=null;viewChId=null;renderBible()">📖 읽기표</button><button class="sub-tab'+(bsub==='challenge'?' active':'')+'" onclick="bsub=\'challenge\';selBook=null;viewChId=null;renderBible()">🏆 챌린지</button></div>';
+  var body=bsub==='reading'?renderReading(new Set(myBP)):renderChallenges();
+  var rows=(AD.users||[]).map(function(u){var me=u.id===CU.id;var cnt=me?rc:((AD.allBibleProgress||{})[u.id]||[]).length;var p=Math.round(cnt/TC*100);
+    return '<div class="member-row" onclick="showReadDetail(\''+u.id+'\')"><div class="avatar" style="width:24px;height:24px;font-size:11px;'+(me?'border:2px solid var(--gold)':'')+'">'+u.emoji+'</div><span style="font-size:13px;font-weight:'+(me?700:500)+';min-width:36px">'+u.name+'</span><div class="progress-bar-bg" style="flex:1;height:6px"><div class="progress-bar-fill" style="width:'+p+'%;background:'+(me?'var(--gold)':'var(--green)')+'"></div></div><span style="font-size:12px;font-weight:600;color:var(--b5)">'+cnt+'장</span></div>';}).join('');
+  var acc='<div class="card"><div class="accordion-header" onclick="groupOpen=!groupOpen;renderBible()"><span>⛪ 여린교회 읽기 현황</span><span style="font-size:14px;display:inline-block;transform:rotate('+(groupOpen?180:0)+'deg);transition:.2s">▼</span></div><div class="accordion-body'+(groupOpen?' open':'')+'">'+rows+'</div></div>';
+  el.innerHTML=myCard+subTabs+body+acc;
+}
+function renderReading(bpSet){
+  if(selBook!==null){var bk=BIBLE[selBook],co=CC[bk.cat];var chs='',readChs=[];
+    for(var i=0;i<bk.c;i++){var k=selBook+'-'+i,ir=bpSet.has(k);if(ir)readChs.push(i+1);
+      var sav=savingChapters[k]?' saving':'';
+      chs+='<button class="ch-btn'+sav+'" onclick="toggleCh('+selBook+','+i+')" style="background:'+(ir?co.a:'#F8F5F0')+';color:'+(ir?'#fff':'var(--b5)')+';font-weight:'+(ir?700:400)+'">'+(i+1)+'</button>';}
+    var rangeStr='아직 없어요';if(readChs.length){var rng=[];var s=readChs[0],e=s;for(var i=1;i<readChs.length;i++){if(readChs[i]===e+1)e=readChs[i];else{rng.push(s===e?s+'장':s+'~'+e+'장');s=readChs[i];e=s;}}rng.push(s===e?s+'장':s+'~'+e+'장');rangeStr=rng.join(', ');}
+    var rp=Math.round(readChs.length/bk.c*100);
+    return '<button class="back-btn" onclick="selBook=null;renderBible()">← 목록</button><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:16px;font-weight:700">'+bk.n+'</div><div style="font-size:16px;font-weight:800;color:var(--b7)">'+rp+'%</div></div><div style="font-size:13px;color:var(--b5);margin-bottom:4px">전체 '+bk.c+'장 중 '+readChs.length+'장</div><div class="progress-bar-bg" style="margin-bottom:8px"><div class="progress-bar-fill" style="width:'+rp+'%;background:'+co.a+'"></div></div><div style="font-size:13px;color:var(--b7);background:var(--b0);padding:10px 12px;border-radius:8px;margin-bottom:12px">📖 '+rangeStr+'</div><div class="chapter-grid">'+chs+'</div></div><div id="yeorinBible"></div><button class="btn-dashed" style="border-color:var(--green);color:var(--green)" onclick="askYeorinBibleUI(\''+bk.n+'\')"><img class="yeorin-img" src="'+YIMG+'"> 여린이에게 물어보기</button>';}
+  var cats='';CATS.forEach(function(cat){var bks=BIBLE.map(function(b,i){return Object.assign({},b,{idx:i});}).filter(function(b){return b.cat===cat;});if(!bks.length)return;var co=CC[cat];var tiles='';
+    bks.forEach(function(bk){var br=0;for(var i=0;i<bk.c;i++)if(bpSet.has(bk.idx+'-'+i))br++;var p=Math.round(br/bk.c*100);
+      tiles+='<button class="book-tile" onclick="selBook='+bk.idx+';renderBible()" style="background:'+(p===100?co.a:p>0?co.bg:'#F8F5F0')+';color:'+(p===100?'#fff':co.t)+';font-weight:'+(p>0?600:400)+'">'+bk.n+(p>0?' '+br+'/'+bk.c:'')+(p===100?' ✓':'')+(p>0&&p<100?'<div class="micro-bar" style="width:'+p+'%;background:'+co.a+'"></div>':'')+'</button>';});
+    cats+='<div style="background:'+co.bg+'30;border-radius:10px;padding:8px 8px 4px;margin-bottom:8px"><div class="cat-label" style="color:'+co.t+'">'+cat+'</div><div class="book-grid">'+tiles+'</div></div>';});
+  return cats;
+}
+
+// 🚀 CHANGED: 성경 체크 — 즉시 저장 + 실패 시 복구 + 중복 클릭 방지
+async function toggleCh(bi,ch){
+  var k=bi+'-'+ch;
+  // 이미 저장 중이면 무시 (중복 클릭 방지)
+  if(savingChapters[k])return;
+
+  var bp=AD.myBibleProgress,abp=AD.allBibleProgress;
+  var wasChecked=bp.indexOf(k)>-1;
+
+  // 낙관적 업데이트: 화면 먼저 반영
+  if(wasChecked){
+    var idxs=[];bp.forEach(function(v,i){if(v===k)idxs.push(i);});
+    for(var i=idxs.length-1;i>=0;i--)bp.splice(idxs[i],1);
+    if(abp[CU.id]){var ai=[];abp[CU.id].forEach(function(v,i){if(v===k)ai.push(i);});for(var i=ai.length-1;i>=0;i--)abp[CU.id].splice(ai[i],1);}
+  }else{
+    bp.push(k);
+    if(!abp[CU.id])abp[CU.id]=[];
+    abp[CU.id].push(k);
+  }
+  savingChapters[k]=true;
+  showToast('저장 중...');
+  renderBible();
+
+  // 서버 저장
+  try{
+    await gas('toggleBibleChapter',CU.id,k);
+    delete savingChapters[k];
+    showToast('저장됨','success');
+    renderBible();
+  }catch(e){
+    // 실패 시 복구
+    delete savingChapters[k];
+    if(wasChecked){
+      // 원래 체크되어 있던 것 → 다시 추가
+      bp.push(k);
+      if(!abp[CU.id])abp[CU.id]=[];
+      abp[CU.id].push(k);
+    }else{
+      // 원래 체크 안 되어 있던 것 → 제거
+      var idxs=[];bp.forEach(function(v,i){if(v===k)idxs.push(i);});
+      for(var i=idxs.length-1;i>=0;i--)bp.splice(idxs[i],1);
+      if(abp[CU.id]){var ai=[];abp[CU.id].forEach(function(v,i){if(v===k)ai.push(i);});for(var i=ai.length-1;i>=0;i--)abp[CU.id].splice(ai[i],1);}
+    }
+    showToast('저장 실패, 다시 시도해주세요','error');
+    renderBible();
+  }
+}
+
+function showReadDetail(uid){var usr=gm(uid);var bp=uid===CU.id?(AD.myBibleProgress||[]):((AD.allBibleProgress||{})[uid]||[]);var rc=bp.length,pct=Math.round(rc/TC*100);
+  var bm={};bp.forEach(function(k){var p=String(k).split('-'),bi=parseInt(p[0]);if(isNaN(bi))return;if(!bm[bi])bm[bi]=[];bm[bi].push(parseInt(p[1])+1);});
+  var bl='';if(!Object.keys(bm).length)bl='<div style="text-align:center;padding:16px;color:var(--b5);font-size:14px">아직 읽은 장이 없어요</div>';
+  else Object.entries(bm).sort(function(a,b){return a[0]-b[0];}).forEach(function(entry){var bi=entry[0],chs=entry[1];var bk=BIBLE[bi];if(!bk)return;var co=CC[bk.cat];chs.sort(function(a,b){return a-b;});
+    var rng=[];var s=chs[0],e=s;for(var i=1;i<chs.length;i++){if(chs[i]===e+1)e=chs[i];else{rng.push(s===e?s+'장':s+'~'+e+'장');s=chs[i];e=s;}}rng.push(s===e?s+'장':s+'~'+e+'장');
+    bl+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1)"><span style="font-size:14px;font-weight:600;min-width:65px;color:'+co.t+'">'+bk.n+'</span><div class="progress-bar-bg" style="flex:1;height:6px"><div class="progress-bar-fill" style="width:'+Math.round(chs.length/bk.c*100)+'%;background:'+co.a+'"></div></div><span style="font-size:12px;color:var(--b5)">'+chs.length+'/'+bk.c+'</span></div><div style="font-size:11px;color:var(--b3);padding:2px 0 4px 73px">'+rng.join(', ')+'</div>';});
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><div style="text-align:center;margin-bottom:14px"><div style="font-size:36px">'+usr.emoji+'</div><div style="font-size:20px;font-weight:800">'+usr.name+'님의 읽기 현황</div><div style="font-size:14px;color:var(--b5)">'+rc+'장 ('+pct+'%)</div><div class="progress-bar-bg" style="margin:8px auto;max-width:200px"><div class="progress-bar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--gold),var(--b7))"></div></div></div><div style="font-size:15px;font-weight:700;margin-bottom:8px">📚 읽은 성경</div>'+bl);}
+
+// ===== 챌린지 =====
+function renderChallenges(){if(!AD)return'';
+  var chs=AD.challenges,certs=AD.challengeCerts;
+  var fTabs='<div class="filter-tabs"><button class="filter-tab'+(chFilter==='active'?' active':'')+'" onclick="chFilter=\'active\';renderBible()">진행 중</button><button class="filter-tab'+(chFilter==='completed'?' active':'')+'" onclick="chFilter=\'completed\';renderBible()">완료됨</button></div>';
+  var filtered=chs.filter(function(c){return c.status===(chFilter==='completed'?'completed':'active');});
+  if(viewChId)return renderChDetail(viewChId);
+  var list=filtered.map(function(ch){var days=Math.max(Math.ceil((new Date(ch.endDate)-new Date(ch.startDate))/864e5)+1,1);var isMem=ch.memberIds.includes(CU.id),isCr=ch.creatorId===CU.id;
+    var ac=certs.filter(function(c){return c.challengeId===ch.id;});var op=ch.memberIds.length*days>0?Math.round(ac.length/(ch.memberIds.length*days)*100):0;
+    var top='';if(ch.memberIds.length){var cnt={};ch.memberIds.forEach(function(u){cnt[u]=ac.filter(function(c){return c.userId===u;}).length;});var t=Object.entries(cnt).sort(function(a,b){return b[1]-a[1];})[0];if(t&&t[1]>0)top='🏆 '+gm(t[0]).emoji+gm(t[0]).name+' '+t[1]+'일';}
+    var mc=ac.filter(function(c){return c.userId===CU.id;}).length,mp=Math.round(mc/days*100);
+    return '<div class="ch-card" onclick="viewChId=\''+ch.id+'\';renderBible()"><div style="display:flex;justify-content:space-between"><div><div style="font-size:15px;font-weight:700">'+ch.title+(ch.status==='completed'?' ✅':'')+'</div><div class="ch-meta">📖 '+ch.book+' · '+ch.startDate.slice(5)+'~'+ch.endDate.slice(5)+' · 전체 '+op+'%</div>'+(top?'<div style="font-size:12px;color:var(--gold)">'+top+'</div>':'')+'</div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'+(!isMem&&ch.status==='active'?'<button class="btn-sm" onclick="event.stopPropagation();joinCh(\''+ch.id+'\')" style="background:var(--gold);color:#fff">참여</button>':isMem?'<span style="font-size:11px;color:var(--green);font-weight:600">참여중</span>':'')+'</div></div><div class="ch-members">'+ch.memberIds.map(function(u){return '<div class="ch-member-av">'+gm(u).emoji+'</div>';}).join('')+'<span style="font-size:11px;color:var(--b5);margin-left:4px">'+ch.memberIds.length+'명</span></div>'+(isMem?'<div class="ch-progress"><span class="pname">'+CU.emoji+'나</span><div class="progress-bar-bg" style="flex:1"><div class="progress-bar-fill" style="width:'+mp+'%;background:var(--gold)"></div></div><span class="pct">'+mp+'%</span></div>':'')+'</div>';}).join('');
+  if(!list)list='<div style="text-align:center;padding:20px;color:var(--b5)">'+(chFilter==='completed'?'완료된 챌린지가 없어요':'진행 중인 챌린지가 없어요')+'</div>';
+  return '<button class="btn-dashed" onclick="schf=!schf;renderBible()">'+(schf?'닫기':'🏆 새 챌린지')+'</button>'+(schf?'<div class="card"><div class="fg"><label class="q-label">📌 이름</label><input class="input-field" id="chT"></div><div class="fg"><label class="q-label">📖 성경</label><select class="select-field" id="chB">'+BN.map(function(b){return '<option>'+b+'</option>';}).join('')+'</select></div><div class="fg" style="display:flex;gap:6px"><div style="flex:1"><label class="q-label">시작</label><input type="date" class="input-field" id="chS"></div><div style="flex:1"><label class="q-label">종료</label><input type="date" class="input-field" id="chE"></div></div><button class="btn-primary" onclick="createCh()">만들기</button></div>':'')+fTabs+list;}
+
+function renderChDetail(cid){
+  var ch=AD.challenges.find(function(c){return c.id===cid;});if(!ch)return'<button class="back-btn" onclick="viewChId=null;renderBible()">← 목록</button>';
+  var certs=AD.challengeCerts.filter(function(c){return c.challengeId===cid;});var days=Math.max(Math.ceil((new Date(ch.endDate)-new Date(ch.startDate))/864e5)+1,1);
+  var isMem=ch.memberIds.includes(CU.id),isCr=ch.creatorId===CU.id;
+  var todayCerted=certs.some(function(c){return c.userId===CU.id&&c.date===td();});
+  var memberStats=ch.memberIds.map(function(uid){var cnt=certs.filter(function(c){return c.userId===uid;}).length;return{uid:uid,cnt:cnt,pct:Math.round(cnt/days*100)};}).sort(function(a,b){return b.cnt-a.cnt;});
+  var mp=memberStats.map(function(ms){return '<div class="ch-progress"><span class="pname">'+gm(ms.uid).emoji+gm(ms.uid).name+'</span><div class="progress-bar-bg" style="flex:1"><div class="progress-bar-fill" style="width:'+ms.pct+'%;background:'+(ms.uid===CU.id?'var(--gold)':'var(--green)')+'"></div></div><span class="pct">'+ms.pct+'%</span></div>';}).join('');
+  var myCerts=new Set(certs.filter(function(c){return c.userId===CU.id;}).map(function(c){return c.date;}));
+  var st=new Date(ch.startDate);var dots='';
+  for(var i=0;i<Math.min(days,42);i++){var d=new Date(st);d.setDate(d.getDate()+i);var ds=d.toISOString().split('T')[0];var done=myCerts.has(ds);var past=ds<=td();
+    dots+='<div class="cert-dot" style="background:'+(done?'var(--gold)':past?'#E8D4D4':'var(--b1)')+';color:'+(done?'#fff':'var(--b5)')+'">'+d.getDate()+'</div>';}
+  var op=ch.memberIds.length*days>0?Math.round(certs.length/(ch.memberIds.length*days)*100):0;
+  return '<button class="back-btn" onclick="viewChId=null;renderBible()">← 목록</button><div class="card"><div style="font-size:17px;font-weight:700;margin-bottom:2px">'+ch.title+(ch.status==='completed'?' ✅':'')+'</div><div class="ch-meta">📖 '+ch.book+' · '+ch.startDate+'~'+ch.endDate+' · '+ch.memberIds.length+'명 · 전체 '+op+'%</div>'+(isMem&&ch.status==='active'&&!todayCerted?'<button class="btn-full" onclick="certToday(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:10px 0">✅ 오늘 읽었어요!</button>':'')+(isMem&&todayCerted?'<div style="text-align:center;padding:10px;background:#E8F5E8;border-radius:8px;margin:10px 0;font-size:14px;font-weight:600;color:var(--green)">✅ 오늘 인증 완료!</div>':'')+(!isMem&&ch.status==='active'?'<button class="btn-full" onclick="joinCh(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:10px 0">🙋 참여하기</button>':'')+'</div><div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px">참여자 현황</div>'+mp+'</div>'+(isMem?'<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:6px">인증 기록</div><div class="cert-log">'+dots+'</div><div style="font-size:10px;color:var(--b5);margin-top:4px">🟡인증 🔴미인증 ⬜예정</div></div>':'')+'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'+(isCr&&ch.status==='active'?'<button class="btn-sm" onclick="completeCh(\''+cid+'\')" style="background:var(--green);color:#fff">✅ 완료</button>':'')+(isCr?'<button class="btn-sm" onclick="deleteCh(\''+cid+'\')" style="background:#E8D4D4;color:#6E2E2E">🗑 삭제</button>':'')+'</div>';}
+
+// 🚀 CHANGED: 챌린지 인증 — 전체 리로드 제거
+async function certToday(cid){
+  showSub('인증 중...');
+  try{
+    await gas('certChallenge',cid,CU.id,td());
+    // 로컬 상태만 업데이트 (전체 리로드 X)
+    AD.challengeCerts.push({challengeId:cid,userId:CU.id,date:td()});
+    hideSub();
+    renderBible();
+  }catch(e){
+    hideSub();
+    alert('인증 실패. 다시 시도해주세요.');
+  }
+}
+
+// 🚀 CHANGED: 챌린지 생성 — 전체 리로드 제거
+async function createCh(){
+  if(busy)return;
+  var t=document.getElementById('chT').value,b=document.getElementById('chB').value,s=document.getElementById('chS').value,e=document.getElementById('chE').value;
+  if(!t||!s||!e)return;
+  showSub('생성 중...');
+  try{
+    var res=await gas('createChallenge',t,b,BN.indexOf(b),s,e,CU.id);
+    // 로컬에 새 챌린지 추가 (전체 리로드 X)
+    if(res&&res.id){
+      AD.challenges.push({
+        id:res.id,title:t,book:b,bookIdx:BN.indexOf(b),
+        startDate:s,endDate:e,creatorId:CU.id,memberIds:[CU.id],status:'active'
+      });
+    }
+    schf=false;
+    hideSub();
+    renderBible();
+  }catch(e){
+    hideSub();
+    alert('생성 실패. 다시 시도해주세요.');
+  }
+}
+
+// 🚀 CHANGED: 챌린지 참여 — 전체 리로드 제거
+async function joinCh(id){
+  showSub('참여 중...');
+  try{
+    await gas('joinChallenge',id,CU.id);
+    // 로컬에서 memberIds에 추가
+    var ch=AD.challenges.find(function(c){return c.id===id;});
+    if(ch&&!ch.memberIds.includes(CU.id))ch.memberIds.push(CU.id);
+    hideSub();
+    renderBible();
+  }catch(e){
+    hideSub();
+    alert('참여 실패. 다시 시도해주세요.');
+  }
+}
+
+// 🚀 CHANGED: 챌린지 삭제 — 전체 리로드 제거
+async function deleteCh(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  showSub('삭제 중...');
+  try{
+    await gas('deleteChallenge',id,CU.id);
+    // 로컬에서 제거
+    AD.challenges=AD.challenges.filter(function(c){return c.id!==id;});
+    AD.challengeCerts=AD.challengeCerts.filter(function(c){return c.challengeId!==id;});
+    viewChId=null;
+    hideSub();
+    renderBible();
+  }catch(e){
+    hideSub();
+    alert('삭제 실패. 다시 시도해주세요.');
+  }
+}
+
+// 🚀 CHANGED: 챌린지 완료 — 전체 리로드 제거
+async function completeCh(id){
+  if(!confirm('챌린지를 완료 처리하시겠습니까?'))return;
+  showSub('완료 처리 중...');
+  try{
+    await gas('completeChallenge',id,CU.id);
+    // 로컬에서 status 변경
+    var ch=AD.challenges.find(function(c){return c.id===id;});
+    if(ch)ch.status='completed';
+    hideSub();
+    renderBible();
+  }catch(e){
+    hideSub();
+    alert('완료 처리 실패. 다시 시도해주세요.');
+  }
+}
+
+// ===== QT =====
+function renderQt(){
+  var el=document.getElementById('page-qt');if(!AD){el.innerHTML='<div class="loading"><div class="spinner"></div></div>';return;}
+  var viewTabs='<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn-pill" onclick="qtCalView=false;renderQt()" style="background:'+(qtCalView?'var(--b1)':'var(--b7)')+';color:'+(qtCalView?'var(--b7)':'#FAF0E6')+'">📋 목록</button><button class="btn-pill" onclick="qtCalView=true;renderQt()" style="background:'+(qtCalView?'var(--b7)':'var(--b1)')+';color:'+(qtCalView?'#FAF0E6':'var(--b7)')+'">📅 캘린더</button></div>';
+  var opts=BN.map(function(b){return '<option>'+b+'</option>';}).join('');
+  var form=sqf?'<div class="card"><div class="fg"><label class="q-label">📜 읽은 말씀</label><select class="select-field" id="qB">'+opts+'</select><div style="display:flex;gap:6px;align-items:flex-end;margin-top:8px"><div style="flex:1"><div style="font-size:11px;color:var(--b5);margin-bottom:2px">시작</div><div style="display:flex;align-items:center;gap:4px"><input class="input-field" id="qCF" placeholder="장" style="width:100%;text-align:center" type="number"><span style="color:var(--b5)">장</span><input class="input-field" id="qVF" placeholder="절" style="width:100%;text-align:center" type="number"><span style="color:var(--b5)">절</span></div></div><span style="font-size:16px;color:var(--b3);padding-bottom:10px">~</span><div style="flex:1"><div style="font-size:11px;color:var(--b5);margin-bottom:2px">끝</div><div style="display:flex;align-items:center;gap:4px"><input class="input-field" id="qCT" placeholder="장" style="width:100%;text-align:center" type="number"><span style="color:var(--b5)">장</span><input class="input-field" id="qVT" placeholder="절" style="width:100%;text-align:center" type="number"><span style="color:var(--b5)">절</span></div></div></div></div><div class="fg"><label class="q-label">💡 인상 깊은 구절</label><input class="input-field" id="qBV"></div><div class="fg"><label class="q-label">✏️ 적용할 점</label><textarea class="input-field" id="qAP" rows="2" style="resize:none"></textarea></div><div class="fg"><label class="q-label">💌 나누고 싶은 내용</label><textarea class="input-field" id="qSH" rows="2" style="resize:none"></textarea></div><div class="fg"><label class="q-label">❓ 궁금한 점 (선택)</label><input class="input-field" id="qQQ"></div><div id="yeorinQT"></div><button class="btn-dashed" style="border-color:var(--green);color:var(--green)" onclick="askYeorinQTUI()"><img class="yeorin-img" src="'+YIMG+'"> 여린이 묵상 도우미</button><button class="btn-primary" onclick="addQT()">나누기</button></div>':'';
+  var content='';
+  if(qtCalView){content=renderMiniCal('qt',qtPosts);}
+  else{var filters='<div class="filter-tabs">'+[{k:'today',l:'오늘'},{k:'week',l:'이번 주'},{k:'month',l:'이번 달'},{k:'all',l:'전체'}].map(function(f){return '<button class="filter-tab'+(qtFilter===f.k?' active':'')+'" onclick="chgQtF(\''+f.k+'\')">'+f.l+'</button>';}).join('')+'</div>';
+    var posts='';qtPosts.forEach(function(p){var m=gm(p.authorId),own=p.authorId===CU.id;var vs=p.chFrom===p.chTo&&p.vsFrom===p.vsTo?p.book+' '+p.chFrom+':'+p.vsFrom:p.book+' '+p.chFrom+':'+p.vsFrom+'~'+p.chTo+':'+p.vsTo;
+      posts+='<div class="card" style="position:relative"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px"><div class="avatar">'+m.emoji+'</div><div><div style="font-size:14px;font-weight:700">'+m.name+'</div><div style="font-size:11px;color:var(--b5)">'+p.date+'</div></div></div>'+(own?'<button class="edit-menu-btn" onclick="emo=emo===\'qt-'+p.id+'\'?null:\'qt-'+p.id+'\';renderQt()">⋯</button>':'')+'</div>'+(emo==='qt-'+p.id?'<div class="edit-dropdown"><button onclick="editQT(\''+p.id+'\')">✏️ 수정</button><button onclick="delQT(\''+p.id+'\')">🗑 삭제</button></div>':'')+'<div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:6px">📜 '+vs+'</div>'+(p.bestVerse?'<div class="qt-section"><div class="qt-section-label">💡 인상 깊은 구절</div>'+p.bestVerse+'</div>':'')+(p.applyContent?'<div class="qt-section"><div class="qt-section-label">✏️ 적용할 점</div>'+p.applyContent+'</div>':'')+(p.shareContent?'<div class="qt-section"><div class="qt-section-label">💌 나누고 싶은 내용</div>'+p.shareContent+'</div>':'')+(p.question?'<div class="qt-section"><div class="qt-section-label">❓ 궁금한 점</div>'+p.question+'</div>':'')+renderRx(p.reactions,QR,'qt',p.id)+renderCm(p.comments,'qt',p.id)+'</div>';});
+    content=filters+(posts||'<div style="text-align:center;padding:24px;color:var(--b5)">이 기간에 작성된 QT가 없어요</div>')+(qtMore?'<button class="btn-more" onclick="moreQt()">더 보기</button>':'');}
+  el.innerHTML='<button class="btn-dashed" onclick="sqf=!sqf;renderQt()">'+(sqf?'닫기':'✍️ 묵상 나누기')+'</button>'+form+viewTabs+content;
+}
+async function chgQtF(f){qtFilter=f;qtPage=0;var r=await gas('getQTPosts',f,0,10);qtPosts=r.posts;qtMore=r.hasMore;renderQt();}
+async function moreQt(){qtPage++;var r=await gas('getQTPosts',qtFilter,qtPage,10);qtPosts=qtPosts.concat(r.posts);qtMore=r.hasMore;renderQt();}
+async function addQT(){if(busy)return;var b=document.getElementById('qB').value,cf=document.getElementById('qCF').value,vf=document.getElementById('qVF').value,ct=document.getElementById('qCT').value||cf,vt=document.getElementById('qVT').value||vf,bv=document.getElementById('qBV').value,ap=document.getElementById('qAP').value,sh=document.getElementById('qSH').value,qq=document.getElementById('qQQ').value;if(!b||!cf||(!ap&&!sh))return;showSub('등록 중...');await gas('addQTPost',CU.id,b,cf,ct,vf||'1',vt||vf||'1',bv,ap,sh,qq);var r=await gas('getQTPosts',qtFilter,0,10);qtPosts=r.posts;qtMore=r.hasMore;qtPage=0;sqf=false;hideSub();renderQt();}
+async function delQT(id){showSub('삭제 중...');await gas('deleteQTPost',id,CU.id);var r=await gas('getQTPosts',qtFilter,0,(qtPage+1)*10);qtPosts=r.posts;qtMore=r.hasMore;emo=null;hideSub();renderQt();}
+function editQT(id){var p=qtPosts.find(function(x){return x.id===id;});if(!p)return;emo=null;var opts=BN.map(function(b){return '<option'+(b===p.book?' selected':'')+'>'+b+'</option>';}).join('');
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>✏️ QT 수정</h3><div class="fg"><label class="q-label">📜 말씀</label><select class="select-field" id="eqB">'+opts+'</select><div style="display:flex;gap:4px;margin-top:6px"><input class="input-field" id="eqCF" value="'+p.chFrom+'" style="width:25%;text-align:center"><span style="padding:8px">장</span><input class="input-field" id="eqVF" value="'+p.vsFrom+'" style="width:25%;text-align:center"><span style="padding:8px">절~</span><input class="input-field" id="eqCT" value="'+p.chTo+'" style="width:25%;text-align:center"><span style="padding:8px">장</span><input class="input-field" id="eqVT" value="'+p.vsTo+'" style="width:25%;text-align:center"><span style="padding:8px">절</span></div></div><div class="fg"><label class="q-label">💡 인상 깊은 구절</label><input class="input-field" id="eqBV" value="'+(p.bestVerse||'')+'"></div><div class="fg"><label class="q-label">✏️ 적용할 점</label><textarea class="input-field" id="eqAP" rows="2">'+(p.applyContent||'')+'</textarea></div><div class="fg"><label class="q-label">💌 나누고 싶은 내용</label><textarea class="input-field" id="eqSH" rows="2">'+(p.shareContent||'')+'</textarea></div><div class="fg"><label class="q-label">❓ 궁금한 점</label><input class="input-field" id="eqQQ" value="'+(p.question||'')+'"></div><button class="btn-primary" onclick="saveQTEdit(\''+id+'\')">저장</button>');}
+async function saveQTEdit(id){showSub('저장 중...');await gas('updateQTPost',id,CU.id,document.getElementById('eqB').value,document.getElementById('eqCF').value,document.getElementById('eqCT').value,document.getElementById('eqVF').value,document.getElementById('eqVT').value,document.getElementById('eqBV').value,document.getElementById('eqAP').value,document.getElementById('eqSH').value,document.getElementById('eqQQ').value);var r=await gas('getQTPosts',qtFilter,0,(qtPage+1)*10);qtPosts=r.posts;qtMore=r.hasMore;hideSub();closePopup();renderQt();}
+
+// ===== 기도/감사 =====
+function renderPrayer(){
+  var el=document.getElementById('page-prayer');if(!AD){el.innerHTML='<div class="loading"><div class="spinner"></div></div>';return;}
+  var PTYPES=["건강","가정","직장/사업","학업/진로","관계","영적 성장","감사","기타"];
+  var viewTabs='<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn-pill" onclick="prCalView=false;renderPrayer()" style="background:'+(prCalView?'var(--b1)':'var(--b7)')+';color:'+(prCalView?'var(--b7)':'#FAF0E6')+'">📋 목록</button><button class="btn-pill" onclick="prCalView=true;renderPrayer()" style="background:'+(prCalView?'var(--b7)':'var(--b1)')+';color:'+(prCalView?'#FAF0E6':'var(--b7)')+'">📅 캘린더</button></div>';
+  var form=spf?'<div class="card"><div class="fg"><label class="q-label">📝 유형</label><div style="display:flex;gap:8px;margin-bottom:8px"><button class="btn-pill" id="ptPrayer" onclick="document.getElementById(\'ptVal\').value=\'prayer\';this.style.background=\'var(--b7)\';this.style.color=\'#FAF0E6\';document.getElementById(\'ptThanks\').style.background=\'var(--b1)\';document.getElementById(\'ptThanks\').style.color=\'var(--b7)\'" style="background:var(--b7);color:#FAF0E6">🙏 기도제목</button><button class="btn-pill" id="ptThanks" onclick="document.getElementById(\'ptVal\').value=\'thanks\';this.style.background=\'var(--gold)\';this.style.color=\'#fff\';document.getElementById(\'ptPrayer\').style.background=\'var(--b1)\';document.getElementById(\'ptPrayer\').style.color=\'var(--b7)\'" style="background:var(--b1);color:var(--b7)">✨ 감사제목</button></div><input type="hidden" id="ptVal" value="prayer"></div><div class="fg"><label class="q-label">📂 세부</label><select class="select-field" id="pTy" onchange="if(this.value===\'기타\')document.getElementById(\'pCW\').style.display=\'block\';else document.getElementById(\'pCW\').style.display=\'none\'">'+PTYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select><div id="pCW" style="display:none;margin-top:4px"><input class="input-field" id="pCu" placeholder="직접 입력"></div></div><div class="fg"><label class="q-label">📝 내용</label><textarea class="input-field" id="pCo" rows="3" style="resize:none"></textarea></div><button class="btn-primary" onclick="addPr()">올리기</button></div>':'';
+  var content='';
+  if(prCalView){content=renderMiniCal('prayer',prPosts);}
+  else{var filters='<div class="filter-tabs"><button class="filter-tab'+(prFilter==='active'?' active':'')+'" onclick="chgPrF(\'active\')">진행 중</button><button class="filter-tab'+(prFilter==='past'?' active':'')+'" onclick="chgPrF(\'past\')">지난 글</button><button class="filter-tab'+(prFilter==='all'?' active':'')+'" onclick="chgPrF(\'all\')">전체</button></div>';
+    var posts='';prPosts.forEach(function(p){var m=gm(p.authorId),own=p.authorId===CU.id;var tl=p.prayerType==='기타'?(p.customType||'기타'):p.prayerType;var isPr=(p.postType||'prayer')==='prayer';
+      posts+='<div class="card" style="position:relative"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px"><div class="avatar">'+m.emoji+'</div><div><div style="font-size:14px;font-weight:700">'+m.name+'</div><div style="font-size:11px;color:var(--b5)">'+p.date+'</div></div></div><div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;padding:3px 8px;border-radius:6px;background:'+(isPr?'var(--purple)':'var(--gold)')+';color:#fff;font-weight:600">'+(isPr?'기도':'감사')+'</span><span style="font-size:11px;padding:3px 8px;border-radius:6px;background:var(--b1);color:var(--b7);font-weight:600">'+tl+'</span>'+(own?'<button class="edit-menu-btn" onclick="emo=emo===\'pr-'+p.id+'\'?null:\'pr-'+p.id+'\';renderPrayer()">⋯</button>':'')+'</div></div>'+(emo==='pr-'+p.id?'<div class="edit-dropdown"><button onclick="editPr(\''+p.id+'\')">✏️ 수정</button><button onclick="delPr(\''+p.id+'\')">🗑 삭제</button></div>':'')+'<p style="font-size:14px;color:#4A3F35;line-height:1.6;margin-bottom:6px">'+p.situation+'</p><div id="yeorinPr-'+p.id+'"></div><button style="border:none;background:none;color:var(--green);font-size:12px;font-weight:600;padding:4px 0" onclick="askYeorinPrayerUI(\''+p.id+'\',\''+(p.postType||'prayer')+'\')"><img class="yeorin-img" src="'+YIMG+'" style="height:18px"> 여린이 말씀 추천</button>'+renderRx(p.reactions,PRD,'prayer',p.id)+renderCm(p.comments,'prayer',p.id)+'</div>';});
+    content=filters+(posts||'<div style="text-align:center;padding:24px;color:var(--b5)">글이 없어요</div>')+(prMore?'<button class="btn-more" onclick="morePr()">더 보기</button>':'');}
+  el.innerHTML='<button class="btn-dashed" onclick="spf=!spf;renderPrayer()">'+(spf?'닫기':'🙏 기도/감사 올리기')+'</button>'+form+viewTabs+content;
+}
+async function chgPrF(f){prFilter=f;prPage=0;var r=await gas('getPrayerPosts',f,0,10);prPosts=r.posts;prMore=r.hasMore;renderPrayer();}
+async function morePr(){prPage++;var r=await gas('getPrayerPosts',prFilter,prPage,10);prPosts=prPosts.concat(r.posts);prMore=r.hasMore;renderPrayer();}
+async function addPr(){if(busy)return;var pt=document.getElementById('ptVal').value,ty=document.getElementById('pTy').value,co=document.getElementById('pCo').value;var ct='';if(ty==='기타'){var c=document.getElementById('pCu');if(c)ct=c.value;}if(!co)return;showSub('등록 중...');await gas('addPrayerPost',CU.id,pt,ty,ct,co);var r=await gas('getPrayerPosts',prFilter,0,10);prPosts=r.posts;prMore=r.hasMore;prPage=0;spf=false;hideSub();renderPrayer();}
+async function delPr(id){showSub('삭제 중...');await gas('deletePrayerPost',id,CU.id);var r=await gas('getPrayerPosts',prFilter,0,(prPage+1)*10);prPosts=r.posts;prMore=r.hasMore;emo=null;hideSub();renderPrayer();}
+function editPr(id){var p=prPosts.find(function(x){return x.id===id;});if(!p)return;emo=null;var PTYPES=["건강","가정","직장/사업","학업/진로","관계","영적 성장","감사","기타"];var isPr=(p.postType||'prayer')==='prayer';
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>✏️ 수정</h3><div class="fg"><div style="display:flex;gap:8px"><button class="btn-pill" id="epPr" onclick="document.getElementById(\'epVal\').value=\'prayer\';this.style.background=\'var(--b7)\';this.style.color=\'#FAF0E6\';document.getElementById(\'epTh\').style.background=\'var(--b1)\';document.getElementById(\'epTh\').style.color=\'var(--b7)\'" style="background:'+(isPr?'var(--b7)':'var(--b1)')+';color:'+(isPr?'#FAF0E6':'var(--b7)')+'">🙏 기도</button><button class="btn-pill" id="epTh" onclick="document.getElementById(\'epVal\').value=\'thanks\';this.style.background=\'var(--gold)\';this.style.color=\'#fff\';document.getElementById(\'epPr\').style.background=\'var(--b1)\';document.getElementById(\'epPr\').style.color=\'var(--b7)\'" style="background:'+(isPr?'var(--b1)':'var(--gold)')+';color:'+(isPr?'var(--b7)':'#fff')+'">✨ 감사</button></div><input type="hidden" id="epVal" value="'+(p.postType||'prayer')+'"></div><div class="fg"><select class="select-field" id="epTy">'+PTYPES.map(function(t){return '<option'+(t===p.prayerType?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div><div class="fg"><textarea class="input-field" id="epCo" rows="3">'+(p.situation||'')+'</textarea></div><button class="btn-primary" onclick="savePrEdit(\''+id+'\')">저장</button>');}
+async function savePrEdit(id){showSub('저장 중...');await gas('updatePrayerPost',id,CU.id,document.getElementById('epVal').value,document.getElementById('epTy').value,'',document.getElementById('epCo').value);var r=await gas('getPrayerPosts',prFilter,0,(prPage+1)*10);prPosts=r.posts;prMore=r.hasMore;hideSub();closePopup();renderPrayer();}
+
+// ===== 미니캘린더 =====
+function renderMiniCal(type,posts){
+  var ms=cy+'-'+pd(cm+1),fd_=new Date(cy,cm,1).getDay(),dim=new Date(cy,cm+1,0).getDate();
+  var dateCounts={};posts.forEach(function(p){var d=p.date;if(d.startsWith(ms)){dateCounts[d]=(dateCounts[d]||0)+1;}});
+  var dh=['일','월','화','수','목','금','토'].map(function(d){return '<div>'+d+'</div>';}).join('');
+  var cells='';for(var i=0;i<fd_;i++)cells+='<div></div>';
+  for(var d=1;d<=dim;d++){var ds=ms+'-'+pd(d);var cnt=dateCounts[ds]||0;var today=ds===td();
+    cells+='<div class="mc-cell'+(cnt?' has':'')+(today?' sel':'')+'" onclick="showDatePosts(\''+type+'\',\''+ds+'\')">'+d+(cnt?'<div style="font-size:8px">'+cnt+'</div>':'')+'</div>';}
+  return '<div class="card"><div class="cal-nav"><button onclick="cm===0?(cm=11,cy--):cm++;'+(type==='qt'?'renderQt()':'renderPrayer()')+'">◀</button><h2>'+cy+'년 '+(cm+1)+'월</h2><button onclick="cm===11?(cm=0,cy++):cm++;'+(type==='qt'?'renderQt()':'renderPrayer()')+'">▶</button></div></div><div class="card mini-cal"><div class="mc-hdr">'+dh+'</div><div class="mc-grid">'+cells+'</div></div>';
+}
+async function showDatePosts(type,date){
+  showSub('불러오는 중...');
+  var r=type==='qt'?await gas('getQTPosts','all',0,100):await gas('getPrayerPosts','all',0,100);
+  var filtered=r.posts.filter(function(p){return p.date===date;});hideSub();
+  if(!filtered.length){showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📅 '+date+'</h3><p style="color:var(--b5);margin-top:10px">이 날 작성된 글이 없어요</p>');return;}
+  var items=filtered.map(function(p){var m=gm(p.authorId);
+    if(type==='qt'){return '<div style="border-bottom:1px solid var(--b1);padding:10px 0"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div class="avatar" style="width:28px;height:28px;font-size:12px">'+m.emoji+'</div><span style="font-weight:700">'+m.name+'</span></div><div style="font-size:13px;color:var(--gold);margin-bottom:4px">📜 '+p.book+' '+p.chFrom+':'+p.vsFrom+'</div>'+(p.bestVerse?'<div style="font-size:13px;color:#4A3F35">'+p.bestVerse+'</div>':'')+(p.shareContent?'<div style="font-size:13px;color:#4A3F35;margin-top:2px">'+p.shareContent+'</div>':'')+'</div>';}
+    else{var isPr2=(p.postType||'prayer')==='prayer';return '<div style="border-bottom:1px solid var(--b1);padding:10px 0"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><div class="avatar" style="width:28px;height:28px;font-size:12px">'+m.emoji+'</div><span style="font-weight:700">'+m.name+'</span><span style="font-size:11px;padding:2px 6px;border-radius:6px;background:'+(isPr2?'var(--purple)':'var(--gold)')+';color:#fff">'+(isPr2?'기도':'감사')+'</span></div><div style="font-size:14px;color:#4A3F35">'+p.situation+'</div></div>';}
+  }).join('');
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📅 '+date+'</h3>'+items);
+}
+
+// ===== 캘린더 =====
+function renderCalendar(){
+  var el=document.getElementById('page-calendar');if(!AD){el.innerHTML='<div class="loading"><div class="spinner"></div></div>';return;}
+  var ms=cy+'-'+pd(cm+1),fd_=new Date(cy,cm,1).getDay(),dim=new Date(cy,cm+1,0).getDate(),ts=td();
+  var dh=['일','월','화','수','목','금','토'].map(function(d,i){return '<div style="color:'+(i===0?'var(--coral)':i===6?'var(--blue)':'var(--b5)')+'">'+d+'</div>';}).join('');
+  var cells='';for(var i=0;i<fd_;i++)cells+='<div></div>';
+  for(var d=1;d<=dim;d++){var ds=ms+'-'+pd(d),evts=(AD.calendarEvents||[]).filter(function(e){return e.date===ds;}),it=ds===ts,dow=new Date(cy,cm,d).getDay();
+    var dots=evts.slice(0,4).map(function(ev){var e=ET[ev.type]||ET.etc;return '<div class="cal-ev" style="background:'+e.c+'20;color:'+e.c+'">'+e.i+(ev.title.length>5?ev.title.slice(0,5)+'…':ev.title)+'</div>';}).join('');
+    cells+='<div class="cal-cell'+(it?' today':'')+'" onclick="showDayEvts(\''+ds+'\')"><div class="cal-day" style="color:'+(dow===0?'var(--coral)':dow===6?'var(--blue)':'#4A3F35')+';font-weight:'+(it?700:400)+'">'+d+'</div>'+dots+'</div>';}
+  var catTabs='<div style="display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap"><button class="cat-tab" onclick="cef=\'all\';renderCalendar()" style="background:'+(cef==='all'?'var(--b7)':'var(--b1)')+';color:'+(cef==='all'?'#FAF0E6':'var(--b7)')+'">전체</button>'+Object.entries(ET).map(function(entry){var k=entry[0],v=entry[1];return '<button class="cat-tab" onclick="cef=\''+k+'\';renderCalendar()" style="background:'+(cef===k?v.c:'var(--b1)')+';color:'+(cef===k?'#fff':'var(--b7)')+'">'+v.i+v.l+'</button>';}).join('')+'</div>';
+  var mEvts=(AD.calendarEvents||[]).filter(function(e){return e.date.startsWith(ms)&&(cef==='all'||e.type===cef);}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var evtList=mEvts.map(function(ev){var e=ET[ev.type]||ET.etc,dd=ev.date.split('-');return '<div class="evt-row" onclick="showEvtEdit(\''+ev.id+'\')"><div class="evt-icon" style="background:'+e.c+'18">'+e.i+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600">'+ev.title+'</div><div style="font-size:12px;color:var(--b5)">'+dd[1]+'/'+dd[2]+' · '+(ev.startTime||'')+(ev.endTime?' ~ '+ev.endTime:'')+'</div></div></div>';}).join('');
+  var tb=Object.entries(ET).map(function(entry){var k=entry[0],v=entry[1];return '<button class="cat-tab" onclick="selEt=\''+k+'\';saveEvF();renderCalendar()" style="background:'+(selEt===k?v.c:'var(--b1)')+';color:'+(selEt===k?'#fff':'var(--b7)')+'">'+v.i+v.l+'</button>';}).join('');
+  var fh=sef?'<div class="card"><div class="fg"><label class="q-label">📌 제목</label><input class="input-field" id="evT" value="'+(evFD.t||'')+'"></div><div class="fg"><label class="q-label">📅 날짜</label><input type="date" class="input-field" id="evD" value="'+(evFD.d||'')+'"></div><div class="fg" style="display:flex;gap:6px"><div style="flex:1"><label class="q-label">⏰ 시작</label><input type="time" class="input-field" id="evS" value="'+(evFD.s||'')+'"></div><div style="flex:1"><label class="q-label">⏰ 종료</label><input type="time" class="input-field" id="evE" value="'+(evFD.e||'')+'"></div></div><div class="fg"><label class="q-label">📂 카테고리</label><div style="display:flex;flex-wrap:wrap;gap:4px">'+tb+'</div></div>'+(selEt==='etc'?'<div class="fg"><input class="input-field" id="evCT" placeholder="직접 입력" value="'+(evFD.ct||'')+'"></div>':'')+'<div class="fg"><label class="q-label">📝 상세</label><textarea class="input-field" id="evDt" rows="2" style="resize:none">'+(evFD.dt||'')+'</textarea></div><button class="btn-primary" onclick="addEvt()">추가</button></div>':'';
+  el.innerHTML='<div class="card" style="margin-bottom:10px"><div class="cal-nav"><button onclick="cm===0?(cm=11,cy--):cm--;renderCalendar()">◀</button><h2>'+cy+'년 '+(cm+1)+'월</h2><button onclick="cm===11?(cm=0,cy++):cm++;renderCalendar()">▶</button></div></div><div class="card" style="margin-bottom:10px"><div class="cal-hdr">'+dh+'</div><div class="cal-grid">'+cells+'</div></div><button class="btn-dashed" onclick="sef=!sef;renderCalendar()">'+(sef?'닫기':'📅 일정 추가')+'</button>'+fh+'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:8px">이번 달 일정</div>'+catTabs+(evtList||'<div style="font-size:13px;color:var(--b5)">없음</div>')+'</div>';
+}
+function saveEvF(){var t=document.getElementById('evT'),d=document.getElementById('evD'),s=document.getElementById('evS'),e=document.getElementById('evE'),ct=document.getElementById('evCT'),dt=document.getElementById('evDt');evFD={t:t?t.value:'',d:d?d.value:'',s:s?s.value:'',e:e?e.value:'',ct:ct?ct.value:'',dt:dt?dt.value:''};}
+async function addEvt(){if(busy)return;var t=document.getElementById('evT').value,d=document.getElementById('evD').value,s=document.getElementById('evS').value,e=document.getElementById('evE').value,dt=(document.getElementById('evDt')||{}).value||'';if(!t||!d)return;var ct='';if(selEt==='etc'){var c=document.getElementById('evCT');if(c)ct=c.value;}showSub('등록 중...');await gas('addCalendarEvent',t,d,s,e,selEt,dt,ct,false);AD.calendarEvents=await gas('getCalendarEvents');sef=false;evFD={t:'',d:'',s:'',e:'',ct:'',dt:''};hideSub();renderCalendar();}
+function showDayEvts(ds){var evts=(AD.calendarEvents||[]).filter(function(e){return e.date===ds;});if(!evts.length){showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📅 '+ds+'</h3><p style="color:var(--b5);font-size:14px;margin-top:10px">일정 없음</p>');return;}
+  var items=evts.map(function(ev){var e=ET[ev.type]||ET.etc;return '<div style="border-bottom:1px solid var(--b1);padding:10px 0;cursor:pointer" onclick="closePopup();showEvtEdit(\''+ev.id+'\')"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="font-size:16px">'+e.i+'</span><span style="font-size:15px;font-weight:700">'+ev.title+'</span></div><div style="font-size:13px;color:var(--b5)">'+(ev.startTime||'')+(ev.endTime?' ~ '+ev.endTime:'')+'</div>'+(ev.detail?'<div style="font-size:13px;color:#4A3F35;margin-top:2px">'+ev.detail+'</div>':'')+'</div>';}).join('');
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📅 '+ds+'</h3>'+items);}
+function showEvtEdit(id){var ev=(AD.calendarEvents||[]).find(function(e){return e.id===id;});if(!ev)return;var e=ET[ev.type]||ET.etc;
+  var tb=Object.entries(ET).map(function(entry){var k=entry[0],v=entry[1];return '<button class="cat-tab" data-et="'+k+'" onclick="document.getElementById(\'edEvType\').value=\''+k+'\';document.querySelectorAll(\'[data-et]\').forEach(function(b){b.style.background=\'var(--b1)\';b.style.color=\'var(--b7)\';});this.style.background=\''+v.c+'\';this.style.color=\'#fff\'" style="background:'+(ev.type===k?v.c:'var(--b1)')+';color:'+(ev.type===k?'#fff':'var(--b7)')+'">'+v.i+v.l+'</button>';}).join('');
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:26px">'+e.i+'</span><h3 style="margin:0;font-size:18px">'+ev.title+'</h3></div><div style="font-size:14px;line-height:2;margin-bottom:14px">📅 '+ev.date+'<br>⏰ '+(ev.startTime||'-')+(ev.endTime?' ~ '+ev.endTime:'')+'<br>📝 '+(ev.detail||'없음')+'</div><div style="border-top:1px solid var(--b1);padding-top:14px"><div style="font-size:14px;font-weight:700;margin-bottom:10px">✏️ 수정</div><input type="hidden" id="edEvType" value="'+ev.type+'"><div class="fg"><label class="q-label">제목</label><input class="input-field" id="edEvT" value="'+ev.title+'"></div><div class="fg"><label class="q-label">날짜</label><input type="date" class="input-field" id="edEvD" value="'+ev.date+'"></div><div class="fg" style="display:flex;gap:6px"><div style="flex:1"><label class="q-label">시작</label><input type="time" class="input-field" id="edEvS" value="'+(ev.startTime||'')+'"></div><div style="flex:1"><label class="q-label">종료</label><input type="time" class="input-field" id="edEvE" value="'+(ev.endTime||'')+'"></div></div><div class="fg"><label class="q-label">카테고리</label><div style="display:flex;flex-wrap:wrap;gap:4px">'+tb+'</div></div><div class="fg"><label class="q-label">상세</label><textarea class="input-field" id="edEvDt" rows="2" style="resize:none">'+(ev.detail||'')+'</textarea></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-primary" onclick="saveEvtEdit(\''+ev.id+'\')">저장</button><button onclick="delEvt(\''+ev.id+'\')" style="padding:10px 18px;border-radius:10px;border:none;background:#E8D4D4;color:#6E2E2E;font-size:13px;cursor:pointer">🗑 삭제</button></div></div>');}
+async function saveEvtEdit(id){showSub('저장 중...');await gas('updateCalendarEvent',id,document.getElementById('edEvT').value,document.getElementById('edEvD').value,document.getElementById('edEvS').value,document.getElementById('edEvE').value,document.getElementById('edEvType').value,document.getElementById('edEvDt').value,'');AD.calendarEvents=await gas('getCalendarEvents');hideSub();closePopup();renderCalendar();}
+async function delEvt(id){showSub('삭제 중...');await gas('deleteCalendarEvent',id);AD.calendarEvents=await gas('getCalendarEvents');hideSub();closePopup();renderCalendar();}
+
+// ===== 마이페이지 =====
+function renderMyPage(){var el=document.getElementById('page-mypage');if(!AD)return;var rc=(AD.myBibleProgress||[]).length,pct=Math.round(rc/TC*100),myCh=(AD.challenges||[]).filter(function(c){return c.memberIds.includes(CU.id);}).length;
+  el.innerHTML='<div class="card"><div class="my-header"><div class="my-avatar">'+CU.emoji+'</div><div class="my-name">'+CU.name+'</div><div class="my-bio">'+(CU.bio||'여린교회')+'</div></div><div class="stat-grid"><div class="stat-item"><div class="stat-num">'+rc+'</div><div class="stat-label">읽은 장</div></div><div class="stat-item"><div class="stat-num">'+myCh+'</div><div class="stat-label">챌린지</div></div><div class="stat-item"><div class="stat-num">'+qtPosts.filter(function(p){return p.authorId===CU.id;}).length+'</div><div class="stat-label">QT</div></div><div class="stat-item"><div class="stat-num">'+prPosts.filter(function(p){return p.authorId===CU.id;}).length+'</div><div class="stat-label">기도/감사</div></div></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--gold),var(--b7))"></div></div><div style="text-align:center;font-size:11px;color:var(--b5);margin-top:3px">통독 '+pct+'%</div></div><div class="card"><div class="my-menu-item" onclick="switchTab(\'bible\')"><span class="mi-icon">📖</span>성경읽기표</div><div class="my-menu-item" onclick="switchTab(\'bible\');bsub=\'challenge\'"><span class="mi-icon">🏆</span>챌린지</div><div class="my-menu-item" onclick="switchTab(\'qt\')"><span class="mi-icon">✍️</span>QT 나눔</div><div class="my-menu-item" onclick="switchTab(\'prayer\')"><span class="mi-icon">🙏</span>기도/감사</div><div class="my-menu-item" onclick="editProfile()"><span class="mi-icon">⚙️</span>프로필 편집</div><div class="my-menu-item" onclick="doLogout()" style="color:var(--coral)"><span class="mi-icon">🚪</span>로그아웃</div></div>';}
+function editProfile(){var eo=EMOJIS.map(function(e){return '<button class="emoji-opt'+(CU.emoji===e?' sel':'')+'" onclick="document.querySelectorAll(\'.emoji-opt\').forEach(function(b){b.classList.remove(\'sel\');});this.classList.add(\'sel\');document.getElementById(\'edE\').value=\''+e+'\'" style="width:36px;height:36px;font-size:16px">'+e+'</button>';}).join('');showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>⚙️ 프로필</h3><input type="hidden" id="edE" value="'+CU.emoji+'"><div class="fg"><label class="q-label">이모지</label><div class="emoji-grid">'+eo+'</div></div><div class="fg"><label class="q-label">소개</label><input class="input-field" id="edB" value="'+(CU.bio||'')+'"></div><div class="fg"><label class="q-label">비밀번호 변경</label><input class="input-field" id="edP" type="password" placeholder="변경 시만"></div><button class="btn-primary" onclick="saveProfile()">저장</button>');}
+async function saveProfile(){showSub('저장 중...');var e=document.getElementById('edE').value,b=document.getElementById('edB').value,p=document.getElementById('edP').value;await gas('updateProfile',CU.id,e,b,p||null);CU.emoji=e;CU.bio=b;document.getElementById('profileBtn').textContent=e;hideSub();closePopup();renderMyPage();}
+
+function renderAll(){if(!CU||!AD)return;var fn={bible:renderBible,qt:renderQt,prayer:renderPrayer,calendar:renderCalendar,mypage:renderMyPage};if(fn[curTab])fn[curTab]();updateNoticeDot();}
+document.addEventListener('click',function(e){if(emo&&!e.target.closest('.edit-menu-btn')&&!e.target.closest('.edit-dropdown')){emo=null;renderAll();}});
+
+// 🚀 NEW: 앱 나가기 전 저장 중인 성경 체크 있으면 경고
+window.addEventListener('beforeunload',function(e){
+  if(Object.keys(savingChapters).length>0){
+    e.preventDefault();
+    e.returnValue='저장 중인 내용이 있습니다. 정말 나가시겠습니까?';
+    return e.returnValue;
+  }
+});
+
+// ===== 📢 공지사항 =====
+function updateNoticeDot(){
+  var notices=AD&&AD.notices?AD.notices:[];
+  var lastRead=localStorage.getItem('yeorin_notice_read')||'2000-01-01';
+  var hasNew=notices.some(function(n){return n.date>lastRead;});
+  document.getElementById('noticeDot').style.display=hasNew?'block':'none';
+}
+function showNoticeList(){
+  localStorage.setItem('yeorin_notice_read',td());
+  document.getElementById('noticeDot').style.display='none';
+  var notices=AD&&AD.notices?AD.notices:[];
+  var items='';
+  if(!notices.length)items='<div style="text-align:center;padding:24px;color:var(--b5)">공지사항이 없어요</div>';
+  else items=notices.map(function(n){var m=gm(n.authorId);var own=n.authorId===CU.id;var pin=n.pinned==='Y';
+    return '<div style="border-bottom:1px solid var(--b1);padding:14px 0"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'+(pin?'<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:var(--coral);color:#fff;font-weight:600">📌 고정</span>':'')+'<span style="font-size:15px;font-weight:700">'+n.title+'</span></div><div style="font-size:14px;color:#4A3F35;line-height:1.6;margin-bottom:4px">'+n.content.replace(/\n/g,'<br>')+'</div><div style="font-size:11px;color:var(--b5)">'+m.emoji+' '+m.name+' · '+n.date+'</div></div>'+(own?'<div style="display:flex;gap:4px;margin-left:8px;flex-shrink:0"><button onclick="editNotice(\''+n.id+'\')" style="padding:6px 10px;border-radius:6px;border:none;background:var(--b1);font-size:12px;cursor:pointer">✏️</button><button onclick="delNotice(\''+n.id+'\')" style="padding:6px 10px;border-radius:6px;border:none;background:#E8D4D4;color:#6E2E2E;font-size:12px;cursor:pointer">🗑</button></div>':'')+'</div></div>';}).join('');
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📢 공지사항</h3>'+items+'<button class="btn-dashed" style="margin-top:14px" onclick="closePopup();showNoticeForm()">📝 공지 작성</button>');
+}
+function showNoticeForm(editData){
+  var isEdit=editData&&editData.id;
+  showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>'+(isEdit?'✏️ 공지 수정':'📝 공지 작성')+'</h3><div class="fg"><label class="q-label">제목</label><input class="input-field" id="ntTitle" value="'+(isEdit?editData.title:'')+'"></div><div class="fg"><label class="q-label">내용</label><textarea class="input-field" id="ntContent" rows="4" style="resize:none">'+(isEdit?editData.content:'')+'</textarea></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--b7);cursor:pointer"><input type="checkbox" id="ntPinned"'+(isEdit&&editData.pinned==='Y'?' checked':'')+' style="accent-color:var(--b7)"> 📌 상단 고정</label></div><button class="btn-primary" onclick="'+(isEdit?'saveNoticeEdit(\''+editData.id+'\')':'submitNotice()')+'">저장</button>');
+}
+async function submitNotice(){
+  var t=document.getElementById('ntTitle').value,c=document.getElementById('ntContent').value,p=document.getElementById('ntPinned').checked;
+  if(!t||!c){alert('제목과 내용을 입력해주세요');return;}
+  showSub('공지 등록 중...');await gas('addNotice',CU.id,t,c,p);AD.notices=await gas('getNotices');hideSub();closePopup();showNoticeList();
+}
+function editNotice(nid){
+  var n=(AD.notices||[]).find(function(x){return x.id===nid;});if(!n)return;
+  closePopup();setTimeout(function(){showNoticeForm(n);},200);
+}
+async function saveNoticeEdit(nid){
+  var t=document.getElementById('ntTitle').value,c=document.getElementById('ntContent').value,p=document.getElementById('ntPinned').checked;
+  if(!t||!c){alert('제목과 내용을 입력해주세요');return;}
+  showSub('수정 중...');await gas('updateNotice',nid,CU.id,t,c,p);AD.notices=await gas('getNotices');hideSub();closePopup();showNoticeList();
+}
+async function delNotice(nid){
+  if(!confirm('이 공지를 삭제하시겠습니까?'))return;
+  showSub('삭제 중...');await gas('deleteNotice',nid,CU.id);AD.notices=await gas('getNotices');hideSub();closePopup();showNoticeList();
+}
+
+// ===== 여린이 AI =====
+// 🚀 NEW: 로딩 메시지 순환 시스템
+var yeorinLoadingTimer=null;
+function startYeorinLoading(el,messages,style){
+  var idx=0;
+  function show(){
+    var msg=messages[idx];
+    if(style==='inline'){
+      el.innerHTML='<div style="padding:10px;text-align:center"><div class="spinner" style="margin:0 auto;width:20px;height:20px;border-width:2px"></div><div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;transition:opacity .3s">'+msg+'</div></div>';
+    }else{
+      el.innerHTML='<div class="card" style="border-left:4px solid var(--green)"><div style="text-align:center;padding:8px 0"><img class="yeorin-img-lg" src="'+YIMG+'" style="height:40px;animation:pulse 1.5s infinite"><div style="font-size:14px;font-weight:700;color:var(--green);margin-top:10px;transition:opacity .3s">'+msg+'</div><div class="spinner" style="margin:12px auto 4px;width:22px;height:22px;border-width:2px"></div></div></div>';
+    }
+    idx=(idx+1)%messages.length;
+  }
+  show();
+  yeorinLoadingTimer=setInterval(show,1800);
+}
+function stopYeorinLoading(){
+  if(yeorinLoadingTimer){clearInterval(yeorinLoadingTimer);yeorinLoadingTimer=null;}
+}
+
+async function askYeorinBibleUI(bookName){
+  var ch=prompt(bookName+' 몇 장이 궁금하세요? (숫자만 입력)');
+  if(!ch||isNaN(ch))return;
+  var el=document.getElementById('yeorinBible');
+  var messages=[
+    '📖 '+bookName+' '+ch+'장을 펼치고 있어요',
+    '✨ 이 장의 배경을 살펴보고 있어요',
+    '💡 핵심 구절을 찾고 있어요',
+    '🌿 따뜻하게 정리하고 있어요',
+    '🕊️ 마지막으로 다듬는 중이에요'
+  ];
+  startYeorinLoading(el,messages,'card');
+  try{
+    var res=await gas('askYeorinBible',bookName,parseInt(ch));
+    stopYeorinLoading();
+    el.innerHTML='<div class="card" style="border-left:4px solid var(--green)"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><img class="yeorin-img-lg" src="'+YIMG+'"><span style="font-size:14px;font-weight:700;color:var(--green)">여린이의 '+bookName+' '+ch+'장 해설</span></div><div style="font-size:14px;line-height:1.7;color:#4A3F35;white-space:pre-wrap">'+res+'</div></div>';
+  }catch(e){
+    stopYeorinLoading();
+    el.innerHTML='<div class="card" style="border-left:4px solid var(--coral)"><div style="font-size:13px;color:var(--coral)">여린이가 잠시 쉬고 있어요. 다시 시도해주세요.</div></div>';
+  }
+}
+
+async function askYeorinQTUI(){
+  var b=document.getElementById('qB'),cf=document.getElementById('qCF');
+  if(!b||!cf||!b.value||!cf.value){alert('먼저 읽은 말씀의 책과 장을 입력해주세요');return;}
+  var ct=document.getElementById('qCT'),vf=document.getElementById('qVF'),vt=document.getElementById('qVT');
+  var el=document.getElementById('yeorinQT');
+  var messages=[
+    '📜 말씀을 다시 읽어보고 있어요',
+    '🤔 맥락을 이해하고 있어요',
+    '💭 어떤 질문이 도움될지 고민 중이에요',
+    '🌱 삶에 어떻게 적용될지 살피고 있어요',
+    '🙏 마음을 담아 정리하고 있어요'
+  ];
+  startYeorinLoading(el,messages,'card');
+  try{
+    var res=await gas('askYeorinQT',b.value,cf.value,(vf?vf.value:null)||'1',(ct?ct.value:null)||cf.value,(vt?vt.value:null)||'1');
+    stopYeorinLoading();
+    el.innerHTML='<div class="card" style="border-left:4px solid var(--green)"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><img class="yeorin-img-lg" src="'+YIMG+'"><span style="font-size:14px;font-weight:700;color:var(--green)">여린이의 묵상 도우미</span></div><div style="font-size:14px;line-height:1.8;color:#4A3F35;white-space:pre-wrap">'+res+'</div></div>';
+  }catch(e){
+    stopYeorinLoading();
+    el.innerHTML='<div class="card" style="border-left:4px solid var(--coral)"><div style="font-size:13px;color:var(--coral)">여린이가 잠시 쉬고 있어요. 다시 시도해주세요.</div></div>';
+  }
+}
+
+async function askYeorinPrayerUI(postId,postType){
+  var p=prPosts.find(function(x){return x.id===postId;});if(!p)return;
+  var el=document.getElementById('yeorinPr-'+postId);
+  var typeStr=postType==='thanks'?'감사제목':'기도제목';
+  var messages=[
+    '🤗 '+typeStr+'을 읽어보고 있어요',
+    '💛 마음에 공감하고 있어요',
+    '📖 힘이 되는 말씀을 찾고 있어요',
+    '✨ 따뜻한 구절을 고르고 있어요',
+    '🙏 위로의 말을 준비하고 있어요'
+  ];
+  startYeorinLoading(el,messages,'inline');
+  try{
+    var res=await gas('askYeorinPrayer',postType,p.situation);
+    stopYeorinLoading();
+    el.innerHTML='<div style="background:var(--b0);border-radius:10px;padding:12px 14px;margin-bottom:6px;border-left:3px solid var(--green)"><div style="display:flex;align-items:center;gap:4px;margin-bottom:6px"><img class="yeorin-img" src="'+YIMG+'"><span style="font-size:12px;font-weight:700;color:var(--green)">여린이의 말씀 추천</span></div><div style="font-size:13px;line-height:1.7;color:#4A3F35;white-space:pre-wrap">'+res+'</div></div>';
+  }catch(e){
+    stopYeorinLoading();
+    el.innerHTML='<div style="font-size:12px;color:var(--coral);padding:4px">여린이가 잠시 쉬고 있어요. 다시 시도해주세요.</div>';
+  }
+}
+</script>
+</body>
+</html>
