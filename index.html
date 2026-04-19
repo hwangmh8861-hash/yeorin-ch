@@ -716,6 +716,7 @@ async function delEvt(id){showSub('삭제 중...');await gas('deleteCalendarEven
 function renderHome(){
   var el=document.getElementById('page-home');
   if(!AD){el.innerHTML='<div class="loading"><div class="spinner"></div></div>';return;}
+  try{
   
   // 시간대별 인사말
   var h=new Date().getHours();
@@ -853,6 +854,10 @@ function renderHome(){
   }
   
   el.innerHTML=html;
+  }catch(e){
+    console.error('[renderHome] 에러:', e);
+    el.innerHTML='<div class="card" style="text-align:center;padding:30px 20px"><div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-size:14px;font-weight:700;color:var(--b9);margin-bottom:6px">홈 화면 로딩 중 문제가 생겼어요</div><div style="font-size:12px;color:var(--b5);line-height:1.6;margin-bottom:16px">잠시 후 다시 시도해주세요</div><button class="btn-primary" onclick="location.reload()">새로고침</button></div>';
+  }
 }
 
 // ============================================================
@@ -902,7 +907,8 @@ async function submitYeorinVerse(){
     }
   } catch(e){
     hideSub();
-    alert('오류가 발생했어요: '+String(e.message||e));
+    console.error('[yeorin verse]',e);
+    alert('여린이가 잠시 쉬고 있어요 🌿\n조금 뒤에 다시 시도해주세요.');
   }
 }
 
@@ -1126,12 +1132,21 @@ async function createWorship(){
   if(!date){alert('날짜를 선택해주세요');return;}
   var zoomUrl=_newWType==='zoom'?document.getElementById('nwZoom').value.trim():'';
   showSub('생성 중...');
-  var r=await gas('createWorship',CU.id,date,_newWType,zoomUrl);
-  // 로컬 데이터에 추가
-  worshipsData.list.unshift({id:r.id,date:date,type:_newWType,zoomUrl:zoomUrl,messageRef:'',messageTitle:'',authorId:CU.id,createdAt:new Date().toISOString()});
-  worshipsData.list.sort(function(a,b){return S(b.date).localeCompare(S(a.date));});
-  selWorshipId=r.id;worshipSub='song';
-  hideSub();closePopup();renderWorship();
+  try {
+    var r=await gas('createWorship',CU.id,date,_newWType,zoomUrl);
+    if(!r||!r.id||!r.success){
+      hideSub();
+      alert('예배 생성에 실패했어요. 잠시 후 다시 시도해주세요.\n'+(r&&r.error?r.error:''));
+      return;
+    }
+    worshipsData.list.unshift({id:r.id,date:date,type:_newWType,zoomUrl:zoomUrl,messageRef:'',messageTitle:'',authorId:CU.id,createdAt:new Date().toISOString()});
+    worshipsData.list.sort(function(a,b){return S(b.date).localeCompare(S(a.date));});
+    selWorshipId=r.id;worshipSub='song';
+    hideSub();closePopup();renderWorship();
+  } catch(e) {
+    hideSub();
+    alert('오류가 발생했어요: '+String(e.message||e));
+  }
 }
 
 function showWorshipSettings(wid){
@@ -1300,7 +1315,7 @@ function renderMyPage(){var el=document.getElementById('page-mypage');if(!AD)ret
 function editProfile(){var eo=EMOJIS.map(function(e){return '<button class="emoji-opt'+(CU.emoji===e?' sel':'')+'" onclick="document.querySelectorAll(\'.emoji-opt\').forEach(function(b){b.classList.remove(\'sel\');});this.classList.add(\'sel\');document.getElementById(\'edE\').value=\''+e+'\'" style="width:36px;height:36px;font-size:16px">'+e+'</button>';}).join('');showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>⚙️ 프로필</h3><input type="hidden" id="edE" value="'+CU.emoji+'"><div class="fg"><label class="q-label">이모지</label><div class="emoji-grid">'+eo+'</div></div><div class="fg"><label class="q-label">소개</label><input class="input-field" id="edB" value="'+(CU.bio||'')+'"></div><div class="fg"><label class="q-label">비밀번호 변경</label><input class="input-field" id="edP" type="password" placeholder="변경 시만"></div><button class="btn-primary" onclick="saveProfile()">저장</button>');}
 async function saveProfile(){showSub('저장 중...');var e=document.getElementById('edE').value,b=document.getElementById('edB').value,p=document.getElementById('edP').value;await gas('updateProfile',CU.id,e,b,p||null);CU.emoji=e;CU.bio=b;document.getElementById('profileBtn').textContent=e;hideSub();closePopup();renderMyPage();}
 
-function renderAll(){if(!CU||!AD)return;var fn={home:renderHome,bible:renderBible,worship:renderWorship,nanum:renderNanum,calendar:renderCalendar,mypage:renderMyPage};if(fn[curTab])fn[curTab]();updateNoticeDot();}
+function renderAll(){if(!CU||!AD)return;var fn={home:renderHome,bible:renderBible,worship:renderWorship,nanum:renderNanum,calendar:renderCalendar,mypage:renderMyPage};try{if(fn[curTab])fn[curTab]();}catch(e){console.error('[renderAll] '+curTab+' 에러:',e);}updateNoticeDot();}
 function renderNanum(){if(nanumSub==='qt')renderQt();else renderPrayer();}
 document.addEventListener('click',function(e){if(emo&&!e.target.closest('.edit-menu-btn')&&!e.target.closest('.edit-dropdown')){emo=null;renderAll();}});
 // 📱 브라우저 뒤로가기 지원 — 예배 상세에서 뒤로 → 목록으로
