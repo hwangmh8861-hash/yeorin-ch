@@ -274,6 +274,24 @@ input,textarea,select{font-family:inherit;}
 #nanum-tabs{position:sticky;top:0;z-index:50;background:var(--bg);padding:4px 0 8px;margin:0 -2px 14px;}
 #nanum-tabs .sub-tab{position:relative;padding:12px 6px;}
 #nanum-tabs .sub-tab .badge{top:6px;right:10px;position:absolute;}
+
+/* 시간 선택 위젯 */
+.tp-wrap{display:flex;flex-direction:column;gap:8px;background:var(--b0);padding:10px;border-radius:12px;border:1px solid #E0E8DC;}
+.tp-row{display:flex;align-items:center;gap:6px;}
+.tp-ampm{display:flex;gap:4px;flex-shrink:0;}
+.tp-ampm button{padding:8px 12px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--b5);min-width:48px;}
+.tp-ampm button.active{background:var(--b7);color:#fff;}
+.tp-num{display:flex;align-items:center;gap:2px;background:#fff;border-radius:8px;padding:2px;flex:1;min-width:0;}
+.tp-num input{flex:1;text-align:center;border:none;outline:none;font-size:16px;font-weight:700;color:var(--b9);padding:6px 0;width:100%;min-width:0;background:transparent;font-variant-numeric:tabular-nums;}
+.tp-num input::-webkit-inner-spin-button,.tp-num input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.tp-arrows{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.tp-arrows button{width:22px;height:14px;border:none;background:var(--b1);color:var(--b7);font-size:9px;cursor:pointer;border-radius:3px;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;}
+.tp-arrows button:active{background:var(--b3);}
+.tp-label{font-size:11px;color:var(--b5);font-weight:600;margin:0 2px;}
+.tp-quick{display:flex;flex-wrap:wrap;gap:4px;}
+.tp-quick button{padding:5px 10px;border-radius:999px;border:1px solid var(--b1);background:#fff;font-size:11px;font-weight:600;color:var(--b7);cursor:pointer;}
+.tp-quick button:active{background:var(--b1);}
+.tp-quick button.tp-now{background:var(--b7);color:#fff;border-color:var(--b7);}
 </style>
 </head>
 <body>
@@ -1918,9 +1936,9 @@ function renderCalendar(){
   const fh=sef?'<div class="card">'
     +'<div class="fg"><label class="q-label">📌 제목</label><input class="input-field" id="evT" value="'+escapeHtml(evFD.t||'')+'"></div>'
     +'<div class="fg"><label class="q-label">📅 날짜</label><input type="date" class="input-field" id="evD" value="'+(evFD.d||'')+'"></div>'
-    +'<div class="fg" style="display:flex;gap:6px">'
-    +'<div style="flex:1"><label class="q-label">⏰ 시작</label><input type="time" class="input-field" id="evS" value="'+(evFD.s||'')+'"></div>'
-    +'<div style="flex:1"><label class="q-label">⏰ 종료</label><input type="time" class="input-field" id="evE" value="'+(evFD.e||'')+'"></div>'
+    +'<div class="fg" style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:260px"><label class="q-label">⏰ 시작</label>'+renderTimePicker('evS',evFD.s||'')+'</div>'
+    +'<div style="flex:1;min-width:260px"><label class="q-label">⏰ 종료</label>'+renderTimePicker('evE',evFD.e||'')+'</div>'
     +'</div>'
     +'<div class="fg"><label class="q-label">📂 카테고리</label><div style="display:flex;flex-wrap:wrap;gap:4px">'+tb+'</div></div>'
     +(selEt==='etc'?'<div class="fg"><input class="input-field" id="evCT" placeholder="직접 입력" value="'+escapeHtml(evFD.ct||'')+'"></div>':'')
@@ -1954,11 +1972,12 @@ function calNext(){
 function saveEvF(){
   const t=document.getElementById('evT');
   const d=document.getElementById('evD');
-  const s=document.getElementById('evS');
-  const e=document.getElementById('evE');
   const ct=document.getElementById('evCT');
   const dt=document.getElementById('evDt');
-  evFD={t:t?t.value:'',d:d?d.value:'',s:s?s.value:'',e:e?e.value:'',ct:ct?ct.value:'',dt:dt?dt.value:''};
+  // 시간 위젯에서 값 읽기 (없으면 빈 문자열)
+  const s=document.getElementById('tp-evS')?tpGetValue('evS'):'';
+  const e=document.getElementById('tp-evE')?tpGetValue('evE'):'';
+  evFD={t:t?t.value:'',d:d?d.value:'',s:s,e:e,ct:ct?ct.value:'',dt:dt?dt.value:''};
 }
 
 // ============================================================
@@ -1967,8 +1986,8 @@ function saveEvF(){
 async function addEvt(){
   const t=document.getElementById('evT').value.trim();
   const d=document.getElementById('evD').value;
-  const s=document.getElementById('evS').value;
-  const e=document.getElementById('evE').value;
+  const s=tpGetValue('evS');
+  const e=tpGetValue('evE');
   const dt=(document.getElementById('evDt')||{}).value||'';
 
   if(!t){showToast('제목을 입력해주세요','error');return;}
@@ -2084,9 +2103,9 @@ function showEvtEdit(id){
     +'<input type="hidden" id="edEvType" value="'+ev.type+'">'
     +'<div class="fg"><label class="q-label">제목</label><input class="input-field" id="edEvT" value="'+escapeHtml(ev.title)+'"></div>'
     +'<div class="fg"><label class="q-label">날짜</label><input type="date" class="input-field" id="edEvD" value="'+ev.date+'"></div>'
-    +'<div class="fg" style="display:flex;gap:6px">'
-    +'<div style="flex:1"><label class="q-label">시작</label><input type="time" class="input-field" id="edEvS" value="'+(ev.startTime||'')+'"></div>'
-    +'<div style="flex:1"><label class="q-label">종료</label><input type="time" class="input-field" id="edEvE" value="'+(ev.endTime||'')+'"></div>'
+    +'<div class="fg" style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:260px"><label class="q-label">시작</label>'+renderTimePicker('edEvS',ev.startTime||'')+'</div>'
+    +'<div style="flex:1;min-width:260px"><label class="q-label">종료</label>'+renderTimePicker('edEvE',ev.endTime||'')+'</div>'
     +'</div>'
     +'<div class="fg"><label class="q-label">카테고리</label><div style="display:flex;flex-wrap:wrap;gap:4px">'+tb+'</div></div>'
     +'<div class="fg"><label class="q-label">상세</label><textarea class="input-field" id="edEvDt" rows="2" style="resize:none">'+escapeHtml(ev.detail||'')+'</textarea></div>'
@@ -2100,8 +2119,8 @@ function showEvtEdit(id){
 async function saveEvtEdit(id){
   const t=document.getElementById('edEvT').value.trim();
   const d=document.getElementById('edEvD').value;
-  const s=document.getElementById('edEvS').value;
-  const e=document.getElementById('edEvE').value;
+  const s=tpGetValue('edEvS');
+  const e=tpGetValue('edEvE');
   const ty=document.getElementById('edEvType').value;
   const dt=document.getElementById('edEvDt').value;
 
@@ -2142,6 +2161,154 @@ async function delEvt(id){
     showToast('삭제 실패','error');
     renderCalendar();
   }
+}
+
+// ============================================================
+// 🕐 시간 선택 위젯 (tp = Time Picker)
+// ============================================================
+// 사용법:
+//   HTML: renderTimePicker('evS', '14:30') → HTML 문자열 반환
+//   값 읽기: tpGetValue('evS') → '14:30' (24시간 "HH:MM" 형식)
+
+// "HH:MM"(24시간) → {ampm: 'am'|'pm', h12: 1~12, m: 0~59}
+function _tpParse(hhmm){
+  if(!hhmm||!/^\d{1,2}:\d{1,2}$/.test(hhmm))return{ampm:'am',h12:9,m:0}; // 기본값 오전 9시
+  const parts=hhmm.split(':');
+  let h=parseInt(parts[0])||0;
+  const m=parseInt(parts[1])||0;
+  const ampm=h>=12?'pm':'am';
+  let h12=h%12;
+  if(h12===0)h12=12;
+  return{ampm:ampm,h12:h12,m:m};
+}
+
+// {ampm, h12, m} → "HH:MM"
+function _tpFormat(ampm,h12,m){
+  let h24=h12;
+  if(ampm==='am'&&h12===12)h24=0;
+  else if(ampm==='pm'&&h12!==12)h24=h12+12;
+  return pd(h24)+':'+pd(m);
+}
+
+// 위젯 HTML 생성
+function renderTimePicker(id,value){
+  const p=_tpParse(value);
+  return '<div class="tp-wrap" id="tp-'+id+'" data-ampm="'+p.ampm+'">'
+    +'<div class="tp-row">'
+    +'<div class="tp-ampm">'
+    +'<button type="button" class="'+(p.ampm==='am'?'active':'')+'" onclick="tpSetAmpm(\''+id+'\',\'am\')">오전</button>'
+    +'<button type="button" class="'+(p.ampm==='pm'?'active':'')+'" onclick="tpSetAmpm(\''+id+'\',\'pm\')">오후</button>'
+    +'</div>'
+    +'<div class="tp-num">'
+    +'<input type="number" min="1" max="12" id="tph-'+id+'" value="'+p.h12+'" oninput="tpNormalizeH(\''+id+'\')">'
+    +'<div class="tp-arrows">'
+    +'<button type="button" onclick="tpIncHour(\''+id+'\')">▲</button>'
+    +'<button type="button" onclick="tpDecHour(\''+id+'\')">▼</button>'
+    +'</div>'
+    +'</div>'
+    +'<div class="tp-label">시</div>'
+    +'<div class="tp-num">'
+    +'<input type="number" min="0" max="59" id="tpm-'+id+'" value="'+pd(p.m)+'" oninput="tpNormalizeM(\''+id+'\')">'
+    +'<div class="tp-arrows">'
+    +'<button type="button" onclick="tpIncMin(\''+id+'\')">▲</button>'
+    +'<button type="button" onclick="tpDecMin(\''+id+'\')">▼</button>'
+    +'</div>'
+    +'</div>'
+    +'<div class="tp-label">분</div>'
+    +'</div>'
+    +'<div class="tp-quick">'
+    +'<button type="button" class="tp-now" onclick="tpSetNow(\''+id+'\')">🕐 지금</button>'
+    +'<button type="button" onclick="tpSetQuick(\''+id+'\',\'09:00\')">9시</button>'
+    +'<button type="button" onclick="tpSetQuick(\''+id+'\',\'11:00\')">11시</button>'
+    +'<button type="button" onclick="tpSetQuick(\''+id+'\',\'14:00\')">14시</button>'
+    +'<button type="button" onclick="tpSetQuick(\''+id+'\',\'19:30\')">19:30</button>'
+    +'</div>'
+    +'</div>';
+}
+
+// 현재 값 읽기 (24시간 "HH:MM")
+function tpGetValue(id){
+  const wrap=document.getElementById('tp-'+id);
+  if(!wrap)return'';
+  const ampm=wrap.getAttribute('data-ampm')||'am';
+  const h12=parseInt(document.getElementById('tph-'+id).value)||12;
+  const m=parseInt(document.getElementById('tpm-'+id).value)||0;
+  return _tpFormat(ampm,Math.min(12,Math.max(1,h12)),Math.min(59,Math.max(0,m)));
+}
+
+// 오전/오후 전환
+function tpSetAmpm(id,ampm){
+  const wrap=document.getElementById('tp-'+id);
+  if(!wrap)return;
+  wrap.setAttribute('data-ampm',ampm);
+  wrap.querySelectorAll('.tp-ampm button').forEach(function(b){b.classList.remove('active');});
+  wrap.querySelector('.tp-ampm button[onclick*="\''+ampm+'\'"]').classList.add('active');
+}
+
+// 시 증가/감소 (1~12 순환)
+function tpIncHour(id){
+  const el=document.getElementById('tph-'+id);
+  let h=parseInt(el.value)||1;
+  h=h>=12?1:h+1;
+  el.value=h;
+}
+function tpDecHour(id){
+  const el=document.getElementById('tph-'+id);
+  let h=parseInt(el.value)||1;
+  h=h<=1?12:h-1;
+  el.value=h;
+}
+
+// 분 증가/감소 (5분 단위, 0~59 순환)
+function tpIncMin(id){
+  const el=document.getElementById('tpm-'+id);
+  let m=parseInt(el.value)||0;
+  m=Math.floor(m/5)*5+5;
+  if(m>=60)m=0;
+  el.value=pd(m);
+}
+function tpDecMin(id){
+  const el=document.getElementById('tpm-'+id);
+  let m=parseInt(el.value)||0;
+  m=m<=0?55:(Math.ceil(m/5)*5-5);
+  if(m<0)m=55;
+  el.value=pd(m);
+}
+
+// 직접 입력 시 범위 보정
+function tpNormalizeH(id){
+  const el=document.getElementById('tph-'+id);
+  let h=parseInt(el.value);
+  if(isNaN(h))return;
+  if(h<1)el.value=1;
+  else if(h>12)el.value=12;
+}
+function tpNormalizeM(id){
+  const el=document.getElementById('tpm-'+id);
+  let m=parseInt(el.value);
+  if(isNaN(m))return;
+  if(m<0)el.value=0;
+  else if(m>59)el.value=59;
+}
+
+// 빠른 선택
+function tpSetQuick(id,hhmm){
+  const p=_tpParse(hhmm);
+  const wrap=document.getElementById('tp-'+id);
+  if(!wrap)return;
+  wrap.setAttribute('data-ampm',p.ampm);
+  wrap.querySelectorAll('.tp-ampm button').forEach(function(b){b.classList.remove('active');});
+  wrap.querySelector('.tp-ampm button[onclick*="\''+p.ampm+'\'"]').classList.add('active');
+  document.getElementById('tph-'+id).value=p.h12;
+  document.getElementById('tpm-'+id).value=pd(p.m);
+}
+
+// 현재 시각 (한국 시간으로)
+function tpSetNow(id){
+  const n=new Date();
+  const hh=pd(n.getHours());
+  const mm=pd(n.getMinutes());
+  tpSetQuick(id,hh+':'+mm);
 }
 
 // ============================================================
@@ -2347,7 +2514,7 @@ function renderHome(){
         const tt=ET[ev.type]||ET.etc;
         const d=S(ev.date).split('-');
         const dow=new Date(ev.date+'T00:00:00').getDay();
-        html+='<div style="display:flex;gap:12px;padding:10px 0;'+(idx<weekMax-1?'border-bottom:1px solid var(--b1)':'')+';align-items:center;cursor:pointer" onclick="switchTab(\'calendar\')">'
+        html+='<div style="display:flex;gap:12px;padding:10px 0;'+(idx<weekMax-1?'border-bottom:1px solid var(--b1)':'')+';align-items:center;cursor:pointer" onclick="showEvtEdit(\''+ev.id+'\')">'
           +'<div style="text-align:center;min-width:36px"><div style="font-size:11px;color:var(--b5);font-weight:700">'+days[dow]+'</div>'
           +'<div style="font-size:18px;font-weight:900;color:var(--b7);line-height:1">'+parseInt(d[2])+'</div></div>'
           +'<div style="flex:1;min-width:0">'
