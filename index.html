@@ -1948,6 +1948,7 @@ async function addEvt(){
       delete AD.calendarEvents[idx]._pending;
     }
     showToast('일정 등록 완료 ✓','success');
+    renderCalendar();  // 실제 ID로 DOM 다시 그려서 클릭 가능하게
   }catch(err){
     AD.calendarEvents=AD.calendarEvents.filter(function(x){return x.id!==tempId;});
     sef=true;
@@ -1967,15 +1968,42 @@ function showDayEvts(ds){
   }
   const items=evts.map(function(ev){
     const e=ET[ev.type]||ET.etc;
-    return '<div style="border-bottom:1px solid var(--b1);padding:10px 0;cursor:pointer" onclick="closePopup();showEvtEdit(\''+ev.id+'\')">'
+    return '<div style="border-bottom:1px solid var(--b1);padding:12px 0;position:relative">'
+      +'<div style="display:flex;align-items:flex-start;gap:8px">'
+      +'<div style="flex:1;cursor:pointer" onclick="closePopup();showEvtEdit(\''+ev.id+'\')">'
       +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
       +'<span style="font-size:16px">'+e.i+'</span>'
       +'<span style="font-size:15px;font-weight:700">'+escapeHtml(ev.title)+'</span></div>'
       +'<div style="font-size:13px;color:var(--b5)">'+escapeHtml(ev.startTime||'')+(ev.endTime?' ~ '+escapeHtml(ev.endTime):'')+'</div>'
       +(ev.detail?'<div style="font-size:13px;color:#4A3F35;margin-top:2px">'+escapeHtml(ev.detail)+'</div>':'')
-      +'</div>';
+      +'</div>'
+      +'<div style="display:flex;gap:4px;flex-shrink:0">'
+      +'<button onclick="closePopup();showEvtEdit(\''+ev.id+'\')" style="padding:6px 10px;border-radius:6px;border:none;background:var(--b1);font-size:12px;cursor:pointer" title="수정">✏️</button>'
+      +'<button onclick="delEvtFromDayPopup(\''+ev.id+'\',\''+ds+'\')" style="padding:6px 10px;border-radius:6px;border:none;background:#E8D4D4;color:#6E2E2E;font-size:12px;cursor:pointer" title="삭제">🗑</button>'
+      +'</div>'
+      +'</div></div>';
   }).join('');
   showPopup('<button class="popup-close" onclick="closePopup()">✕</button><h3>📅 '+ds+'</h3>'+items);
+}
+
+// 날짜 팝업에서 직접 삭제 (삭제 후 같은 팝업 다시 열기)
+async function delEvtFromDayPopup(id,ds){
+  if(!confirm('이 일정을 삭제할까요?'))return;
+  const backup=AD.calendarEvents.find(function(x){return x.id===id;});
+  AD.calendarEvents=AD.calendarEvents.filter(function(x){return x.id!==id;});
+  renderCalendar();
+  // 같은 날짜 팝업 다시 그려서 남은 일정 보여주기
+  showDayEvts(ds);
+  showToast('삭제 중...');
+  try{
+    await gas('deleteCalendarEvent',id);
+    showToast('삭제 완료 ✓','success');
+  }catch(e){
+    if(backup)AD.calendarEvents.push(backup);
+    showToast('삭제 실패','error');
+    renderCalendar();
+    showDayEvts(ds);
+  }
 }
 
 // ============================================================
