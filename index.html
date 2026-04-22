@@ -824,6 +824,58 @@ window.addEventListener('beforeunload',function(e){
     return e.returnValue;
   }
 });
+
+// ============================================================
+// 🔄 탭 복귀 시 자동 새로고침 (Visibility API)
+// ============================================================
+// 사용자가 다른 탭/앱 갔다가 돌아오면 최신 데이터 조용히 가져옴
+// - 로그인 상태에서만 동작
+// - 너무 자주 호출되지 않게 최소 10초 쿨타임
+// - 저장 중일 때나 팝업 열려있으면 스킵 (작업 방해 금지)
+let _lastRefresh=Date.now();
+const REFRESH_COOLDOWN=10000; // 10초
+
+async function refreshOnReturn(){
+  if(!CU||!AD)return;
+  if(document.hidden)return;
+  if(Date.now()-_lastRefresh<REFRESH_COOLDOWN)return;
+  // 작업 중이면 스킵
+  if(Object.keys(savingChapters).length>0)return;
+  if(document.getElementById('popupRoot').innerHTML)return;
+  if(sqf||spf||sef||schf)return; // 폼 열려있으면 스킵
+
+  _lastRefresh=Date.now();
+  try{
+    const full=await gas('loadAllData',CU.id);
+    AD.users=full.users;
+    AD.myBibleProgress=full.myBibleProgress;
+    AD.allBibleProgress=full.allBibleProgress;
+    AD.challenges=full.challenges;
+    AD.challengeCerts=full.challengeCerts;
+    AD.calendarEvents=full.calendarEvents;
+    AD.notices=full.notices;
+    if(full.worships)worshipsData=full.worships;
+    qtPosts=full.qtData.posts;
+    qtMore=full.qtData.hasMore;
+    qtPage=0;
+    prPosts=full.prayerData.posts;
+    prMore=full.prayerData.hasMore;
+    prPage=0;
+    newCounts=full.newCounts||{qt:0,prayer:0};
+    updateBadges();
+    renderAll();
+  }catch(e){
+    // 조용히 실패 (사용자 방해 금지)
+    console.warn('[auto-refresh]',e);
+  }
+}
+
+// 탭이 다시 보이게 될 때
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden)refreshOnReturn();
+});
+// 창에 포커스 들어올 때 (데스크톱에서 다른 창 갔다 올 때)
+window.addEventListener('focus',refreshOnReturn);
 // ============================================================
 // 📦 Phase 3: QT / 기도 / 공감 / 댓글
 // ============================================================
