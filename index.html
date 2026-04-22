@@ -744,13 +744,16 @@ function updateBadges(){
   ['qt','prayer'].forEach(function(t){
     const el=document.getElementById('badge-'+t);
     if(!el)return;
-    const c=newCounts[t]||0;
+    // 현재 나눔 탭에 있고, 해당 서브탭이 활성화된 상태면 배지 숨김
+    const onThisSubtab=curTab==='nanum'&&nanumSub===t;
+    const c=onThisSubtab?0:(newCounts[t]||0);
     if(c>0){el.textContent=c>99?'99+':c;el.style.display='flex';}
     else el.style.display='none';
   });
   const nb=document.getElementById('badge-nanum');
   if(nb){
-    const total=(newCounts.qt||0)+(newCounts.prayer||0);
+    // 현재 나눔 탭에 있으면 하단 배지도 숨김 (이미 보고있으니까)
+    const total=curTab==='nanum'?0:((newCounts.qt||0)+(newCounts.prayer||0));
     if(total>0){nb.textContent=total>99?'99+':total;nb.style.display='flex';}
     else nb.style.display='none';
   }
@@ -880,6 +883,11 @@ async function refreshOnReturn(){
     prMore=full.prayerData.hasMore;
     prPage=0;
     newCounts=full.newCounts||{qt:0,prayer:0};
+    // 현재 나눔 탭에 있으면 해당 서브탭을 서버에 읽음 처리 (배지가 다시 뜨지 않게)
+    if(curTab==='nanum'){
+      newCounts[nanumSub]=0;
+      try{gas('updateReadStatus',CU.id,nanumSub);}catch(e){}
+    }
     updateBadges();
     renderAll();
   }catch(e){
