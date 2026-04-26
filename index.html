@@ -503,7 +503,13 @@ input,textarea,select{font-family:inherit;}
 </style>
 </head>
 <body>
-<div id="onboarding" class="onboarding"><div class="ob-slides" id="obSlides">
+<div id="splash" style="position:fixed;inset:0;z-index:1100;background:linear-gradient(180deg,#FAFAF7,#F0F3EC);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:90px;object-fit:contain;margin-bottom:20px;animation:splashFade 1.4s ease-in-out infinite alternate">
+  <div style="font-size:13px;color:#8A9485;font-weight:700;letter-spacing:1px">여린교회 신앙관리</div>
+</div>
+<style>@keyframes splashFade{from{opacity:.55}to{opacity:1}}</style>
+
+<div id="onboarding" class="onboarding" style="display:none"><div class="ob-slides" id="obSlides">
 <div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:100px;object-fit:contain;margin-bottom:16px"><div class="ob-title">여린교회 신앙관리 시스템</div><div class="ob-desc">성경읽기 및 교재용 플랫폼에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon">📖</div><div class="ob-title">함께 읽는 성경</div><div class="ob-desc">66권 성경읽기표와 챌린지로 함께 읽어요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon">✍️</div><div class="ob-title">나누는 신앙</div><div class="ob-desc">QT 묵상, 기도·감사제목을 나누고 서로 공감해요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
@@ -754,6 +760,8 @@ function nextOb(){
 function skipOb(){
   const c=document.getElementById('obDontShow');
   obDont=c&&c.checked;
+  // 온보딩 본 것으로 기록 (다음 새로고침 시 다시 안 뜨게)
+  try{localStorage.setItem('yeorin_obSeen','1');}catch(e){}
   document.getElementById('onboarding').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
 }
@@ -776,30 +784,61 @@ function showRegister(){
 
 async function tryAuto(){
   const s=localStorage.getItem('yeorin_user');
-  if(!s)return;
+  // 저장된 정보가 없으면 → 온보딩 또는 로그인 화면 표시
+  if(!s){
+    document.getElementById('splash').style.display='none';
+    // 온보딩 본 적 있는지 체크 (간단히 로컬 플래그로)
+    const obSeen=localStorage.getItem('yeorin_obSeen');
+    if(obSeen){
+      document.getElementById('loginScreen').style.display='flex';
+    }else{
+      document.getElementById('onboarding').style.display='block';
+    }
+    return;
+  }
+  // 저장된 정보가 있으면 → 자동 로그인 시도 (스플래시 유지)
   try{
     const d=JSON.parse(s);
-    document.getElementById('onboarding').style.display='none';
-    document.getElementById('loginScreen').style.display='flex';
     document.getElementById('loginName').value=d.name;
     document.getElementById('loginPw').value=d.pw;
-    document.getElementById('loginBtn').textContent='자동 로그인 중...';
     const r=await gas('loginUser',String(d.name),String(d.pw));
     if(r.success){
       CU=r.user;
+      // 스플래시는 enterApp이 끝난 뒤 닫음 (앱이 준비된 후)
       await enterApp();
+      document.getElementById('splash').style.display='none';
+      // 마지막 보던 탭 복원
+      restoreLastTab();
     }else{
       localStorage.removeItem('yeorin_user');
+      document.getElementById('splash').style.display='none';
+      document.getElementById('loginScreen').style.display='flex';
       document.getElementById('loginBtn').textContent='로그인';
       document.getElementById('loginError').textContent='저장된 정보로 로그인할 수 없어요. 다시 입력해주세요.';
       document.getElementById('loginPw').value='';
     }
   }catch(e){
     localStorage.removeItem('yeorin_user');
+    document.getElementById('splash').style.display='none';
+    document.getElementById('loginScreen').style.display='flex';
     document.getElementById('loginBtn').textContent='로그인';
   }
 }
-setTimeout(function(){try{tryAuto();}catch(e){}},500);
+setTimeout(function(){try{tryAuto();}catch(e){}},300);
+
+// 마지막 탭 저장/복원
+function saveLastTab(tab){
+  try{localStorage.setItem('yeorin_lastTab',tab);}catch(e){}
+}
+function restoreLastTab(){
+  try{
+    const t=localStorage.getItem('yeorin_lastTab');
+    // 항상 메인 또는 마지막 탭으로
+    if(t&&t!=='mypage'&&t!==curTab){
+      switchTab(t);
+    }
+  }catch(e){}
+}
 
 async function doLogin(){
   const n=document.getElementById('loginName').value.trim();
@@ -917,6 +956,7 @@ async function enterApp(){
 function doLogout(){
   CU=null;AD=null;curTab='main';
   localStorage.removeItem('yeorin_user');
+  localStorage.removeItem('yeorin_lastTab');
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('loginName').value='';
@@ -970,6 +1010,7 @@ function switchTab(id){
     if(btabs[tabIdx[id]])btabs[tabIdx[id]].classList.add('active');
   }
   if(id==='nanum')markRead(nanumSub);
+  saveLastTab(id);
   window.scrollTo({top:0,behavior:'smooth'});
   renderAll();
 }
