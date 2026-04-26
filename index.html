@@ -55,8 +55,24 @@ input,textarea,select{font-family:inherit;}
 
 .app{display:none;}
 .top-bar{background:linear-gradient(135deg,var(--deep),var(--b9));padding:18px 22px;color:#F0F5E8;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200;}
-.top-bar-left{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.top-bar-left{display:flex;align-items:center;gap:10px;}
 .profile-btn{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);font-size:18px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
+
+/* 사이드 메뉴 (햄버거) */
+.side-menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:550;opacity:0;pointer-events:none;transition:opacity .25s;}
+.side-menu-overlay.open{opacity:1;pointer-events:auto;}
+.side-menu{position:fixed;top:0;left:0;bottom:0;width:80%;max-width:300px;background:var(--bg);z-index:551;transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.7,.3,1);box-shadow:6px 0 24px rgba(0,0,0,.18);display:flex;flex-direction:column;}
+.side-menu.open{transform:translateX(0);}
+.side-menu-hdr{padding:24px 22px 18px;background:linear-gradient(135deg,var(--deep),var(--b7));color:#fff;}
+.side-menu-hdr .smh-title{font-size:18px;font-weight:900;letter-spacing:-.4px;}
+.side-menu-hdr .smh-sub{font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;}
+.side-menu-list{flex:1;overflow-y:auto;padding:8px 0;}
+.side-menu-item{display:flex;align-items:center;gap:14px;padding:16px 22px;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-size:15px;font-weight:600;color:var(--b9);transition:.15s;font-family:inherit;}
+.side-menu-item:active{background:var(--b1);}
+.side-menu-item .smi-icon{font-size:22px;width:28px;text-align:center;flex-shrink:0;}
+.side-menu-item .smi-arrow{margin-left:auto;color:var(--b3);font-size:14px;}
+.side-menu-divider{height:1px;background:var(--b1);margin:6px 22px;}
+.side-menu-foot{padding:14px 22px;font-size:11px;color:var(--b5);text-align:center;border-top:1px solid var(--b1);}
 
 .bottom-bar{position:fixed;bottom:12px;left:12px;right:12px;background:var(--card);border:1px solid var(--b1);border-radius:22px;box-shadow:0 6px 20px rgba(30,50,30,.08);z-index:200;padding:6px;max-width:calc(var(--max) - 24px);margin:0 auto;}
 .bottom-inner{display:flex;}
@@ -73,26 +89,6 @@ input,textarea,select{font-family:inherit;}
 @media(min-width:1024px){:root{--max:720px;}}
 
 /* ===== Phase A: 메인 페이지 박스 ===== */
-.main-hero{padding:18px 4px 24px;}
-.main-hero .greet-date{font-size:12px;color:var(--b5);letter-spacing:1px;font-weight:700;margin-bottom:4px;}
-.main-hero .greet-msg{font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1.3;color:var(--b9);}
-.main-hero .greet-msg .accent{color:var(--b7);}
-.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
-.main-box{background:var(--card);border:1px solid rgba(208,216,202,.5);border-radius:20px;padding:22px 18px;cursor:pointer;transition:.18s;box-shadow:var(--shadow);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;min-height:148px;}
-.main-box:active{transform:scale(.97);}
-.main-box.featured{grid-column:span 2;background:linear-gradient(135deg,var(--deep),var(--b7));color:#fff;border:none;min-height:130px;}
-.main-box .mb-icon{font-size:34px;margin-bottom:10px;line-height:1;}
-.main-box.featured .mb-icon{font-size:38px;}
-.main-box .mb-title{font-size:15px;font-weight:800;letter-spacing:-.4px;color:var(--b9);margin-bottom:4px;}
-.main-box.featured .mb-title{color:#fff;font-size:18px;}
-.main-box .mb-sub{font-size:11px;color:var(--b5);font-weight:600;line-height:1.5;}
-.main-box.featured .mb-sub{color:var(--accent);}
-.main-box .mb-arrow{position:absolute;right:14px;top:14px;font-size:13px;color:var(--b5);font-weight:700;}
-.main-box.featured .mb-arrow{color:var(--accent);}
-.main-box.coming{background:var(--b0);border-style:dashed;}
-.main-box.coming .mb-icon{opacity:.55;}
-.main-box.coming .mb-title{color:var(--b5);}
-.main-box.coming .mb-badge{position:absolute;top:14px;right:14px;font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:999px;background:var(--b1);color:var(--b7);}
 
 .coming-wrap{padding:60px 24px;text-align:center;}
 .coming-wrap .cw-icon{font-size:60px;margin-bottom:16px;}
@@ -503,10 +499,9 @@ input,textarea,select{font-family:inherit;}
 <div id="registerScreen" class="auth-screen" style="display:none"><div class="auth-box"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:80px;object-fit:contain;margin-bottom:10px"><h1>회원가입</h1><p class="sub">여린교회 신앙관리 시스템</p><div class="fg"><input class="input-field" id="regName" placeholder="이름" style="text-align:center;font-weight:600"></div><div class="fg"><input class="input-field" id="regPw" type="password" placeholder="비밀번호" style="text-align:center"></div><div class="fg"><input class="input-field" id="regPw2" type="password" placeholder="비밀번호 확인" style="text-align:center"></div><p style="font-size:10px;color:var(--b5);margin-bottom:4px">이모지 선택</p><div class="emoji-grid" id="emojiGrid"></div><div class="fg"><input class="input-field" id="regBio" placeholder="한 줄 소개 (선택)" style="text-align:center;font-size:12px"></div><div class="error-msg" id="regError"></div><button class="btn-full btn-primary" onclick="doRegister()" id="regBtn">가입하기</button><div class="auth-toggle">이미 계정이 있으신가요? <a onclick="showLogin()">로그인</a></div></div></div>
 
 <div id="app" class="app">
-<div class="top-bar"><div class="top-bar-left" onclick="goMain()"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:44px;object-fit:contain"></div><div style="display:flex;align-items:center;gap:8px"><button id="noticeBtn" onclick="showNoticeList()" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer">🔔<span id="noticeDot" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--coral)"></span></button><button class="profile-btn" id="profileBtn" onclick="showMyPage()"></button></div></div>
+<div class="top-bar"><div class="top-bar-left"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:44px;object-fit:contain"></div><div style="display:flex;align-items:center;gap:8px"><button id="menuBtn" onclick="openSideMenu()" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer" title="더보기">☰</button><button id="noticeBtn" onclick="showNoticeList()" style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer">🔔<span id="noticeDot" style="display:none;position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--coral)"></span></button><button class="profile-btn" id="profileBtn" onclick="showMyPage()"></button></div></div>
 <div class="content">
-<div class="page active" id="page-main"></div>
-<div class="page" id="page-home"></div>
+<div class="page active" id="page-home"></div>
 <div class="page" id="page-bible"></div>
 <div class="page" id="page-worship"></div>
 <div class="page" id="page-nanum">
@@ -524,13 +519,28 @@ input,textarea,select{font-family:inherit;}
 <div class="page" id="page-finance"></div>
 </div>
 <div class="bottom-bar"><div class="bottom-inner">
-<button class="btab active" onclick="switchTab('main')"><span class="bico">🏡</span>메인</button>
-<button class="btab" onclick="switchTab('home')"><span class="bico">🏠</span>홈</button>
+<button class="btab active" onclick="switchTab('home')"><span class="bico">🏠</span>홈</button>
 <button class="btab" onclick="switchTab('bible')"><span class="bico">📖</span>성경</button>
+<button class="btab" onclick="switchTab('worship')"><span class="bico">⛪</span>예배</button>
 <button class="btab" onclick="switchTab('nanum')"><span class="bico">💛</span>나눔<span class="badge" id="badge-nanum" style="display:none"></span></button>
 <button class="btab" onclick="switchTab('calendar')"><span class="bico">📅</span>캘린더</button>
 </div></div></div>
 <div id="popupRoot"></div>
+<div id="sideMenuOverlay" class="side-menu-overlay" onclick="closeSideMenu()"></div>
+<div id="sideMenu" class="side-menu">
+  <div class="side-menu-hdr">
+    <div class="smh-title">⛪ 여린교회</div>
+    <div class="smh-sub">신앙관리 시스템</div>
+  </div>
+  <div class="side-menu-list">
+    <button class="side-menu-item" onclick="sideMenuGo('addressbook')"><span class="smi-icon">📇</span><span>여린 주소록</span><span class="smi-arrow">›</span></button>
+    <button class="side-menu-item" onclick="sideMenuGo('neighbors')"><span class="smi-icon">💛</span><span>여린 이웃</span><span class="smi-arrow">›</span></button>
+    <button class="side-menu-item" onclick="sideMenuGo('finance')"><span class="smi-icon">💰</span><span>재정 현황</span><span class="smi-arrow">›</span></button>
+    <div class="side-menu-divider"></div>
+    <button class="side-menu-item" onclick="sideMenuOpenMyPage()"><span class="smi-icon">👤</span><span>마이페이지</span><span class="smi-arrow">›</span></button>
+  </div>
+  <div class="side-menu-foot">v1.0 · 여린교회</div>
+</div>
 <div id="toast" class="toast" style="display:none"><span class="dot"></span><span id="toastMsg">저장 중...</span></div>
 
 <script>
@@ -582,7 +592,7 @@ const TC=BIBLE.reduce((s,b)=>s+b.c,0);
 
 // 상태 (전역)
 let CU=null,AD=null;
-let curTab='main',nanumSub='qt',worshipSub='song';
+let curTab='home',nanumSub='qt',worshipSub='song';
 let selWorshipId=null,bsub='reading',selBook=null,viewChId=null,groupOpen=false;
 let worshipsData={list:[],songs:[],shares:[]};
 let schf=false,sqf=false,spf=false,sef=false,emo=null,selEmoji=0,selEt='worship';
@@ -684,23 +694,12 @@ function skeletonHome(){
     +'<div class="sk-box" style="height:100px;border-radius:18px"></div></div>'
     +'<div class="sk-box" style="width:100%;height:200px;border-radius:18px"></div>';
 }
-function skeletonMain(){
-  return '<div class="sk-box" style="width:60%;height:24px;margin-bottom:12px;border-radius:8px"></div>'
-    +'<div class="sk-box" style="width:40%;height:16px;margin-bottom:20px;border-radius:6px"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div class="sk-box" style="grid-column:span 2;height:130px;border-radius:20px"></div>'
-    +'<div class="sk-box" style="height:148px;border-radius:20px"></div>'
-    +'<div class="sk-box" style="height:148px;border-radius:20px"></div>'
-    +'<div class="sk-box" style="height:148px;border-radius:20px"></div>'
-    +'</div>';
-}
 function loadingView(type,label){
   type=type||'home';
   label=label||'잠시만요';
   let skeleton='';
   if(type==='home')skeleton=skeletonHome();
   else if(type==='bible')skeleton=skeletonBible();
-  else if(type==='main')skeleton=skeletonMain();
   else skeleton=skeletonCards(3);
   const v=randomVerse();
   return '<div class="load-wrap">'
@@ -832,8 +831,8 @@ async function enterApp(){
   document.getElementById('profileBtn').textContent=CU.emoji;
   if(obDont)try{await gas('setOnboardingSeen',CU.id);}catch(e){}
 
-  // 메인 페이지에 로딩 화면
-  document.getElementById('page-main').innerHTML=loadingView('main','여린교회에 오신 걸 환영해요');
+  // 홈 페이지에 로딩 화면
+  document.getElementById('page-home').innerHTML=loadingView('home','여린교회에 오신 걸 환영해요');
 
   try{
     // 1단계: 가벼운 데이터만 먼저
@@ -877,7 +876,7 @@ async function enterApp(){
 
     loadYeorinDailyVerse();
   }catch(e){
-    document.getElementById('page-main').innerHTML=
+    document.getElementById('page-home').innerHTML=
       '<div class="loading">로딩 실패<br><br>'
       +'<button class="btn-primary" onclick="location.reload()">새로고침</button><br>'
       +'<button class="btn-primary" style="background:var(--coral);margin-top:8px" onclick="localStorage.removeItem(\'yeorin_user\');location.reload()">로그아웃</button>'
@@ -886,7 +885,7 @@ async function enterApp(){
 }
 
 function doLogout(){
-  CU=null;AD=null;curTab='main';
+  CU=null;AD=null;curTab='home';
   localStorage.removeItem('yeorin_user');
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
@@ -918,12 +917,7 @@ async function markRead(t){
   }catch(e){}
 }
 
-// 상단바 로고 → 메인으로
-function goMain(){
-  switchTab('main');
-}
-
-// 탭 전환 - main 라우팅 추가
+// 탭 전환
 function switchTab(id){
   curTab=id;
   selBook=null;
@@ -934,8 +928,8 @@ function switchTab(id){
   const target=document.getElementById('page-'+id);
   if(target)target.classList.add('active');
   document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});
-  // 하단 탭바 활성화: 메인/홈/성경/나눔/캘린더 5개만
-  const tabIdx={main:0,home:1,bible:2,nanum:3,calendar:4};
+  // 하단 탭바 활성화: 홈/성경/예배/나눔/캘린더
+  const tabIdx={home:0,bible:1,worship:2,nanum:3,calendar:4};
   if(tabIdx[id]!==undefined){
     const btabs=document.querySelectorAll('.btab');
     if(btabs[tabIdx[id]])btabs[tabIdx[id]].classList.add('active');
@@ -964,11 +958,29 @@ function showMyPage(){
   renderMyPage();
 }
 
-// 전체 렌더 - main / addressbook / neighbors / finance 추가
+// 햄버거 사이드 메뉴
+function openSideMenu(){
+  document.getElementById('sideMenuOverlay').classList.add('open');
+  document.getElementById('sideMenu').classList.add('open');
+}
+function closeSideMenu(){
+  document.getElementById('sideMenuOverlay').classList.remove('open');
+  document.getElementById('sideMenu').classList.remove('open');
+}
+function sideMenuGo(tab){
+  closeSideMenu();
+  // 약간 딜레이 줘서 메뉴 닫히는 애니메이션 보이게
+  setTimeout(function(){switchTab(tab);},120);
+}
+function sideMenuOpenMyPage(){
+  closeSideMenu();
+  setTimeout(function(){showMyPage();},120);
+}
+
+// 전체 렌더
 function renderAll(){
   if(!CU||!AD)return;
   const fn={
-    main:renderMain,
     home:renderHome,
     bible:renderBible,
     worship:renderWorship,
@@ -984,57 +996,6 @@ function renderAll(){
 }
 function renderNanum(){
   if(nanumSub==='qt')renderQt();else renderPrayer();
-}
-
-// ============================================================
-// 메인 페이지 (Phase A)
-// ============================================================
-function renderMain(){
-  const el=document.getElementById('page-main');
-  if(!AD){el.innerHTML=loadingView('main','메인을 준비하고 있어요');return;}
-
-  const h=new Date().getHours();
-  const greet=h<6?'평안한 새벽이에요':h<12?'좋은 아침이에요':h<18?'오후의 평안을':h<22?'좋은 저녁이에요':'평안한 밤 되세요';
-  const now=new Date();
-  const days=['일','월','화','수','목','금','토'];
-  const dateStr=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 '+days[now.getDay()]+'요일';
-
-  let html='<div class="main-hero">'
-    +'<div class="greet-date">'+escapeHtml(dateStr)+'</div>'
-    +'<div class="greet-msg">'+greet+',<br><span class="accent">'+escapeHtml(CU.name)+'</span>님</div>'
-    +'</div>'
-    +'<div class="main-grid">'
-    // 1. 여린교회 입장 (큰 박스)
-    +'<div class="main-box featured" onclick="switchTab(\'home\')">'
-    +'<div class="mb-arrow">→</div>'
-    +'<div class="mb-icon">⛪</div>'
-    +'<div class="mb-title">여린교회 입장하기</div>'
-    +'<div class="mb-sub">성경 · 예배 · 나눔 · 캘린더</div>'
-    +'</div>'
-    // 2. 여린 주소록
-    +'<div class="main-box" onclick="switchTab(\'addressbook\')">'
-    +'<div class="mb-arrow">→</div>'
-    +'<div class="mb-icon">📇</div>'
-    +'<div class="mb-title">여린 주소록</div>'
-    +'<div class="mb-sub">교인 연락처</div>'
-    +'</div>'
-    // 3. 여린 이웃
-    +'<div class="main-box" onclick="switchTab(\'neighbors\')">'
-    +'<div class="mb-arrow">→</div>'
-    +'<div class="mb-icon">💛</div>'
-    +'<div class="mb-title">여린 이웃</div>'
-    +'<div class="mb-sub">후원 단체 정보</div>'
-    +'</div>'
-    // 4. 재정 현황
-    +'<div class="main-box" onclick="switchTab(\'finance\')" style="grid-column:span 2">'
-    +'<div class="mb-arrow">→</div>'
-    +'<div class="mb-icon">💰</div>'
-    +'<div class="mb-title">재정 현황</div>'
-    +'<div class="mb-sub">헌금 · 지출 내역</div>'
-    +'</div>'
-    +'</div>';
-
-  el.innerHTML=html;
 }
 
 // 전역 이벤트
@@ -2637,7 +2598,6 @@ function renderHome(){
     +'<div style="font-size:24px;font-weight:900;letter-spacing:-.6px;margin-top:2px">'+escapeHtml(CU.name)+'님</div></div>'
     +verseCard
     +statCards
-    +'<button class="btn-dashed" style="border-color:var(--b7);color:var(--b7)" onclick="switchTab(\'worship\')">⛪ 예배로 들어가기</button>'
     +weekCard
     +worshipCard
     +nanumCard;
@@ -2688,7 +2648,7 @@ function renderMyPage(){
   const myQT=qtPosts.filter(function(p){return p.authorId===CU.id;}).length;
   const myPr=prPosts.filter(function(p){return p.authorId===CU.id;}).length;
 
-  el.innerHTML='<button class="back-btn" onclick="switchTab(curTab===\'mypage\'?\'main\':curTab)">← 닫기</button>'
+  el.innerHTML='<button class="back-btn" onclick="switchTab(curTab===\'mypage\'?\'home\':curTab)">← 닫기</button>'
     +'<div class="my-header">'
     +'<div class="my-avatar">'+CU.emoji+'</div>'
     +'<div class="my-name">'+escapeHtml(CU.name)+'</div>'
@@ -3488,7 +3448,7 @@ function renderAddressBook(){
   filtered.sort(function(a,b){return sortKey(a.name).localeCompare(sortKey(b.name),'ko');});
 
   // 헤더
-  let html='<button class="back-btn" onclick="switchTab(\'main\')">← 메인으로</button>'
+  let html='<button class="back-btn" onclick="switchTab(\'home\')">← 홈으로</button>'
     +'<div class="ab-header">'
     +'<div class="ab-title">📇 여린 주소록</div>'
     +'<div class="ab-count">총 '+contacts.length+'명'+(filtered.length!==contacts.length?' · 검색 결과 '+filtered.length+'명':'')+'</div>'
@@ -3934,7 +3894,7 @@ function renderNeighbors(){
   filtered.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'ko');});
 
   // 헤더
-  let html='<button class="back-btn" onclick="switchTab(\'main\')">← 메인으로</button>'
+  let html='<button class="back-btn" onclick="switchTab(\'home\')">← 홈으로</button>'
     +'<div class="nb-header">'
     +'<div class="nb-title">💛 여린 이웃</div>'
     +'<div class="nb-sub">우리 교회가 함께하는 이웃들이에요<br>총 '+list.length+'곳'+(filtered.length!==list.length?' · 필터 결과 '+filtered.length+'곳':'')+'</div>'
@@ -4293,7 +4253,7 @@ function renderFinance(){
   const monthBalance=monthIncome-monthExpense;
 
   // 헤더
-  let html='<button class="back-btn" onclick="switchTab(\'main\')">← 메인으로</button>'
+  let html='<button class="back-btn" onclick="switchTab(\'home\')">← 홈으로</button>'
     +'<div class="fin-header">'
     +'<div class="fin-title">💰 재정 현황</div>'
     +'<div class="fin-sub">투명하게 함께 보는 우리 교회 재정</div>'
