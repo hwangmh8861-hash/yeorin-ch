@@ -2619,8 +2619,8 @@ async function loadYeorinDailyVerse(){
   }
   try{
     const r=await gas('getDailyVerseForUser',CU.id);
-    if(r&&r.text){
-      _yeorinDailyVerseCache={text:r.text,reference:r.reference};
+    if(r&&r.verseText){
+      _yeorinDailyVerseCache={text:r.verseText,reference:r.verseRef,message:r.yeorinMessage};
       _yeorinDailyVerseDate=today;
       if(curTab==='home')renderHome();
     }
@@ -2637,10 +2637,12 @@ function renderHome(){
   // 오늘의 말씀
   let verseCard='';
   if(_yeorinDailyVerseCache){
+    const msg=_yeorinDailyVerseCache.message;
     verseCard='<div class="verse-card">'
       +'<div class="verse-label">✦ 오늘의 말씀 ✦</div>'
       +'<div class="verse-text">'+escapeHtml(_yeorinDailyVerseCache.text)+'</div>'
       +'<div class="verse-ref">— '+escapeHtml(_yeorinDailyVerseCache.reference||'')+'</div>'
+      +(msg?'<div style="margin-top:14px;padding:12px 14px;background:rgba(255,255,255,.45);border-radius:12px;font-size:13px;line-height:1.7;color:#3D4A38;display:flex;gap:8px;align-items:flex-start"><img class="yeorin-img" src="'+YIMG+'" style="height:20px;flex-shrink:0;margin-top:1px"><div style="white-space:pre-wrap">'+escapeHtml(msg)+'</div></div>':'')
       +'<button class="btn-pill" style="background:var(--b1);color:var(--b7);font-size:11px;margin-top:10px" onclick="showYeorinVerseInput()"><img class="yeorin-img" src="'+YIMG+'" style="height:14px"> 다른 말씀 받기</button>'
       +'</div>';
   }else{
@@ -2772,8 +2774,8 @@ async function submitYeorinVerse(){
   if(btn){btn.disabled=true;btn.textContent='여린이가 묵상 중...';}
   try{
     const r=await gas('getDailyVerseForUser',CU.id,text);
-    if(r&&r.text){
-      _yeorinDailyVerseCache={text:r.text,reference:r.reference};
+    if(r&&r.verseText){
+      _yeorinDailyVerseCache={text:r.verseText,reference:r.verseRef,message:r.yeorinMessage};
       _yeorinDailyVerseDate=td();
       closePopup();
       renderHome();
@@ -3456,10 +3458,10 @@ async function askYeorinBibleUI(book){
   try{
     const r=await gas('askYeorinBible',book);
     stopYeorinLoading('yeorinBible');
-    if(r&&r.text){
+    if(r){
       el.innerHTML='<div class="card" style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:18px;margin-bottom:14px">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><img src="'+YIMG+'" class="yeorin-img-lg"><div style="font-size:13px;font-weight:800;color:var(--b7)">여린이의 한마디</div></div>'
-        +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(r.text)+'</div>'
+        +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(String(r))+'</div>'
         +'</div>';
     }
   }catch(e){
@@ -3482,10 +3484,10 @@ async function askYeorinQTUI(){
   try{
     const r=await gas('askYeorinQT',passage);
     stopYeorinLoading('yeorinQT');
-    if(r&&r.text){
+    if(r){
       el.innerHTML='<div class="card" style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:18px;margin-bottom:14px">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><img src="'+YIMG+'" class="yeorin-img-lg"><div style="font-size:13px;font-weight:800;color:var(--b7)">여린이의 묵상 도우미</div></div>'
-        +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(r.text)+'</div>'
+        +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(String(r))+'</div>'
         +'</div>';
     }
   }catch(e){
@@ -3503,10 +3505,10 @@ async function askYeorinPrayerUI(postId,postType){
     const r=await gas('askYeorinPrayer',p.situation,postType||'prayer');
     stopYeorinLoading(elId);
     const el=document.getElementById(elId);
-    if(el&&r&&r.text){
+    if(el&&r){
       el.innerHTML='<div style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:14px;border-radius:10px;margin:8px 0">'
         +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><img src="'+YIMG+'" class="yeorin-img"><div style="font-size:12px;font-weight:800;color:var(--b7)">여린이의 말씀</div></div>'
-        +'<div style="font-size:13px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(r.text)+'</div>'
+        +'<div style="font-size:13px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(String(r))+'</div>'
         +'</div>';
     }
   }catch(e){
