@@ -851,13 +851,20 @@ setTimeout(function(){try{tryAuto();}catch(e){}},300);
 
 // 마지막 탭 저장/복원
 function saveLastTab(tab){
-  try{localStorage.setItem('yeorin_lastTab',tab);}catch(e){}
+  try{
+    localStorage.setItem('yeorin_lastTab',tab);
+    localStorage.setItem('yeorin_lastTabAt',String(Date.now()));
+  }catch(e){}
 }
 function restoreLastTab(){
   try{
     const t=localStorage.getItem('yeorin_lastTab');
-    // 항상 메인 또는 마지막 탭으로
-    if(t&&t!=='mypage'&&t!==curTab){
+    const at=parseInt(localStorage.getItem('yeorin_lastTabAt')||'0',10);
+    const elapsed=Date.now()-at;
+    const RESTORE_LIMIT=30*60*1000; // 30분
+    // 30분 지났으면 메인홈에서 시작 (복원하지 않음)
+    if(!t||!at||elapsed>RESTORE_LIMIT)return;
+    if(t!=='mypage'&&t!==curTab){
       switchTab(t);
     }
   }catch(e){}
@@ -982,6 +989,7 @@ function doLogout(){
   CU=null;AD=null;curTab='main';
   localStorage.removeItem('yeorin_user');
   localStorage.removeItem('yeorin_lastTab');
+  localStorage.removeItem('yeorin_lastTabAt');
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('loginName').value='';
