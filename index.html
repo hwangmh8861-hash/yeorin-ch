@@ -3452,15 +3452,26 @@ function stopYeorinLoading(elId){
 }
 
 async function askYeorinBibleUI(book){
+  // 책의 총 장수 찾기
+  const bk=BIBLE.find(function(b){return b.n===book;});
+  const maxCh=bk?bk.c:0;
+  // 장 입력 받기 (간단 prompt)
+  const input=prompt(book+' 몇 장이 궁금하세요?\n(1~'+maxCh+'장)');
+  if(input===null)return; // 취소
+  const ch=parseInt(input,10);
+  if(!ch||ch<1||(maxCh&&ch>maxCh)){
+    showToast('1~'+maxCh+'장 사이로 입력해주세요','error');
+    return;
+  }
   const el=document.getElementById('yeorinBible');
   if(!el)return;
-  startYeorinLoading('yeorinBible',['여린이가 말씀을 묵상 중...','관련 구절을 찾고 있어요...','적용점을 정리하고 있어요...']);
+  startYeorinLoading('yeorinBible',['여린이가 '+book+' '+ch+'장을 묵상 중...','관련 구절을 찾고 있어요...','적용점을 정리하고 있어요...']);
   try{
-    const r=await gas('askYeorinBible',book);
+    const r=await gas('askYeorinBible',book,ch);
     stopYeorinLoading('yeorinBible');
     if(r){
       el.innerHTML='<div class="card" style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:18px;margin-bottom:14px">'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><img src="'+YIMG+'" class="yeorin-img-lg"><div style="font-size:13px;font-weight:800;color:var(--b7)">여린이의 한마디</div></div>'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><img src="'+YIMG+'" class="yeorin-img-lg"><div style="font-size:13px;font-weight:800;color:var(--b7)">여린이의 '+escapeHtml(book)+' '+ch+'장 해설</div></div>'
         +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(String(r))+'</div>'
         +'</div>';
     }
