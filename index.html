@@ -3472,26 +3472,47 @@ async function submitYeorinBible(book,maxCh){
     return;
   }
   closePopup();
-  const el=document.getElementById('yeorinBible');
+  // 팝업 닫힌 후 DOM 안정화 대기
+  await new Promise(function(rs){setTimeout(rs,80);});
+  let el=document.getElementById('yeorinBible');
+  if(!el){
+    // 다시 한번 시도 (혹시 렌더 중일 수 있음)
+    await new Promise(function(rs){setTimeout(rs,200);});
+    el=document.getElementById('yeorinBible');
+  }
   if(!el){
     showToast('성경 화면에서 다시 시도해주세요','error');
+    console.warn('[여린이] yeorinBible 요소 없음');
     return;
   }
   startYeorinLoading('yeorinBible',['여린이가 '+book+' '+ch+'장을 묵상 중...','관련 구절을 찾고 있어요...','적용점을 정리하고 있어요...']);
   try{
     const r=await gas('askYeorinBible',book,ch);
     stopYeorinLoading('yeorinBible');
-    if(r){
-      el.innerHTML='<div class="card" style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:18px;margin-bottom:14px">'
+    // 응답 받은 시점의 fresh DOM 참조
+    const elNow=document.getElementById('yeorinBible');
+    if(!elNow){
+      showToast('말씀: '+book+' '+ch+'장 해설이 도착했어요','success');
+      console.warn('[여린이] 응답 후 yeorinBible 요소 없음. 답변:',r);
+      return;
+    }
+    if(r&&String(r).trim()){
+      elNow.innerHTML='<div class="card" style="background:linear-gradient(135deg,#F5F7F3,#EAEEE4);border-left:4px solid var(--green);padding:18px;margin-bottom:14px">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><img src="'+YIMG+'" class="yeorin-img-lg"><div style="font-size:13px;font-weight:800;color:var(--b7)">여린이의 '+escapeHtml(book)+' '+ch+'장 해설</div></div>'
         +'<div style="font-size:14px;line-height:1.7;color:#3D4A38;white-space:pre-wrap">'+escapeHtml(String(r))+'</div>'
         +'</div>';
+      // 결과 카드로 스크롤
+      setTimeout(function(){elNow.scrollIntoView({behavior:'smooth',block:'center'});},100);
     }else{
-      el.innerHTML='<div class="card" style="background:#FFF0F0;color:var(--coral);font-size:13px">여린이가 응답하지 못했어요. 다시 시도해주세요.</div>';
+      elNow.innerHTML='<div class="card" style="background:#FFF0F0;color:var(--coral);font-size:13px">여린이가 응답하지 못했어요. 다시 시도해주세요.</div>';
     }
   }catch(e){
     stopYeorinLoading('yeorinBible');
-    el.innerHTML='<div class="card" style="background:#FFF0F0;color:var(--coral);font-size:13px">여린이가 답변하지 못했어요. 다시 시도해주세요.</div>';
+    const elNow=document.getElementById('yeorinBible');
+    if(elNow){
+      elNow.innerHTML='<div class="card" style="background:#FFF0F0;color:var(--coral);font-size:13px">여린이가 답변하지 못했어요. 다시 시도해주세요.<br><small style="font-size:11px;opacity:.7">'+escapeHtml(String(e))+'</small></div>';
+    }
+    console.error('[여린이 성경]',e);
   }
 }
 
