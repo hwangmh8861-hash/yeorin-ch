@@ -3772,11 +3772,17 @@ function setAbRoleFilter(role){
   abRoleFilter=role;
   renderAddressBook();
 }
-
+// ===== 전화번호 앞자리 0 복원 =====
+function normalizePhone(phone){
+  const d=String(phone||'').replace(/[^\d]/g,'');
+  if(!d)return'';
+  if(d.charAt(0)!=='0'&&(d.length===9||d.length===10))return'0'+d;
+  return d;
+}
 // ===== 전화번호 포맷 =====
 function formatPhone(phone){
   if(!phone)return'';
-  const d=String(phone).replace(/[^\d]/g,'');
+  const d=normalizePhone(phone);
   if(d.length===11)return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
   if(d.length===10){
     if(d.startsWith('02'))return d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6);
@@ -3799,7 +3805,7 @@ function renderContactDetail(){
 
   const initial=String(c.name||'?').charAt(0);
   const phoneFmt=formatPhone(c.phone);
-  const phoneDigits=String(c.phone||'').replace(/[^\d+]/g,'');
+  const phoneDigits=normalizePhone(c.phone);
   const bdLabel=c.birthdayType==='lunar'?'음력':'양력';
   const bdDisplay=c.birthday?(c.birthday+' ('+bdLabel+')'):'';
 
