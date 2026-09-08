@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>여린교회 신앙관리</title>
 <!-- PWA 설정 -->
 <link rel="manifest" href="/manifest.json">
@@ -524,7 +524,7 @@ input,textarea,select{font-family:inherit;}
 <div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:100px;object-fit:contain;margin-bottom:16px"><div class="ob-title">여린교회 신앙관리 시스템</div><div class="ob-desc">성경읽기 및 교재용 플랫폼에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon">📖</div><div class="ob-title">함께 읽는 성경</div><div class="ob-desc">66권 성경읽기표와 챌린지로 함께 읽어요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon">✍️</div><div class="ob-title">나누는 신앙</div><div class="ob-desc">QT 묵상, 기도·감사제목을 나누고 서로 공감해요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
-<div class="ob-slide"><div class="ob-icon">⛪</div><div class="ob-title">지금 시작하세요</div><div class="ob-desc">계정을 만들고 시작해보세요!</div><label style="display:flex;align-items:center;gap:6px;margin-top:16px;font-size:12px;color:var(--b5);cursor:pointer"><input type="checkbox" id="obDontShow"> 다시 보지 않기</label><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><div class="ob-btns"><button class="ob-btn ob-start" onclick="skipOb()">시작하기</button></div></div>
+<div class="ob-slide"><div class="ob-icon">⛪</div><div class="ob-title">지금 시작하세요</div><div class="ob-desc">계정을 만들고 시작해보세요!</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><div class="ob-btns"><button class="ob-btn ob-start" onclick="skipOb()">시작하기</button></div></div>
 </div></div>
 
 <div id="loginScreen" class="auth-screen" style="display:none"><div class="auth-box"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:80px;object-fit:contain;margin-bottom:10px"><h1>로그인</h1><p class="sub">여린교회 신앙관리 시스템</p><div class="fg"><input class="input-field" id="loginName" placeholder="이름" style="text-align:center;font-weight:600"></div><div class="fg"><input class="input-field" id="loginPw" type="password" placeholder="비밀번호" style="text-align:center"></div><div class="error-msg" id="loginError"></div><button class="btn-full btn-primary" onclick="doLogin()" id="loginBtn">로그인</button><div class="auth-toggle">계정이 없으신가요? <a onclick="showRegister()">회원가입</a></div></div></div>
@@ -645,6 +645,12 @@ let newCounts={qt:0,prayer:0};
 let savingChapters={};
 let obP=0,obDont=false;
 let _newWType='onsite';
+// 미니 캘린더 전용 연/월 (메인 캘린더와 분리)
+let mcY=_now.getFullYear(),mcM=_now.getMonth();
+// 저장 실패 시 입력 복구용 임시 보관
+let qtDraft=null,prDraft=null;
+// 성경 체크 배치 전송용
+let _bibleQueue={},_bibleTimer=null;
 
 // 유틸 함수
 const pd=n=>String(n).padStart(2,'0');
@@ -769,8 +775,6 @@ function nextOb(){
   document.getElementById('obSlides').style.transform='translateX(-'+obP*25+'%)';
 }
 function skipOb(){
-  const c=document.getElementById('obDontShow');
-  obDont=c&&c.checked;
   // 온보딩 본 것으로 기록 (다음 새로고침 시 다시 안 뜨게)
   try{localStorage.setItem('yeorin_obSeen','1');}catch(e){}
   document.getElementById('onboarding').style.display='none';
@@ -949,9 +953,9 @@ async function enterApp(){
       newCounts:light.newCounts,
       notices:light.notices,
       worships:{list:[],songs:[],shares:[]},
-      contacts:light.contacts||[],
-      neighbors:light.neighbors||[],
-      finance:light.finance||[]
+      contacts:null,
+      neighbors:null,
+      finance:null
     };
     qtPosts=AD.qtData.posts;qtMore=AD.qtData.hasMore;
     prPosts=AD.prayerData.posts;prMore=AD.prayerData.hasMore;
@@ -969,10 +973,17 @@ async function enterApp(){
         AD.challenges=full.challenges;
         AD.challengeCerts=full.challengeCerts;
         if(full.worships)worshipsData=full.worships;
-        if(full.contacts)AD.contacts=full.contacts;
-        if(full.neighbors)AD.neighbors=full.neighbors;
-        if(full.finance)AD.finance=full.finance;
-      }catch(e){console.warn('[background load]',e);}
+        AD.contacts=full.contacts||[];
+        AD.neighbors=full.neighbors||[];
+        AD.finance=full.finance||[];
+        renderAll();
+      }catch(e){
+        console.warn('[background load]',e);
+        if(AD.contacts===null)AD.contacts=[];
+        if(AD.neighbors===null)AD.neighbors=[];
+        if(AD.finance===null)AD.finance=[];
+        renderAll();
+      }
     })();
 
     loadYeorinDailyVerse();
@@ -1012,12 +1023,11 @@ function updateBadges(){
     else nb.style.display='none';
   }
 }
-async function markRead(t){
-  try{
-    await gas('updateReadStatus',CU.id,t);
-    newCounts[t]=0;
-    updateBadges();
-  }catch(e){}
+function markRead(t){
+  if(!newCounts[t])return; // 이미 읽음 → 서버 요청 생략
+  newCounts[t]=0;
+  updateBadges();
+  gas('updateReadStatus',CU.id,t).catch(function(){});
 }
 
 // 상단 로고 → 메인홈
@@ -1032,6 +1042,8 @@ function switchTab(id){
   viewChId=null;
   savingChapters={};
   if(id!=='worship')selWorshipId=null;
+  if(id!=='addressbook')selContactId=null;
+  if(id!=='neighbors')selNeighborId=null;
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   const target=document.getElementById('page-'+id);
   if(target)target.classList.add('active');
@@ -1184,40 +1196,35 @@ window.addEventListener('beforeunload',function(e){
 
 // 자동 새로고침
 let _lastRefresh=Date.now();
-const REFRESH_COOLDOWN=10000;
+const REFRESH_COOLDOWN=60000; // 앱 복귀마다 전체를 다시 받지 않도록 60초
 
 async function refreshOnReturn(){
   if(!CU||!AD)return;
   if(document.hidden)return;
   if(Date.now()-_lastRefresh<REFRESH_COOLDOWN)return;
   if(Object.keys(savingChapters).length>0)return;
+  if(_bibleTimer)return;
   if(document.getElementById('popupRoot').innerHTML)return;
   if(sqf||spf||sef||schf)return;
 
   _lastRefresh=Date.now();
   try{
-    const full=await gas('loadAllData',CU.id);
-    AD.users=full.users;
-    AD.myBibleProgress=full.myBibleProgress;
-    AD.allBibleProgress=full.allBibleProgress;
-    AD.challenges=full.challenges;
-    AD.challengeCerts=full.challengeCerts;
-    AD.calendarEvents=full.calendarEvents;
-    AD.notices=full.notices;
-    if(full.worships)worshipsData=full.worships;
-    if(full.contacts)AD.contacts=full.contacts;
-    if(full.neighbors)AD.neighbors=full.neighbors;
-    if(full.finance)AD.finance=full.finance;
-    qtPosts=full.qtData.posts;
-    qtMore=full.qtData.hasMore;
+    // 자주 바뀌는 것만 (성경/챌린지/주소록/이웃/재정 제외)
+    // 현재 보고 있는 필터를 그대로 넘겨 필터가 초기화되지 않게 함
+    const r=await gas('loadRefreshData',CU.id,qtFilter,prFilter);
+    AD.users=r.users;
+    AD.calendarEvents=r.calendarEvents;
+    AD.notices=r.notices;
+    qtPosts=r.qtData.posts;
+    qtMore=r.qtData.hasMore;
     qtPage=0;
-    prPosts=full.prayerData.posts;
-    prMore=full.prayerData.hasMore;
+    prPosts=r.prayerData.posts;
+    prMore=r.prayerData.hasMore;
     prPage=0;
-    newCounts=full.newCounts||{qt:0,prayer:0};
+    newCounts=r.newCounts||{qt:0,prayer:0};
     if(curTab==='nanum'){
       newCounts[nanumSub]=0;
-      try{gas('updateReadStatus',CU.id,nanumSub);}catch(e){}
+      gas('updateReadStatus',CU.id,nanumSub).catch(function(){});
     }
     updateBadges();
     renderAll();
@@ -1227,7 +1234,12 @@ async function refreshOnReturn(){
 }
 
 document.addEventListener('visibilitychange',function(){
-  if(!document.hidden)refreshOnReturn();
+  if(document.hidden){
+    // 앱을 벗어날 때 대기 중인 성경 체크를 즉시 전송
+    if(_bibleTimer){clearTimeout(_bibleTimer);flushBibleQueue();}
+  }else{
+    refreshOnReturn();
+  }
 });
 window.addEventListener('focus',refreshOnReturn);
 // ============================================================
@@ -1261,15 +1273,13 @@ async function togRx(type,id,key){
   else it.reactions[key].push(CU.id);
   type==='qt'?renderQt():renderPrayer();
 
-  try{
-    await gas('toggleReaction',type,id,key,CU.id);
-  }catch(e){
+  gas('toggleReaction',type,id,key,CU.id).catch(function(e){
     const idx2=it.reactions[key].indexOf(CU.id);
     if(wasActive){if(idx2===-1)it.reactions[key].push(CU.id);}
     else{if(idx2>-1)it.reactions[key].splice(idx2,1);}
     type==='qt'?renderQt():renderPrayer();
     showToast('공감 저장 실패, 다시 시도해주세요','error');
-  }
+  });
 }
 
 // 댓글 렌더 - c.t 본문은 c-body가 white-space:pre-wrap 가짐 (CSS에서 적용됨)
@@ -1294,17 +1304,16 @@ async function addCm(type,id){
   it.comments.push(tempCmt);
   inp.value='';
   type==='qt'?renderQt():renderPrayer();
-  try{
-    const res=await gas('addComment',type,id,CU.id,t);
+  gas('addComment',type,id,CU.id,t).then(function(res){
     if(res&&res.id){
       const cmt=it.comments.find(function(c){return c.id===tempId;});
       if(cmt)cmt.id=res.id;
     }
-  }catch(e){
+  }).catch(function(e){
     it.comments=it.comments.filter(function(c){return c.id!==tempId;});
     type==='qt'?renderQt():renderPrayer();
     showToast('댓글 저장 실패, 다시 시도해주세요','error');
-  }
+  });
 }
 
 async function delCm(cid,type){
@@ -1319,16 +1328,14 @@ async function delCm(cid,type){
   });
   arr.forEach(function(p){if(p.comments)p.comments=p.comments.filter(function(c){return c.id!==cid;});});
   type==='qt'?renderQt():renderPrayer();
-  try{
-    await gas('deleteComment',cid,CU.id);
-  }catch(e){
+  gas('deleteComment',cid,CU.id).catch(function(e){
     backup.forEach(function(b){
       const p=arr.find(function(x){return x.id===b.postId;});
       if(p){if(!p.comments)p.comments=[];p.comments.push(b.cmt);}
     });
     type==='qt'?renderQt():renderPrayer();
     showToast('댓글 삭제 실패, 다시 시도해주세요','error');
-  }
+  });
 }
 
 // QT (qt-section은 CSS에 white-space:pre-wrap 적용됨)
@@ -1377,6 +1384,7 @@ function renderQt(){
   }
 
   el.innerHTML='<button class="btn-dashed" onclick="sqf=!sqf;renderQt()">'+(sqf?'닫기':'✍️ 묵상 나누기')+'</button>'+form+viewTabs+content;
+  if(sqf&&qtDraft)applyQtDraft();
 }
 
 async function chgQtF(f){
@@ -1422,14 +1430,32 @@ async function addQT(){
     const r=await gas('addQTPost',CU.id,b,cf,ct,vf||'1',vt||vf||'1',bv,ap,sh,qq);
     const idx=qtPosts.findIndex(function(p){return p.id===tempId;});
     if(idx>=0&&r&&r.id){qtPosts[idx].id=r.id;qtPosts[idx]._pending=false;}
+    qtDraft=null;
     showToast('저장 완료 ✓','success');
     renderQt();
   }catch(e){
     qtPosts=qtPosts.filter(function(p){return p.id!==tempId;});
+    // 애써 쓴 내용이 날아가지 않도록 보관했다가 폼에 다시 채웁니다
+    qtDraft={b:b,cf:cf,vf:vf,ct:ct,vt:vt,bv:bv,ap:ap,sh:sh,qq:qq};
     sqf=true;
     showToast('저장 실패, 다시 시도해주세요','error');
     renderQt();
   }
+}
+
+// 저장 실패로 보관해 둔 QT 입력을 폼에 되돌려 놓기
+function applyQtDraft(){
+  if(!qtDraft)return;
+  const set=function(id,v){const el=document.getElementById(id);if(el&&v!==undefined&&v!==null)el.value=v;};
+  set('qB',qtDraft.b);
+  set('qCF',qtDraft.cf);
+  set('qVF',qtDraft.vf);
+  set('qCT',qtDraft.ct);
+  set('qVT',qtDraft.vt);
+  set('qBV',qtDraft.bv);
+  set('qAP',qtDraft.ap);
+  set('qSH',qtDraft.sh);
+  set('qQQ',qtDraft.qq);
 }
 
 async function delQT(id){
@@ -1556,6 +1582,7 @@ function renderPrayer(){
   }
 
   el.innerHTML='<button class="btn-dashed" onclick="spf=!spf;renderPrayer()">'+(spf?'닫기':'🙏 기도/감사 올리기')+'</button>'+form+viewTabs+content;
+  if(spf&&prDraft)applyPrDraft();
 }
 
 function selectPt(type){
@@ -1626,14 +1653,28 @@ async function addPr(){
     const r=await gas('addPrayerPost',CU.id,pt,ty,ct,co);
     const idx=prPosts.findIndex(function(p){return p.id===tempId;});
     if(idx>=0&&r&&r.id){prPosts[idx].id=r.id;prPosts[idx]._pending=false;}
+    prDraft=null;
     showToast('저장 완료 ✓','success');
     renderPrayer();
   }catch(e){
     prPosts=prPosts.filter(function(p){return p.id!==tempId;});
+    prDraft={pt:pt,ty:ty,ct:ct,co:co};
     spf=true;
     showToast('저장 실패, 다시 시도해주세요','error');
     renderPrayer();
   }
+}
+
+// 저장 실패로 보관해 둔 기도/감사 입력을 폼에 되돌려 놓기
+function applyPrDraft(){
+  if(!prDraft)return;
+  const ty=document.getElementById('pTy');
+  if(ty&&prDraft.ty){ty.value=prDraft.ty;togglePCu();}
+  const cu=document.getElementById('pCu');
+  if(cu&&prDraft.ct)cu.value=prDraft.ct;
+  const co=document.getElementById('pCo');
+  if(co&&prDraft.co)co.value=prDraft.co;
+  if(prDraft.pt)selectPt(prDraft.pt);
 }
 
 async function delPr(id){
@@ -1715,7 +1756,7 @@ function renderBible(){
   if(!AD){el.innerHTML=loadingView('bible','성경을 불러오고 있어요');return;}
 
   const myBP=AD.myBibleProgress||[];
-  const rc=myBP.length;
+  const rc=new Set(myBP).size;
   const pct=Math.round(rc/TC*100);
 
   const myCard='<div class="card" style="cursor:pointer" onclick="showReadDetail(\''+CU.id+'\')">'
@@ -1735,7 +1776,7 @@ function renderBible(){
 
   const rows=(AD.users||[]).map(function(u){
     const me=u.id===CU.id;
-    const cnt=me?rc:((AD.allBibleProgress||{})[u.id]||[]).length;
+    const cnt=me?rc:new Set((AD.allBibleProgress||{})[u.id]||[]).size;
     const p=Math.round(cnt/TC*100);
     return '<div class="member-row" onclick="showReadDetail(\''+u.id+'\')">'
       +'<div class="avatar" style="width:24px;height:24px;font-size:11px;'+(me?'border:2px solid var(--gold)':'')+'">'+u.emoji+'</div>'
@@ -1809,14 +1850,15 @@ function renderReading(bpSet){
   return cats;
 }
 
-async function toggleCh(bi,ch){
+// 연속으로 여러 장을 체크해도 요청이 하나씩 줄서지 않도록
+// 1초 동안 모았다가 한 번에 보냅니다.
+function toggleCh(bi,ch){
   const k=bi+'-'+ch;
-  if(savingChapters[k])return;
-
   const bp=AD.myBibleProgress;
   const abp=AD.allBibleProgress;
   const wasChecked=bp.indexOf(k)>-1;
 
+  // 화면 먼저 반영
   if(wasChecked){
     const idxs=[];
     bp.forEach(function(v,i){if(v===k)idxs.push(i);});
@@ -1832,31 +1874,50 @@ async function toggleCh(bi,ch){
     abp[CU.id].push(k);
   }
 
+  // 같은 장을 여러 번 눌러도 최종 상태만 큐에 남음
+  _bibleQueue[k]=!wasChecked;
   savingChapters[k]=true;
-  showToast('저장 중...');
   renderBible();
 
+  if(_bibleTimer)clearTimeout(_bibleTimer);
+  _bibleTimer=setTimeout(flushBibleQueue,1000);
+}
+
+async function flushBibleQueue(){
+  _bibleTimer=null;
+  const keys=Object.keys(_bibleQueue);
+  if(!keys.length)return;
+
+  const items=keys.map(function(k){return{key:k,checked:_bibleQueue[k]};});
+  const sent=Object.assign({},_bibleQueue);
+  _bibleQueue={};
+
+  showToast('저장 중...');
   try{
-    await gas('toggleBibleChapter',CU.id,k);
-    delete savingChapters[k];
-    showToast('저장됨','success');
+    await gas('toggleBibleChapters',CU.id,items);
+    keys.forEach(function(k){delete savingChapters[k];});
+    showToast('저장됨 ✓','success');
     renderBible();
   }catch(e){
-    delete savingChapters[k];
-    if(wasChecked){
-      bp.push(k);
-      if(!abp[CU.id])abp[CU.id]=[];
-      abp[CU.id].push(k);
-    }else{
-      const idxs=[];
-      bp.forEach(function(v,i){if(v===k)idxs.push(i);});
-      for(let i=idxs.length-1;i>=0;i--)bp.splice(idxs[i],1);
-      if(abp[CU.id]){
-        const ai=[];
-        abp[CU.id].forEach(function(v,i){if(v===k)ai.push(i);});
-        for(let i=ai.length-1;i>=0;i--)abp[CU.id].splice(ai[i],1);
+    const bp=AD.myBibleProgress;
+    const abp=AD.allBibleProgress;
+    keys.forEach(function(k){
+      delete savingChapters[k];
+      if(sent[k]){
+        // 추가하려던 것 → 화면에서 제거
+        let i=bp.indexOf(k);
+        while(i>-1){bp.splice(i,1);i=bp.indexOf(k);}
+        if(abp[CU.id]){
+          let j=abp[CU.id].indexOf(k);
+          while(j>-1){abp[CU.id].splice(j,1);j=abp[CU.id].indexOf(k);}
+        }
+      }else{
+        // 지우려던 것 → 되살리기
+        if(bp.indexOf(k)===-1)bp.push(k);
+        if(!abp[CU.id])abp[CU.id]=[];
+        if(abp[CU.id].indexOf(k)===-1)abp[CU.id].push(k);
       }
-    }
+    });
     showToast('저장 실패, 다시 시도해주세요','error');
     renderBible();
   }
@@ -1864,7 +1925,7 @@ async function toggleCh(bi,ch){
 
 function showReadDetail(uid){
   const usr=gm(uid);
-  const bp=uid===CU.id?(AD.myBibleProgress||[]):((AD.allBibleProgress||{})[uid]||[]);
+  const bp=Array.from(new Set(uid===CU.id?(AD.myBibleProgress||[]):((AD.allBibleProgress||{})[uid]||[])));
   const rc=bp.length;
   const pct=Math.round(rc/TC*100);
 
@@ -2529,9 +2590,9 @@ function tpSetNow(id){
 
 // 미니 캘린더
 function renderMiniCal(type,posts){
-  const ms=cy+'-'+pd(cm+1);
-  const fd_=new Date(cy,cm,1).getDay();
-  const dim=new Date(cy,cm+1,0).getDate();
+  const ms=mcY+'-'+pd(mcM+1);
+  const fd_=new Date(mcY,mcM,1).getDay();
+  const dim=new Date(mcY,mcM+1,0).getDate();
 
   const dateCounts={};
   posts.forEach(function(p){
@@ -2552,18 +2613,18 @@ function renderMiniCal(type,posts){
 
   return '<div class="card"><div class="cal-nav">'
     +'<button onclick="miniCalPrev(\''+type+'\')">◀</button>'
-    +'<h2>'+cy+'년 '+(cm+1)+'월</h2>'
+    +'<h2>'+mcY+'년 '+(mcM+1)+'월</h2>'
     +'<button onclick="miniCalNext(\''+type+'\')">▶</button>'
     +'</div></div>'
     +'<div class="card mini-cal"><div class="mc-hdr">'+dh+'</div><div class="mc-grid">'+cells+'</div></div>';
 }
 
 function miniCalPrev(type){
-  if(cm===0){cm=11;cy--;}else{cm--;}
+  if(mcM===0){mcM=11;mcY--;}else{mcM--;}
   if(type==='qt')renderQt();else renderPrayer();
 }
 function miniCalNext(type){
-  if(cm===11){cm=0;cy++;}else{cm++;}
+  if(mcM===11){mcM=0;mcY++;}else{mcM++;}
   if(type==='qt')renderQt();else renderPrayer();
 }
 
@@ -2571,10 +2632,8 @@ function miniCalNext(type){
 async function showDatePosts(type,date){
   showToast('불러오는 중...');
   try{
-    const r=type==='qt'
-      ?await gas('getQTPosts','all',0,100)
-      :await gas('getPrayerPosts','all',0,100);
-    const filtered=r.posts.filter(function(p){return p.date===date;});
+    const r=await gas('getPostsByDate',type,date);
+    const filtered=r.posts||[];
     hideToast();
 
     if(!filtered.length){
@@ -2665,7 +2724,7 @@ function renderHome(){
 
   // 스탯카드 - 성경읽기 + 챌린지
   const myBP=AD.myBibleProgress||[];
-  const rcnt=myBP.length;
+  const rcnt=new Set(myBP).size;
   const rpct=Math.round(rcnt/TC*100);
   const myChs=(AD.challenges||[]).filter(function(c){return c.status==='active'&&c.memberIds.includes(CU.id);});
 
@@ -2805,7 +2864,7 @@ function renderMyPage(){
   if(!AD){el.innerHTML=loadingView('mypage','정보를 불러오고 있어요');return;}
 
   const myBP=AD.myBibleProgress||[];
-  const rcnt=myBP.length;
+  const rcnt=new Set(myBP).size;
   const rpct=Math.round(rcnt/TC*100);
   const myChs=(AD.challenges||[]).filter(function(c){return c.memberIds.includes(CU.id);});
   const myQT=qtPosts.filter(function(p){return p.authorId===CU.id;}).length;
@@ -3144,7 +3203,7 @@ async function saveSongEdit(id){
   renderWorship();
   showToast('저장 중...');
   try{
-    await gas('updateSong',id,title,artist,url);
+    await gas('updateSong',id,title,artist,url,CU.id);
     showToast('저장 완료 ✓','success');
   }catch(e){
     Object.assign(s,backup);
@@ -3162,7 +3221,7 @@ async function deleteSong(id){
   renderWorship();
   showToast('삭제 중...');
   try{
-    await gas('deleteSong',id);
+    await gas('deleteSong',id,CU.id);
     showToast('삭제 완료 ✓','success');
   }catch(e){
     worshipsData.songs.push(backup);
@@ -3377,7 +3436,7 @@ async function submitNotice(){
   closePopup();
   showToast('등록 중...');
   try{
-    const r=await gas('addNotice',t,c,CU.id);
+    const r=await gas('addNotice',CU.id,t,c);
     if(r&&r.id){
       AD.notices.unshift({id:r.id,title:t,content:c,authorId:CU.id,date:td()});
       localStorage.setItem('yeorin_lastNotice',r.id);
@@ -3410,7 +3469,7 @@ async function saveNoticeEdit(id){
   closePopup();
   showToast('저장 중...');
   try{
-    await gas('updateNotice',id,t,c,CU.id);
+    await gas('updateNotice',id,CU.id,t,c);
     showToast('저장 완료 ✓','success');
     showNoticeList();
   }catch(e){
@@ -3641,7 +3700,7 @@ function matchesSearch(contact,query){
 // ===== 메인 렌더 =====
 function renderAddressBook(){
   const el=document.getElementById('page-addressbook');
-  if(!AD){el.innerHTML=loadingView('mypage','주소록을 불러오고 있어요');return;}
+  if(!AD||AD.contacts===null){el.innerHTML=loadingView('mypage','주소록을 불러오고 있어요');return;}
 
   // 상세 페이지 모드
   if(selContactId){
@@ -4009,7 +4068,7 @@ async function doDeleteContact(id){
   renderAddressBook();
   showToast('삭제 중...');
   try{
-    await gas('deleteContact',id);
+    await gas('deleteContact',id,CU.id);
     showToast('삭제 완료 ✓','success');
   }catch(e){
     AD.contacts.push(backup);
@@ -4093,7 +4152,7 @@ function nbMatchesSearch(nb,query){
 // ===== 메인 렌더 =====
 function renderNeighbors(){
   const el=document.getElementById('page-neighbors');
-  if(!AD){el.innerHTML=loadingView('mypage','이웃을 불러오고 있어요');return;}
+  if(!AD||AD.neighbors===null){el.innerHTML=loadingView('mypage','이웃을 불러오고 있어요');return;}
 
   // 상세 페이지 모드
   if(selNeighborId){
@@ -4407,7 +4466,7 @@ async function doDeleteNeighbor(id){
   renderNeighbors();
   showToast('삭제 중...');
   try{
-    await gas('deleteNeighbor',id);
+    await gas('deleteNeighbor',id,CU.id);
     showToast('삭제 완료 ✓','success');
   }catch(e){
     AD.neighbors.push(backup);
@@ -4461,7 +4520,7 @@ function fmtMoneyShort(n){
 // ===== 메인 렌더 =====
 function renderFinance(){
   const el=document.getElementById('page-finance');
-  if(!AD){el.innerHTML=loadingView('mypage','재정 정보를 불러오고 있어요');return;}
+  if(!AD||AD.finance===null){el.innerHTML=loadingView('mypage','재정 정보를 불러오고 있어요');return;}
 
   const allRecords=AD.finance||[];
   const ms=finYear+'-'+pd(finMonth+1);
@@ -4858,7 +4917,7 @@ async function doDeleteFinance(id){
   renderFinance();
   showToast('삭제 중...');
   try{
-    await gas('deleteFinance',id);
+    await gas('deleteFinance',id,CU.id);
     showToast('삭제 완료 ✓','success');
   }catch(e){
     AD.finance.push(backup);
