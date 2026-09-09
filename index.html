@@ -98,11 +98,11 @@ input,textarea,select{font-family:inherit;}
    ============================================================ */
 .app{display:none;}
 
-.hero{background:linear-gradient(160deg,var(--brand) 0%,var(--brand2) 100%);color:#fff;padding:14px 0 34px;position:relative;}
+.hero{background:linear-gradient(160deg,var(--brand) 0%,var(--brand2) 100%);color:#fff;padding:12px 0 34px;position:relative;}
 .hero-inner{max-width:var(--max);margin:0 auto;padding:0 20px;}
 .hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .hero-logo{display:flex;align-items:center;gap:8px;cursor:pointer;}
-.hero-logo img{height:38px;object-fit:contain;}
+.hero-logo img{height:52px;object-fit:contain;filter:brightness(0) invert(1);}
 .hero-btns{display:flex;align-items:center;gap:8px;}
 .hero-btn{width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;backdrop-filter:blur(8px);transition:.15s;}
 .hero-btn:active{background:rgba(255,255,255,.3);}
@@ -406,8 +406,8 @@ input,textarea,select{font-family:inherit;}
 
 .ico{display:inline-block;vertical-align:-.18em;flex-shrink:0;}
 .icon-box{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.yeorin-img{height:22px;vertical-align:-.32em;margin-right:5px;}
-.yeorin-img-lg{height:30px;margin-right:7px;vertical-align:middle;}
+.yeorin-img{height:30px;vertical-align:-.45em;margin-right:6px;}
+.yeorin-img-lg{height:40px;margin-right:9px;vertical-align:middle;}
 .yeorin-full{display:block;margin:0 auto;}
 
 /* ============================================================
@@ -505,7 +505,7 @@ input,textarea,select{font-family:inherit;}
 </style>
 
 <div id="onboarding" class="onboarding" style="display:none"><div class="ob-slides" id="obSlides">
-<div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1JVJTRwC-9P_-w4FJx4772G23QZpB1Hmn" style="height:140px;object-fit:contain;margin-bottom:12px"><div class="ob-title">여린교회 신앙관리</div><div class="ob-desc">성경읽기와 나눔을 함께하는 공간에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
+<div class="ob-slide"><img src="/yeorin-full.png" style="height:180px;object-fit:contain;margin-bottom:14px"><div class="ob-title">여린교회 신앙관리</div><div class="ob-desc">성경읽기와 나눔을 함께하는 공간에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="book" data-size="52"></div><div class="ob-title">함께 읽는 성경</div><div class="ob-desc">66권 성경읽기표와 챌린지로 함께 읽어요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="write" data-size="52"></div><div class="ob-title">나누는 신앙</div><div class="ob-desc">QT 묵상, 기도·감사제목을 나누고 서로 공감해요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="church" data-size="52"></div><div class="ob-title">지금 시작하세요</div><div class="ob-desc">계정을 만들고 시작해보세요!</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><div class="ob-btns"><button class="ob-btn ob-start" onclick="skipOb()">시작하기</button></div></div>
@@ -638,8 +638,8 @@ function ico(name,size,color){
 
 // 상수
 // 여린이 캐릭터 — 작은 자리엔 얼굴, 큰 자리엔 전신
-const YIMG='https://lh3.googleusercontent.com/d/1LlBwjkTPw8S-cJa4xlQ6W0fPX--XxYzY';
-const YIMG_FULL='https://lh3.googleusercontent.com/d/1JVJTRwC-9P_-w4FJx4772G23QZpB1Hmn';
+const YIMG='/yeorin-face.png';
+const YIMG_FULL='/yeorin-full.png';
 const EMOJIS=["🕊️","✝️","🌿","💛","☀️","🙏","⭐","🌸","🌊","🔥","🦋","🌈","💎","🎵","📖","🍞"];
 
 const BIBLE=[{n:"창세기",c:50,cat:"모세오경"},{n:"출애굽기",c:40,cat:"모세오경"},{n:"레위기",c:27,cat:"모세오경"},{n:"민수기",c:36,cat:"모세오경"},{n:"신명기",c:34,cat:"모세오경"},{n:"여호수아",c:24,cat:"역사서"},{n:"사사기",c:21,cat:"역사서"},{n:"룻기",c:4,cat:"역사서"},{n:"사무엘상",c:31,cat:"역사서"},{n:"사무엘하",c:24,cat:"역사서"},{n:"열왕기상",c:22,cat:"역사서"},{n:"열왕기하",c:25,cat:"역사서"},{n:"역대상",c:29,cat:"역사서"},{n:"역대하",c:36,cat:"역사서"},{n:"에스라",c:10,cat:"역사서"},{n:"느헤미야",c:13,cat:"역사서"},{n:"에스더",c:10,cat:"역사서"},{n:"욥기",c:42,cat:"시가서"},{n:"시편",c:150,cat:"시가서"},{n:"잠언",c:31,cat:"시가서"},{n:"전도서",c:12,cat:"시가서"},{n:"아가",c:8,cat:"시가서"},{n:"이사야",c:66,cat:"대선지서"},{n:"예레미야",c:52,cat:"대선지서"},{n:"예레미야애가",c:5,cat:"대선지서"},{n:"에스겔",c:48,cat:"대선지서"},{n:"다니엘",c:12,cat:"대선지서"},{n:"호세아",c:14,cat:"소선지서"},{n:"요엘",c:3,cat:"소선지서"},{n:"아모스",c:9,cat:"소선지서"},{n:"오바댜",c:1,cat:"소선지서"},{n:"요나",c:4,cat:"소선지서"},{n:"미가",c:7,cat:"소선지서"},{n:"나훔",c:3,cat:"소선지서"},{n:"하박국",c:3,cat:"소선지서"},{n:"스바냐",c:3,cat:"소선지서"},{n:"학개",c:2,cat:"소선지서"},{n:"스가랴",c:14,cat:"소선지서"},{n:"말라기",c:4,cat:"소선지서"},{n:"마태복음",c:28,cat:"복음서"},{n:"마가복음",c:16,cat:"복음서"},{n:"누가복음",c:24,cat:"복음서"},{n:"요한복음",c:21,cat:"복음서"},{n:"사도행전",c:28,cat:"역사서(신약)"},{n:"로마서",c:16,cat:"바울서신"},{n:"고린도전서",c:16,cat:"바울서신"},{n:"고린도후서",c:13,cat:"바울서신"},{n:"갈라디아서",c:6,cat:"바울서신"},{n:"에베소서",c:6,cat:"바울서신"},{n:"빌립보서",c:4,cat:"바울서신"},{n:"골로새서",c:4,cat:"바울서신"},{n:"데살로니가전서",c:5,cat:"바울서신"},{n:"데살로니가후서",c:3,cat:"바울서신"},{n:"디모데전서",c:6,cat:"바울서신"},{n:"디모데후서",c:4,cat:"바울서신"},{n:"디도서",c:3,cat:"바울서신"},{n:"빌레몬서",c:1,cat:"바울서신"},{n:"히브리서",c:13,cat:"공동서신"},{n:"야고보서",c:5,cat:"공동서신"},{n:"베드로전서",c:5,cat:"공동서신"},{n:"베드로후서",c:3,cat:"공동서신"},{n:"요한일서",c:5,cat:"공동서신"},{n:"요한이서",c:1,cat:"공동서신"},{n:"요한삼서",c:1,cat:"공동서신"},{n:"유다서",c:1,cat:"공동서신"},{n:"요한계시록",c:22,cat:"예언서(신약)"}];
@@ -834,7 +834,7 @@ function loadingView(type,label){
   return '<div class="load-wrap">'
     +'<div class="load-skeleton">'+skeleton+'</div>'
     +'<div class="load-verse">'
-      +'<img src="'+YIMG_FULL+'" style="height:74px;display:block;margin:0 auto 12px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.15))">'
+      +'<img src="'+YIMG_FULL+'" style="height:104px;display:block;margin:0 auto 12px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.18))">'
       +'<div class="load-verse-label">'+label+'</div>'
       +'<div class="load-verse-text">'+v.t+'</div>'
       +'<div class="load-verse-ref">— '+v.r+'</div>'
@@ -1693,7 +1693,7 @@ function renderQt(){
   if(dayLoading&&!qtPosts.length){
     content='<div class="card"><div class="sk-box" style="width:40%;height:14px;margin-bottom:12px"></div><div class="sk-box" style="width:100%;height:52px"></div></div>';
   }else if(!posts){
-    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:120px;opacity:.85;margin-bottom:6px"><br>이 날 올라온 QT가 없어요<br>첫 묵상을 나눠보세요</div>';
+    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:170px;margin-bottom:10px"><br>이 날 올라온 QT가 없어요<br>첫 묵상을 나눠보세요</div>';
   }else{
     content=posts;
   }
@@ -1874,7 +1874,7 @@ function renderPrayer(){
       +(emo==='pr-'+p.id?'<div class="edit-dropdown"><button onclick="editPr(\''+p.id+'\')">'+ico('edit',15)+' 수정</button><button onclick="delPr(\''+p.id+'\')">'+ico('trash',15)+' 삭제</button></div>':'')
       +'<div class="qt-text" style="margin-bottom:8px">'+escapeHtml(p.situation)+'</div>'
       +'<div id="yeorinPr-'+p.id+'"></div>'
-      +'<button style="border:none;background:none;color:var(--brand2);font-size:12px;font-weight:700;padding:4px 0" onclick="askYeorinPrayerUI(\''+p.id+'\',\''+(p.postType||'prayer')+'\')"><img class="yeorin-img" src="'+YIMG+'" style="height:17px"> 여린이 말씀 추천</button>'
+      +'<button style="border:none;background:none;color:var(--brand2);font-size:12px;font-weight:700;padding:4px 0" onclick="askYeorinPrayerUI(\''+p.id+'\',\''+(p.postType||'prayer')+'\')"><img class="yeorin-img" src="'+YIMG+'" style="height:26px"> 여린이 말씀 추천</button>'
       +renderRx(p.reactions||{},PRD,'prayer',p.id)
       +renderCm(p.comments,'prayer',p.id)
       +'</div>';
@@ -1884,7 +1884,7 @@ function renderPrayer(){
   if(dayLoading&&!prPosts.length){
     content='<div class="card"><div class="sk-box" style="width:40%;height:14px;margin-bottom:12px"></div><div class="sk-box" style="width:100%;height:52px"></div></div>';
   }else if(!posts){
-    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:120px;opacity:.85;margin-bottom:6px"><br>이 날 올라온 기도·감사가 없어요<br>마음을 나눠보세요</div>';
+    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:170px;margin-bottom:10px"><br>이 날 올라온 기도·감사가 없어요<br>마음을 나눠보세요</div>';
   }else{
     content=posts;
   }
@@ -3005,8 +3005,8 @@ function renderHome(){
       +'<div class="verse-label">오늘의 말씀</div>'
       +'<div class="verse-text">'+escapeHtml(_yeorinDailyVerseCache.text)+'</div>'
       +'<div class="verse-ref">— '+escapeHtml(_yeorinDailyVerseCache.reference||'')+'</div>'
-      +(msg?'<div style="margin-top:16px;padding:14px;background:var(--brand-soft);border-radius:15px;font-size:13px;line-height:1.7;color:var(--ink2);display:flex;gap:9px;align-items:flex-start;text-align:left"><img class="yeorin-img" src="'+YIMG+'" style="height:20px;flex-shrink:0;margin-top:1px"><div style="white-space:pre-wrap">'+escapeHtml(msg)+'</div></div>':'')
-      +'<button class="btn-pill" style="background:var(--brand-soft);color:var(--brand2);font-size:11.5px;margin-top:12px" onclick="showYeorinVerseInput()"><img class="yeorin-img" src="'+YIMG+'" style="height:14px"> 다른 말씀 받기</button>'
+      +(msg?'<div style="margin-top:16px;padding:14px;background:var(--brand-soft);border-radius:15px;font-size:13px;line-height:1.7;color:var(--ink2);display:flex;gap:9px;align-items:flex-start;text-align:left"><img class="yeorin-img" src="'+YIMG+'" style="height:32px;flex-shrink:0;margin-top:-2px"><div style="white-space:pre-wrap">'+escapeHtml(msg)+'</div></div>':'')
+      +'<button class="btn-pill" style="background:var(--brand-soft);color:var(--brand2);font-size:11.5px;margin-top:12px" onclick="showYeorinVerseInput()"><img class="yeorin-img" src="'+YIMG+'" style="height:22px"> 다른 말씀 받기</button>'
       +'</div>';
   }else{
     const v=randomVerse();
@@ -3014,7 +3014,7 @@ function renderHome(){
       +'<div class="verse-label">오늘의 말씀</div>'
       +'<div class="verse-text">'+v.t+'</div>'
       +'<div class="verse-ref">— '+v.r+'</div>'
-      +'<button class="btn-pill" style="background:var(--brand-soft);color:var(--brand2);font-size:11.5px;margin-top:12px" onclick="showYeorinVerseInput()"><img class="yeorin-img" src="'+YIMG+'" style="height:14px"> 여린이에게 말씀 받기</button>'
+      +'<button class="btn-pill" style="background:var(--brand-soft);color:var(--brand2);font-size:11.5px;margin-top:12px" onclick="showYeorinVerseInput()"><img class="yeorin-img" src="'+YIMG+'" style="height:22px"> 여린이에게 말씀 받기</button>'
       +'</div>';
   }
 
@@ -3112,7 +3112,7 @@ function openNanumAt(sub,ds){
 
 function showYeorinVerseInput(){
   showPopup('<button class="popup-close" onclick="closePopup()">'+ico('close',14)+'</button>'
-    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:96px;margin-bottom:8px"><h3 style="margin:0">여린이에게 말씀 받기</h3>'
+    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:135px;margin-bottom:10px"><h3 style="margin:0">여린이에게 말씀 받기</h3>'
     +'<div style="font-size:12px;color:var(--b5);margin-top:4px">지금 어떤 마음이신가요?</div></div>'
     +'<div class="fg"><textarea class="input-field" id="yvInput" rows="3" placeholder="예: 마음이 무겁고 지쳐요..." style="resize:none"></textarea></div>'
     +'<button class="btn-primary" id="yvBtn" onclick="submitYeorinVerse()">말씀 받기</button>');
@@ -3357,7 +3357,7 @@ function startYeorinLoading(elId,messages){
   const el=document.getElementById(elId);
   if(!el)return;
   let idx=0;
-  el.innerHTML='<div class="card" style="background:var(--brand-soft);padding:18px"><div style="display:flex;align-items:center;gap:12px"><img src="'+YIMG_FULL+'" style="height:52px;animation:pulse 1.4s infinite"><div><div style="font-size:13.5px;font-weight:800;color:var(--brand2)" id="'+elId+'-msg">'+messages[0]+'</div><div style="font-size:11.5px;color:var(--ink3);margin-top:3px;font-weight:600">잠시만 기다려주세요</div></div></div></div>';
+  el.innerHTML='<div class="card" style="background:var(--brand-soft);padding:18px"><div style="display:flex;align-items:center;gap:12px"><img src="'+YIMG_FULL+'" style="height:76px;animation:pulse 1.4s infinite"><div><div style="font-size:13.5px;font-weight:800;color:var(--brand2)" id="'+elId+'-msg">'+messages[0]+'</div><div style="font-size:11.5px;color:var(--ink3);margin-top:3px;font-weight:600">잠시만 기다려주세요</div></div></div></div>';
   _yeorinLoadingTimers[elId]=setInterval(function(){
     idx=(idx+1)%messages.length;
     const m=document.getElementById(elId+'-msg');
@@ -3376,7 +3376,7 @@ function showYeorinBibleInput(book){
   const bk=BIBLE.find(function(b){return b.n===book;});
   const maxCh=bk?bk.c:0;
   showPopup('<button class="popup-close" onclick="closePopup()">'+ico('close',14)+'</button>'
-    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:96px;margin-bottom:8px"><h3 style="margin:0">여린이에게 물어보기</h3>'
+    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:135px;margin-bottom:10px"><h3 style="margin:0">여린이에게 물어보기</h3>'
     +'<div style="font-size:12px;color:var(--b5);margin-top:4px">'+escapeHtml(book)+' 몇 장이 궁금하세요? (1~'+maxCh+'장)</div></div>'
     +'<div class="fg"><input class="input-field" id="ybChInput" type="number" min="1" max="'+maxCh+'" placeholder="예: 1" style="text-align:center;font-size:18px;font-weight:700"></div>'
     +'<button class="btn-primary" id="ybBtn" onclick="submitYeorinBible(\''+book.replace(/'/g,"\\'")+'\','+maxCh+')">물어보기</button>');
