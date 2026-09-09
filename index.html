@@ -58,7 +58,7 @@
   --shadow:0 1px 2px rgba(26,38,32,.04),0 6px 18px rgba(26,38,32,.05);
   --shadow-sm:0 1px 2px rgba(26,38,32,.05);
   --r:20px;
-  --max:640px;
+  --max:430px;   /* PC에서도 모바일과 동일한 폭 */
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Pretendard Variable','Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;color:var(--ink);-webkit-tap-highlight-color:transparent;font-size:16px;line-height:1.6;overflow-x:hidden;overscroll-behavior-y:contain;}
@@ -117,10 +117,17 @@ input,textarea,select{font-family:inherit;}
 .page{display:none;animation:fadeUp .22s;}
 .page.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-@media(min-width:1024px){:root{--max:720px;}}
+/* 화면이 넓어도 앱은 모바일 폭 그대로, 가운데 정렬 */
+#app,.auth-screen,.onboarding,#splash{max-width:var(--max);margin:0 auto;}
+@media(min-width:520px){
+  body{background:#E8ECE8;}
+  #appFrame{max-width:var(--max);margin:0 auto;min-height:100vh;background:var(--bg);
+            box-shadow:0 0 0 1px rgba(26,38,32,.06),0 10px 40px rgba(26,38,32,.09);position:relative;}
+  .onboarding,#splash{box-shadow:0 0 0 1px rgba(26,38,32,.06),0 10px 40px rgba(26,38,32,.09);}
+}
 
 /* ===== 하단 탭바 ===== */
-.bottom-bar{position:fixed;bottom:14px;left:14px;right:14px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:24px;box-shadow:0 6px 24px rgba(26,38,32,.1);z-index:200;padding:7px;max-width:calc(var(--max) - 28px);margin:0 auto;backdrop-filter:blur(12px);}
+.bottom-bar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:calc(var(--max) - 28px);background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:24px;box-shadow:0 6px 24px rgba(26,38,32,.1);z-index:200;padding:7px;backdrop-filter:blur(12px);}
 .bottom-inner{display:flex;}
 .btab{flex:1;padding:9px 0;border:none;background:none;font-size:11px;color:#A8B2AA;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;transition:.2s;border-radius:18px;font-weight:700;letter-spacing:-.2px;}
 .btab.active{color:#fff;background:var(--brand);}
@@ -128,9 +135,9 @@ input,textarea,select{font-family:inherit;}
 .badge{position:absolute;top:4px;right:calc(50% - 22px);background:#FF7A6B;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
 /* ===== 사이드 메뉴 ===== */
-.side-menu-overlay{position:fixed;inset:0;background:rgba(20,30,24,.45);z-index:550;opacity:0;pointer-events:none;transition:opacity .25s;}
+.side-menu-overlay{position:fixed;inset:0;background:rgba(20,30,24,.45);z-index:550;max-width:none;opacity:0;pointer-events:none;transition:opacity .25s;}
 .side-menu-overlay.open{opacity:1;pointer-events:auto;}
-.side-menu{position:fixed;top:0;left:0;bottom:0;width:80%;max-width:300px;background:var(--card);z-index:551;transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.7,.3,1);box-shadow:6px 0 28px rgba(0,0,0,.16);display:flex;flex-direction:column;}
+.side-menu{position:fixed;top:0;left:max(0px,calc(50% - (var(--max) / 2)));bottom:0;width:80%;max-width:min(300px,calc(var(--max) * .8));background:var(--card);z-index:551;transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.7,.3,1);box-shadow:6px 0 28px rgba(0,0,0,.16);display:flex;flex-direction:column;}
 .side-menu.open{transform:translateX(0);}
 .side-menu-hdr{padding:28px 22px 22px;background:linear-gradient(160deg,var(--brand),var(--brand2));color:#fff;}
 .side-menu-hdr .smh-title{font-size:19px;font-weight:900;letter-spacing:-.5px;}
@@ -247,6 +254,7 @@ input,textarea,select{font-family:inherit;}
 
 /* ===== 팝업 ===== */
 .overlay{position:fixed;inset:0;background:rgba(20,30,24,.48);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.popup{margin:0 auto;}
 .popup{background:#fff;border-radius:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:26px 24px;box-shadow:0 14px 44px rgba(0,0,0,.18);position:relative;}
 .popup-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;border:none;background:var(--line);font-size:14px;display:flex;align-items:center;justify-content:center;}
 .popup h3{font-size:18px;font-weight:800;margin-bottom:16px;letter-spacing:-.4px;}
@@ -269,7 +277,7 @@ input,textarea,select{font-family:inherit;}
 @keyframes dotPulse{0%,60%,100%{opacity:.35;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
 
 /* ===== 토스트 ===== */
-.toast{position:fixed;bottom:96px;right:16px;background:rgba(22,32,26,.94);color:#fff;padding:11px 17px;border-radius:999px;font-size:12.5px;font-weight:700;z-index:300;display:flex;align-items:center;gap:7px;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(10px);}
+.toast{position:fixed;bottom:96px;right:max(16px,calc(50% - (var(--max) / 2) + 16px));background:rgba(22,32,26,.94);color:#fff;padding:11px 17px;border-radius:999px;font-size:12.5px;font-weight:700;z-index:300;display:flex;align-items:center;gap:7px;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(10px);}
 .toast .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite;}
 .toast.success .dot{background:#7ADD9D;animation:none;}
 .toast.error{background:var(--red);}
@@ -278,6 +286,38 @@ input,textarea,select{font-family:inherit;}
 /* ===== 진행바 ===== */
 .progress-bar-bg{background:var(--line);border-radius:999px;height:9px;overflow:hidden;}
 .progress-bar-fill{height:100%;border-radius:999px;transition:width .4s;}
+
+/* ===== 성경 통계 ===== */
+.stat-card{background:var(--card);border-radius:var(--r);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);}
+.stat-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.stat-head .sh-title{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:7px;}
+.stat-head .sh-toggle{color:var(--ink3);transition:transform .25s;display:flex;}
+.stat-head .sh-toggle.open{transform:rotate(180deg);}
+.stat-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
+.stat-body.open{max-height:1400px;}
+
+.donut-row{display:flex;align-items:center;gap:18px;padding:18px 0 6px;}
+.donut-wrap{width:118px;height:118px;flex-shrink:0;position:relative;}
+.donut-wrap svg{width:100%;height:100%;display:block;transform:rotate(-90deg);}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.donut-center .dc-num{font-size:23px;font-weight:900;color:var(--ink);letter-spacing:-1px;line-height:1;}
+.donut-center .dc-cap{font-size:10px;color:var(--ink3);font-weight:700;margin-top:3px;}
+.donut-legend{flex:1;min-width:0;display:flex;flex-direction:column;gap:11px;}
+.dl-item{min-width:0;}
+.dl-top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink2);}
+.dl-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.dl-val{margin-left:auto;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.dl-sub{font-size:11px;color:var(--ink3);font-weight:600;margin-top:2px;padding-left:15px;font-variant-numeric:tabular-nums;}
+
+.catbars{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+.catbar{display:flex;align-items:center;gap:9px;padding:6px 0;}
+.catbar .cbl{font-size:11.5px;font-weight:700;color:var(--ink2);width:74px;flex-shrink:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.catbar .cbt{flex:1;min-width:0;height:8px;background:var(--line);border-radius:999px;overflow:hidden;}
+.catbar .cbf{height:100%;border-radius:999px;transition:width .5s ease;min-width:3px;}
+.catbar .cbn{font-size:11px;color:var(--ink3);font-weight:700;font-variant-numeric:tabular-nums;
+  width:52px;text-align:right;flex-shrink:0;}
+.catbar.done .cbn{color:var(--brand2);}
 
 /* ===== 성경 ===== */
 .cat-label{font-size:13px;font-weight:800;margin-bottom:8px;padding:0 2px;letter-spacing:-.2px;}
@@ -382,7 +422,7 @@ input,textarea,select{font-family:inherit;}
 .ab-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:13.5px;line-height:1.8;}
 .ab-fab{position:fixed;bottom:92px;right:22px;width:56px;height:56px;border-radius:20px;background:linear-gradient(150deg,var(--brand2),var(--brand));color:#fff;border:none;font-size:26px;font-weight:300;box-shadow:0 8px 22px rgba(47,107,71,.35);cursor:pointer;z-index:150;display:flex;align-items:center;justify-content:center;line-height:1;}
 .ab-fab:active{transform:scale(.94);}
-@media(min-width:768px){.ab-fab{right:calc(50% - 280px);}}
+@media(min-width:520px){.ab-fab{right:calc(50% - (var(--max) / 2) + 22px);}}
 
 .ab-detail-hero{background:linear-gradient(150deg,var(--brand),var(--brand2));color:#fff;border-radius:24px;padding:30px 22px;margin-bottom:14px;text-align:center;position:relative;overflow:hidden;}
 .ab-detail-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);}
@@ -460,6 +500,7 @@ input,textarea,select{font-family:inherit;}
 
 <div id="registerScreen" class="auth-screen" style="display:none"><div class="auth-box"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:78px;object-fit:contain;margin-bottom:14px"><h1>회원가입</h1><p class="sub">여린교회 신앙관리</p><div class="fg"><input class="input-field" id="regName" placeholder="이름" style="text-align:center;font-weight:600"></div><div class="fg"><input class="input-field" id="regPw" type="password" placeholder="비밀번호" style="text-align:center"></div><div class="fg"><input class="input-field" id="regPw2" type="password" placeholder="비밀번호 확인" style="text-align:center"></div><p style="font-size:11px;color:var(--ink3);margin-bottom:6px;font-weight:600">이모지 선택</p><div class="emoji-grid" id="emojiGrid"></div><div class="fg"><input class="input-field" id="regBio" placeholder="한 줄 소개 (선택)" style="text-align:center;font-size:13px"></div><div class="error-msg" id="regError"></div><button class="btn-full btn-primary" onclick="doRegister()" id="regBtn">가입하기</button><div class="auth-toggle">이미 계정이 있으신가요? <a onclick="showLogin()">로그인</a></div></div></div>
 
+<div id="appFrame">
 <div id="app" class="app">
 <div class="hero" id="hero"></div>
 <div class="sheet">
@@ -486,6 +527,7 @@ input,textarea,select{font-family:inherit;}
 <button class="btab" onclick="switchTab('nanum')"><span class="bico" data-ico="heart"></span>나눔<span class="badge" id="badge-nanum" style="display:none"></span></button>
 <button class="btab" onclick="switchTab('calendar')"><span class="bico" data-ico="calendar"></span>캘린더</button>
 </div></div></div>
+</div>
 <div id="popupRoot"></div>
 <div id="sideMenuOverlay" class="side-menu-overlay" onclick="closeSideMenu()"></div>
 <div id="sideMenu" class="side-menu">
@@ -1950,7 +1992,9 @@ function renderBible(){
     +'<button class="sub-tab'+(bsub==='challenge'?' active':'')+'" onclick="bsub=\'challenge\';selBook=null;viewChId=null;renderBible()">'+ico('trophy',15)+' 챌린지</button>'
     +'</div>';
 
-  const body=bsub==='reading'?renderReading(new Set(myBP)):renderChallenges();
+  const bpSet=new Set(myBP);
+  const statCard=(bsub==='reading'&&selBook===null)?renderBibleStats(bpSet):'';
+  const body=bsub==='reading'?renderReading(bpSet):renderChallenges();
 
   const rows=(AD.users||[]).map(function(u){
     const me=u.id===CU.id;
@@ -1968,7 +2012,81 @@ function renderBible(){
     +'<span style="font-size:14px;display:inline-block;transform:rotate('+(groupOpen?180:0)+'deg);transition:.2s">▼</span></div>'
     +'<div class="accordion-body'+(groupOpen?' open':'')+'">'+rows+'</div></div>';
 
-  el.innerHTML=myCard+subTabs+body+acc;
+  el.innerHTML=myCard+subTabs+statCard+body+acc;
+}
+
+// ============================================================
+// 성경 통계 (구약·신약 도넛 + 분류별 막대)
+// ============================================================
+let statOpen=false;
+
+// 구약은 말라기(인덱스 38)까지
+const OT_LAST=38;
+const OT_TOTAL=BIBLE.slice(0,OT_LAST+1).reduce(function(a,b){return a+b.c;},0);
+const NT_TOTAL=TC-OT_TOTAL;
+
+function renderBibleStats(bpSet){
+  // 분류별 / 구약·신약 집계
+  const catRead={},catTotal={};
+  let otRead=0,ntRead=0;
+  BIBLE.forEach(function(bk,bi){
+    catTotal[bk.cat]=(catTotal[bk.cat]||0)+bk.c;
+    let r=0;
+    for(let i=0;i<bk.c;i++)if(bpSet.has(bi+'-'+i))r++;
+    catRead[bk.cat]=(catRead[bk.cat]||0)+r;
+    if(bi<=OT_LAST)otRead+=r;else ntRead+=r;
+  });
+
+  const totalRead=otRead+ntRead;
+  const pct=TC>0?Math.round(totalRead/TC*100):0;
+  const otPct=Math.round(otRead/OT_TOTAL*100);
+  const ntPct=Math.round(ntRead/NT_TOTAL*100);
+
+  // 도넛 — 구약/신약이 전체에서 차지하는 읽은 비율
+  const R=52,C=2*Math.PI*R;
+  const otLen=TC>0?(otRead/TC)*C:0;
+  const ntLen=TC>0?(ntRead/TC)*C:0;
+  const donut='<svg viewBox="0 0 120 120">'
+    +'<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="15"/>'
+    +(otLen>0?'<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--brand)" stroke-width="15" stroke-linecap="round"'
+      +' stroke-dasharray="'+otLen.toFixed(2)+' '+(C-otLen).toFixed(2)+'" stroke-dashoffset="0"/>':'')
+    +(ntLen>0?'<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--brand3)" stroke-width="15" stroke-linecap="round"'
+      +' stroke-dasharray="'+ntLen.toFixed(2)+' '+(C-ntLen).toFixed(2)+'" stroke-dashoffset="'+(-otLen).toFixed(2)+'"/>':'')
+    +'</svg>';
+
+  const legend='<div class="donut-legend">'
+    +'<div class="dl-item"><div class="dl-top"><span class="dl-dot" style="background:var(--brand)"></span>구약<span class="dl-val">'+otPct+'%</span></div>'
+    +'<div class="dl-sub">'+otRead+' / '+OT_TOTAL+'장</div></div>'
+    +'<div class="dl-item"><div class="dl-top"><span class="dl-dot" style="background:var(--brand3)"></span>신약<span class="dl-val">'+ntPct+'%</span></div>'
+    +'<div class="dl-sub">'+ntRead+' / '+NT_TOTAL+'장</div></div>'
+    +'</div>';
+
+  // 분류별 막대 (읽은 비율 높은 순)
+  const rows=CATS.map(function(cat){
+    const t=catTotal[cat]||0,r=catRead[cat]||0;
+    return{cat:cat,read:r,total:t,pct:t>0?Math.round(r/t*100):0,color:(CC[cat]||{}).a||'var(--brand3)'};
+  }).sort(function(a,b){return b.pct-a.pct;});
+
+  const bars=rows.map(function(x){
+    return '<div class="catbar'+(x.pct===100?' done':'')+'">'
+      +'<div class="cbl" title="'+escapeHtml(x.cat)+'">'+escapeHtml(x.cat)+'</div>'
+      +'<div class="cbt"><div class="cbf" style="width:'+(x.read>0?Math.max(x.pct,2):0)+'%;background:'+x.color+'"></div></div>'
+      +'<div class="cbn">'+x.read+'/'+x.total+'</div>'
+      +'</div>';
+  }).join('');
+
+  return '<div class="stat-card">'
+    +'<div class="stat-head" onclick="statOpen=!statOpen;renderBible()">'
+    +'<div class="sh-title">'+ico('chart',17)+' 읽기 통계</div>'
+    +'<div class="sh-toggle'+(statOpen?' open':'')+'">'+ico('chevronDown',17)+'</div>'
+    +'</div>'
+    +'<div class="stat-body'+(statOpen?' open':'')+'">'
+    +'<div class="donut-row">'
+    +'<div class="donut-wrap">'+donut
+    +'<div class="donut-center"><div class="dc-num">'+pct+'%</div><div class="dc-cap">전체 진도</div></div>'
+    +'</div>'+legend+'</div>'
+    +'<div class="catbars">'+bars+'</div>'
+    +'</div></div>';
 }
 
 function renderReading(bpSet){
