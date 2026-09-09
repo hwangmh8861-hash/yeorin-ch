@@ -172,11 +172,13 @@ input,textarea,select{font-family:inherit;}
 /* ============================================================
    날짜 스트립 (조약돌)
    ============================================================ */
-.dstrip{display:flex;align-items:center;gap:6px;margin-top:14px;}
-.dstrip-arrow{width:30px;height:30px;flex-shrink:0;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.dstrip-head{display:flex;align-items:center;gap:6px;margin-top:14px;}
+.dstrip-arrow{width:30px;height:30px;flex-shrink:0;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .dstrip-arrow:active{background:rgba(255,255,255,.32);}
-.dstrip-arrow:disabled{opacity:.25;cursor:default;}
-.dstrip-track{flex:1;display:flex;gap:7px;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:2px 0;scrollbar-width:none;}
+.dstrip-arrow:disabled{opacity:.22;cursor:default;}
+.dstrip-month{flex:1;background:none;border:none;color:#fff;font-size:14px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;padding:6px 0;}
+.dstrip-today-btn{flex-shrink:0;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:999px;cursor:pointer;}
+.dstrip-track{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 0 2px;scrollbar-width:none;}
 .dstrip-track::-webkit-scrollbar{display:none;}
 .dchip{flex-shrink:0;width:44px;padding:7px 0 8px;border-radius:16px;border:none;background:transparent;color:rgba(255,255,255,.72);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:.15s;position:relative;}
 .dchip .dc-dow{font-size:10px;font-weight:700;letter-spacing:.2px;opacity:.8;}
@@ -191,8 +193,20 @@ input,textarea,select{font-family:inherit;}
 .dchip.sel.sat .dc-dow{color:var(--blue);}
 .dchip.sel.sun .dc-dow{color:var(--red);}
 .dchip.sel .dc-mark{background:var(--brand3);}
-.dstrip-today{margin-top:10px;display:flex;justify-content:center;}
-.dstrip-today button{background:rgba(255,255,255,.16);border:none;color:#fff;font-size:11.5px;font-weight:700;padding:6px 16px;border-radius:999px;cursor:pointer;}
+/* 날짜 선택 달력 */
+.dp-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.dp-nav span{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.dp-nav button{width:34px;height:34px;border-radius:50%;border:none;background:var(--brand-soft);color:var(--brand2);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.dp-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+.dp-hdr div{text-align:center;font-size:11.5px;font-weight:700;padding:3px 0;}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.dp-cell{aspect-ratio:1;border:none;border-radius:13px;background:var(--b0);font-size:14px;font-weight:700;color:var(--ink2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit;}
+.dp-cell:active{background:var(--line);}
+.dp-cell.today{box-shadow:inset 0 0 0 1.6px var(--brand3);}
+.dp-cell.sel{background:var(--brand);color:#fff;}
+.dp-mark{width:4px;height:4px;border-radius:50%;background:var(--brand3);}
+.dp-mark.hidden{background:transparent;}
+.dp-cell.sel .dp-mark{background:#fff;}
 
 /* ============================================================
    공통 컴포넌트
@@ -392,8 +406,9 @@ input,textarea,select{font-family:inherit;}
 
 .ico{display:inline-block;vertical-align:-.18em;flex-shrink:0;}
 .icon-box{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.yeorin-img{height:20px;vertical-align:middle;border-radius:50%;margin-right:4px;}
-.yeorin-img-lg{height:26px;border-radius:50%;margin-right:6px;}
+.yeorin-img{height:22px;vertical-align:-.32em;margin-right:5px;}
+.yeorin-img-lg{height:30px;margin-right:7px;vertical-align:middle;}
+.yeorin-full{display:block;margin:0 auto;}
 
 /* ============================================================
    주소록
@@ -490,7 +505,7 @@ input,textarea,select{font-family:inherit;}
 </style>
 
 <div id="onboarding" class="onboarding" style="display:none"><div class="ob-slides" id="obSlides">
-<div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1XdHFeW6QNU8BjkZzbZzsagfrkwRS7p62" style="height:100px;object-fit:contain;margin-bottom:18px"><div class="ob-title">여린교회 신앙관리</div><div class="ob-desc">성경읽기와 나눔을 함께하는 공간에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
+<div class="ob-slide"><img src="https://lh3.googleusercontent.com/d/1JVJTRwC-9P_-w4FJx4772G23QZpB1Hmn" style="height:140px;object-fit:contain;margin-bottom:12px"><div class="ob-title">여린교회 신앙관리</div><div class="ob-desc">성경읽기와 나눔을 함께하는 공간에 오신 것을 환영합니다.</div><div class="ob-dots"><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="book" data-size="52"></div><div class="ob-title">함께 읽는 성경</div><div class="ob-desc">66권 성경읽기표와 챌린지로 함께 읽어요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="write" data-size="52"></div><div class="ob-title">나누는 신앙</div><div class="ob-desc">QT 묵상, 기도·감사제목을 나누고 서로 공감해요.</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div></div><div class="ob-btns"><button class="ob-btn ob-skip" onclick="skipOb()">건너뛰기</button><button class="ob-btn ob-next" onclick="nextOb()">다음</button></div></div>
 <div class="ob-slide"><div class="ob-icon" data-ico="church" data-size="52"></div><div class="ob-title">지금 시작하세요</div><div class="ob-desc">계정을 만들고 시작해보세요!</div><div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div></div><div class="ob-btns"><button class="ob-btn ob-start" onclick="skipOb()">시작하기</button></div></div>
@@ -587,7 +602,7 @@ note:'<path d="M6 3.5h9.5L19 7v13.5H6z"/><path d="M15 3.5V7h3.8"/><path d="M9 12
 folder:'<path d="M3.5 7.2A1.7 1.7 0 0 1 5.2 5.5h3.4l2 2.4h8.2a1.7 1.7 0 0 1 1.7 1.7v8.7a1.7 1.7 0 0 1-1.7 1.7H5.2a1.7 1.7 0 0 1-1.7-1.7z"/>',
 pin:'<path d="M9 3.5h6l-.8 5.2 3.3 3.3H6.5l3.3-3.3z"/><path d="M12 12v8.5"/>',
 users:'<circle cx="9" cy="8.3" r="3.3"/><path d="M3 19.5a6 6 0 0 1 12 0"/><path d="M16 5.4a3.3 3.3 0 0 1 0 6"/><path d="M17.5 13.8a6 6 0 0 1 3.5 5.7"/>',
-pray:'<path d="M10.2 20.5V13l-2.6 2.2a2 2 0 0 1-2.8-2.8l4-4.4V4.2a1.6 1.6 0 0 1 3.2 0v4.3"/><path d="M13.8 20.5V13l2.6 2.2a2 2 0 0 0 2.8-2.8l-4-4.4"/>',
+pray:'<path d="M12 20.5c-2.6 0-4.8-1-6-2.2l2.4-8.6a2 2 0 0 1 1.3-1.4l2.3-.8"/><path d="M12 20.5c2.6 0 4.8-1 6-2.2l-2.4-8.6a2 2 0 0 0-1.3-1.4l-2.3-.8"/><path d="M12 7.5v13"/><path d="M9.6 4.2a2.4 2.4 0 0 1 4.8 0"/>',
 sparkle:'<path d="M12 3.5 13.7 9 19 10.8 13.7 12.6 12 18l-1.7-5.4L5 10.8 10.3 9z"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
 handshake:'<path d="M8.5 11.5 11 9l2.2 2a1.7 1.7 0 0 0 2.3-2.4L12.8 6a3 3 0 0 0-4 0L5 9.5"/><path d="m5 9.5 3.5 3.5"/><path d="M19 9.5 15.5 6"/><path d="M11 15.5l2 2a1.6 1.6 0 0 0 2.3-2.3"/><path d="M8.5 17.5l1.5 1.5a1.6 1.6 0 0 0 2.3-2.3"/>',
 save:'<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 6.5v6"/><path d="m9.4 10.2 2.6 2.6 2.6-2.6"/><path d="M10 18.5h4"/>',
@@ -600,7 +615,7 @@ scroll:'<path d="M6.5 4.5h11v13a3 3 0 0 1-3 3h-8a3 3 0 0 0 3-3z"/><path d="M17.5
 bulb:'<path d="M9 17.5a5.5 5.5 0 1 1 6 0v2h-6z"/><path d="M10 22h4"/>',
 letter:'<rect x="3.5" y="5.5" width="17" height="13" rx="2.3"/><path d="m4.5 7.5 7.5 5.5 7.5-5.5"/><path d="M12 13v5.5"/>',
 question:'<circle cx="12" cy="12" r="8.5"/><path d="M9.8 9.6a2.3 2.3 0 0 1 4.4.8c0 1.6-2.2 2-2.2 3.3"/><path d="M12 16.8h.01"/>',
-write:'<path d="M4 20.5c1.5-4 3.5-6.5 6.5-8.5"/><path d="M15.5 3.8a2.2 2.2 0 0 1 3.1 3.1L9.4 16.1l-4 1 1-4z"/>',
+write:'<path d="M15.6 4.4a2.3 2.3 0 0 1 3.2 3.2l-9.4 9.4-4.3 1.1 1.1-4.3z"/><path d="m14.2 5.8 3.2 3.2"/><path d="M4.5 21h15"/>',
 star:'<path d="m12 3.8 2.5 5.4 5.5.7-4 3.9 1 5.9L12 17l-5 2.6 1-5.9-4-3.9 5.5-.7z"/>',
 family:'<circle cx="7.5" cy="7.5" r="2.8"/><circle cx="16.5" cy="7.5" r="2.8"/><path d="M2.5 18a5 5 0 0 1 10 0"/><path d="M12.5 18a5 5 0 0 1 9 0"/>',
 chart:'<path d="M4 20V10"/><path d="M9.8 20V4.5"/><path d="M15.5 20v-7"/><path d="M21 20v-11"/>',
@@ -622,7 +637,9 @@ function ico(name,size,color){
 // ============================================================
 
 // 상수
-const YIMG='https://lh3.googleusercontent.com/d/1E-j7s35Z4vNKOA5OxPEn7MZT-NC0sxYN';
+// 여린이 캐릭터 — 작은 자리엔 얼굴, 큰 자리엔 전신
+const YIMG='https://lh3.googleusercontent.com/d/1LlBwjkTPw8S-cJa4xlQ6W0fPX--XxYzY';
+const YIMG_FULL='https://lh3.googleusercontent.com/d/1JVJTRwC-9P_-w4FJx4772G23QZpB1Hmn';
 const EMOJIS=["🕊️","✝️","🌿","💛","☀️","🙏","⭐","🌸","🌊","🔥","🦋","🌈","💎","🎵","📖","🍞"];
 
 const BIBLE=[{n:"창세기",c:50,cat:"모세오경"},{n:"출애굽기",c:40,cat:"모세오경"},{n:"레위기",c:27,cat:"모세오경"},{n:"민수기",c:36,cat:"모세오경"},{n:"신명기",c:34,cat:"모세오경"},{n:"여호수아",c:24,cat:"역사서"},{n:"사사기",c:21,cat:"역사서"},{n:"룻기",c:4,cat:"역사서"},{n:"사무엘상",c:31,cat:"역사서"},{n:"사무엘하",c:24,cat:"역사서"},{n:"열왕기상",c:22,cat:"역사서"},{n:"열왕기하",c:25,cat:"역사서"},{n:"역대상",c:29,cat:"역사서"},{n:"역대하",c:36,cat:"역사서"},{n:"에스라",c:10,cat:"역사서"},{n:"느헤미야",c:13,cat:"역사서"},{n:"에스더",c:10,cat:"역사서"},{n:"욥기",c:42,cat:"시가서"},{n:"시편",c:150,cat:"시가서"},{n:"잠언",c:31,cat:"시가서"},{n:"전도서",c:12,cat:"시가서"},{n:"아가",c:8,cat:"시가서"},{n:"이사야",c:66,cat:"대선지서"},{n:"예레미야",c:52,cat:"대선지서"},{n:"예레미야애가",c:5,cat:"대선지서"},{n:"에스겔",c:48,cat:"대선지서"},{n:"다니엘",c:12,cat:"대선지서"},{n:"호세아",c:14,cat:"소선지서"},{n:"요엘",c:3,cat:"소선지서"},{n:"아모스",c:9,cat:"소선지서"},{n:"오바댜",c:1,cat:"소선지서"},{n:"요나",c:4,cat:"소선지서"},{n:"미가",c:7,cat:"소선지서"},{n:"나훔",c:3,cat:"소선지서"},{n:"하박국",c:3,cat:"소선지서"},{n:"스바냐",c:3,cat:"소선지서"},{n:"학개",c:2,cat:"소선지서"},{n:"스가랴",c:14,cat:"소선지서"},{n:"말라기",c:4,cat:"소선지서"},{n:"마태복음",c:28,cat:"복음서"},{n:"마가복음",c:16,cat:"복음서"},{n:"누가복음",c:24,cat:"복음서"},{n:"요한복음",c:21,cat:"복음서"},{n:"사도행전",c:28,cat:"역사서(신약)"},{n:"로마서",c:16,cat:"바울서신"},{n:"고린도전서",c:16,cat:"바울서신"},{n:"고린도후서",c:13,cat:"바울서신"},{n:"갈라디아서",c:6,cat:"바울서신"},{n:"에베소서",c:6,cat:"바울서신"},{n:"빌립보서",c:4,cat:"바울서신"},{n:"골로새서",c:4,cat:"바울서신"},{n:"데살로니가전서",c:5,cat:"바울서신"},{n:"데살로니가후서",c:3,cat:"바울서신"},{n:"디모데전서",c:6,cat:"바울서신"},{n:"디모데후서",c:4,cat:"바울서신"},{n:"디도서",c:3,cat:"바울서신"},{n:"빌레몬서",c:1,cat:"바울서신"},{n:"히브리서",c:13,cat:"공동서신"},{n:"야고보서",c:5,cat:"공동서신"},{n:"베드로전서",c:5,cat:"공동서신"},{n:"베드로후서",c:3,cat:"공동서신"},{n:"요한일서",c:5,cat:"공동서신"},{n:"요한이서",c:1,cat:"공동서신"},{n:"요한삼서",c:1,cat:"공동서신"},{n:"유다서",c:1,cat:"공동서신"},{n:"요한계시록",c:22,cat:"예언서(신약)"}];
@@ -678,11 +695,10 @@ let savingChapters={};
 let obP=0;
 
 // ── 나눔 날짜 스트립 ──
-// nanumDate : 지금 보고 있는 날짜 (yyyy-MM-dd)
-// stripStart: 스트립에 그릴 첫 날짜
-// postDates : {qt:{날짜:개수}, prayer:{날짜:개수}}
-// dayPosts  : 선택한 날짜의 글 목록
-let nanumDate='',stripStart='',postDates={qt:{},prayer:{}};
+// nanumDate  : 지금 보고 있는 날짜 (yyyy-MM-dd)
+// stripY/stripM: 스트립에 펼쳐 놓은 연/월
+// postDates  : {qt:{날짜:개수}, prayer:{날짜:개수}}
+let nanumDate='',stripY=0,stripM=0,postDates={qt:{},prayer:{}};
 let dayLoading=false;
 // 선택한 날짜의 글 목록 (공감·댓글·수정 로직이 그대로 참조)
 let qtPosts=[],prPosts=[];
@@ -818,6 +834,7 @@ function loadingView(type,label){
   return '<div class="load-wrap">'
     +'<div class="load-skeleton">'+skeleton+'</div>'
     +'<div class="load-verse">'
+      +'<img src="'+YIMG_FULL+'" style="height:74px;display:block;margin:0 auto 12px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.15))">'
       +'<div class="load-verse-label">'+label+'</div>'
       +'<div class="load-verse-text">'+v.t+'</div>'
       +'<div class="load-verse-ref">— '+v.r+'</div>'
@@ -1195,7 +1212,7 @@ function heroTopBar(){
     +'<div class="hero-btns">'
     +'<button class="hero-btn" onclick="openSideMenu()" title="메뉴">'+ico('menu',19)+'</button>'
     +'<button class="hero-btn" onclick="showNoticeList()" title="공지">'+ico('bell',18)+'<span id="noticeDot" class="hero-dot" style="display:none"></span></button>'
-    +'<button class="hero-btn" onclick="showMyPage()" id="profileBtn">'+(CU?CU.emoji:'🙂')+'</button>'
+    +'<button class="hero-btn" onclick="showMyPage()" id="profileBtn" title="마이페이지">'+ico('user',19)+'</button>'
     +'</div></div>';
 }
 
@@ -1245,6 +1262,7 @@ function renderHero(){
   }
 
   el.innerHTML='<div class="hero-inner">'+heroTopBar()+inner+'</div>';
+  if(curTab==='nanum')centerStrip();
 }
 
 // ============================================================
@@ -1381,7 +1399,13 @@ function initNanumDate(){
     const list=datesWithPosts();
     nanumDate=list.length?list[0]:today;
   }
-  stripStart=weekStart(nanumDate);
+  setStripMonthOf(nanumDate);
+}
+
+// 해당 날짜가 속한 달을 스트립에 펼침
+function setStripMonthOf(ds){
+  const p=String(ds).split('-');
+  stripY=Number(p[0]);stripM=Number(p[1])-1;
 }
 
 function nanumDateLabel(){
@@ -1398,45 +1422,106 @@ function oldestPostDate(){
   return list.length?list[list.length-1]:td();
 }
 
+// 스트립에는 해당 월 전체(1일~말일)를 펼쳐 놓고 가로로 스크롤합니다
 function renderDateStrip(){
+  const last=new Date(stripY,stripM+1,0).getDate();
+  const mm=pd(stripM+1);
+  const today=td();
   let chips='';
-  for(let i=0;i<7;i++){
-    const ds=addDays(stripStart,i);
+  for(let d=1;d<=last;d++){
+    const ds=stripY+'-'+mm+'-'+pd(d);
     const dow=dowOf(ds);
     const cnt=countOn(ds);
     const cls='dchip'
       +(ds===nanumDate?' sel':'')
-      +(ds===td()&&ds!==nanumDate?' today':'')
+      +(ds===today&&ds!==nanumDate?' today':'')
       +(dow===0?' sun':dow===6?' sat':'');
-    chips+='<button class="'+cls+'" onclick="selectNanumDate(\''+ds+'\')">'
+    chips+='<button class="'+cls+'"'+(ds===nanumDate?' id="dchipSel"':'')
+      +' onclick="selectNanumDate(\''+ds+'\')">'
       +'<span class="dc-dow">'+DOW_KR[dow]+'</span>'
-      +'<span class="dc-day">'+Number(ds.split('-')[2])+'</span>'
+      +'<span class="dc-day">'+d+'</span>'
       +'<span class="dc-mark'+(cnt?'':' hidden')+'"></span>'
       +'</button>';
   }
-  // 더 과거에 글이 남아있는지 / 미래로 갈 수 있는지
-  const canPrev=addDays(stripStart,-1)>=oldestPostDate()||stripStart>oldestPostDate();
-  const canNext=addDays(stripStart,7)<=addDays(td(),7);
-  const showToday=nanumDate!==td();
 
-  return '<div class="dstrip">'
-    +'<button class="dstrip-arrow" onclick="stripMove(-7)"'+(canPrev?'':' disabled')+'>‹</button>'
-    +'<div class="dstrip-track" id="dstripTrack">'+chips+'</div>'
-    +'<button class="dstrip-arrow" onclick="stripMove(7)"'+(canNext?'':' disabled')+'>›</button>'
+  // 글이 있는 가장 오래된 달보다 이전으로는 가지 않음
+  const oldest=oldestPostDate().split('-');
+  const minYM=Number(oldest[0])*12+Number(oldest[1])-1;
+  const nowD=new Date();
+  const maxYM=nowD.getFullYear()*12+nowD.getMonth();
+  const curYM=stripY*12+stripM;
+  const showToday=nanumDate!==today;
+
+  return '<div class="dstrip-head">'
+    +'<button class="dstrip-arrow" onclick="stripMoveMonth(-1)"'+(curYM>minYM?'':' disabled')+'>'+ico('chevronLeft',15)+'</button>'
+    +'<button class="dstrip-month" onclick="openDatePicker()">'+stripY+'년 '+(stripM+1)+'월 '+ico('chevronDown',13)+'</button>'
+    +'<button class="dstrip-arrow" onclick="stripMoveMonth(1)"'+(curYM<maxYM?'':' disabled')+'>'+ico('chevronRight',15)+'</button>'
+    +(showToday?'<button class="dstrip-today-btn" onclick="selectNanumDate(\''+today+'\',true)">오늘</button>':'')
     +'</div>'
-    +(showToday?'<div class="dstrip-today"><button onclick="selectNanumDate(\''+td()+'\',true)">오늘로 돌아가기</button></div>':'');
+    +'<div class="dstrip-track" id="dstripTrack">'+chips+'</div>';
 }
 
-function stripMove(n){
-  stripStart=addDays(stripStart,n);
+// 선택한 날짜 칩이 화면 가운데 오도록
+function centerStrip(){
+  const el=document.getElementById('dchipSel');
+  const track=document.getElementById('dstripTrack');
+  if(!el||!track)return;
+  track.scrollLeft=el.offsetLeft-(track.clientWidth/2)+(el.offsetWidth/2);
+}
+
+function stripMoveMonth(n){
+  let y=stripY,m=stripM+n;
+  while(m<0){m+=12;y--;}
+  while(m>11){m-=12;y++;}
+  stripY=y;stripM=m;
   renderHero();
 }
 
 function selectNanumDate(ds,resetStrip){
   nanumDate=ds;
-  if(resetStrip)stripStart=weekStart(ds);
+  if(resetStrip)setStripMonthOf(ds);
   renderHero();
   loadDayPosts(ds);
+}
+
+// 날짜 직접 고르기 (달력 팝업)
+let _dpY=0,_dpM=0;
+function openDatePicker(){
+  _dpY=stripY;_dpM=stripM;
+  showPopup('<button class="popup-close" onclick="closePopup()">'+ico('close',14)+'</button>'
+    +'<h3>날짜 선택</h3><div id="dpBody">'+renderDatePickerBody()+'</div>');
+}
+function dpMove(n){
+  let y=_dpY,m=_dpM+n;
+  while(m<0){m+=12;y--;}
+  while(m>11){m-=12;y++;}
+  _dpY=y;_dpM=m;
+  const b=document.getElementById('dpBody');
+  if(b)b.innerHTML=renderDatePickerBody();
+}
+function renderDatePickerBody(){
+  const first=new Date(_dpY,_dpM,1).getDay();
+  const last=new Date(_dpY,_dpM+1,0).getDate();
+  const mm=pd(_dpM+1);
+  const today=td();
+  const dh=DOW_KR.map(function(d,i){
+    return '<div style="color:'+(i===0?'var(--red)':i===6?'var(--blue)':'var(--ink3)')+'">'+d+'</div>';
+  }).join('');
+  let cells='';
+  for(let i=0;i<first;i++)cells+='<div></div>';
+  for(let d=1;d<=last;d++){
+    const ds=_dpY+'-'+mm+'-'+pd(d);
+    const cnt=countOn(ds);
+    const cls='dp-cell'+(ds===nanumDate?' sel':'')+(ds===today&&ds!==nanumDate?' today':'');
+    cells+='<button class="'+cls+'" onclick="closePopup();selectNanumDate(\''+ds+'\',true)">'
+      +d+'<span class="dp-mark'+(cnt?'':' hidden')+'"></span></button>';
+  }
+  return '<div class="dp-nav">'
+    +'<button onclick="dpMove(-1)">'+ico('chevronLeft',16)+'</button>'
+    +'<span>'+_dpY+'년 '+(_dpM+1)+'월</span>'
+    +'<button onclick="dpMove(1)">'+ico('chevronRight',16)+'</button></div>'
+    +'<div class="dp-hdr">'+dh+'</div>'
+    +'<div class="dp-grid">'+cells+'</div>';
 }
 
 // 선택한 날짜의 글이 없으면 불러오기
@@ -1608,7 +1693,7 @@ function renderQt(){
   if(dayLoading&&!qtPosts.length){
     content='<div class="card"><div class="sk-box" style="width:40%;height:14px;margin-bottom:12px"></div><div class="sk-box" style="width:100%;height:52px"></div></div>';
   }else if(!posts){
-    content='<div class="ab-empty">'+ico('write',40,'var(--line2)')+'<br><br>이 날 올라온 QT가 없어요<br>첫 묵상을 나눠보세요</div>';
+    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:120px;opacity:.85;margin-bottom:6px"><br>이 날 올라온 QT가 없어요<br>첫 묵상을 나눠보세요</div>';
   }else{
     content=posts;
   }
@@ -1639,7 +1724,7 @@ async function addQT(){
   const today=td();
   // 글은 항상 오늘 날짜로 저장되므로 보던 날짜가 과거였다면 오늘로 옮겨줍니다
   if(nanumDate!==today){
-    nanumDate=today;stripStart=weekStart(today);_loadedDate=today;
+    nanumDate=today;setStripMonthOf(today);_loadedDate=today;
     qtPosts=[];prPosts=[];
     renderHero();
     loadDayPosts(today,true);
@@ -1799,7 +1884,7 @@ function renderPrayer(){
   if(dayLoading&&!prPosts.length){
     content='<div class="card"><div class="sk-box" style="width:40%;height:14px;margin-bottom:12px"></div><div class="sk-box" style="width:100%;height:52px"></div></div>';
   }else if(!posts){
-    content='<div class="ab-empty">'+ico('pray',40,'var(--line2)')+'<br><br>이 날 올라온 기도·감사가 없어요<br>마음을 나눠보세요</div>';
+    content='<div class="ab-empty"><img class="yeorin-full" src="'+YIMG_FULL+'" style="height:120px;opacity:.85;margin-bottom:6px"><br>이 날 올라온 기도·감사가 없어요<br>마음을 나눠보세요</div>';
   }else{
     content=posts;
   }
@@ -1854,7 +1939,7 @@ async function addPr(){
   const tempId='temp_'+Date.now();
   const today=td();
   if(nanumDate!==today){
-    nanumDate=today;stripStart=weekStart(today);_loadedDate=today;
+    nanumDate=today;setStripMonthOf(today);_loadedDate=today;
     qtPosts=[];prPosts=[];
     renderHero();
     loadDayPosts(today,true);
@@ -3017,7 +3102,7 @@ function renderHome(){
 // 홈의 최근 나눔에서 해당 날짜로 바로 이동
 function openNanumAt(sub,ds){
   nanumSub=sub;
-  if(ds){nanumDate=ds;stripStart=weekStart(ds);_loadedDate='';}
+  if(ds){nanumDate=ds;setStripMonthOf(ds);_loadedDate='';}
   document.getElementById('ntab-qt').classList.toggle('active',sub==='qt');
   document.getElementById('ntab-prayer').classList.toggle('active',sub==='prayer');
   document.getElementById('page-qt').style.display=sub==='qt'?'block':'none';
@@ -3027,7 +3112,7 @@ function openNanumAt(sub,ds){
 
 function showYeorinVerseInput(){
   showPopup('<button class="popup-close" onclick="closePopup()">'+ico('close',14)+'</button>'
-    +'<div style="text-align:center;margin-bottom:14px"><img src="'+YIMG+'" style="height:40px;border-radius:50%;margin-bottom:6px"><h3 style="margin:0">여린이에게 말씀 받기</h3>'
+    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:96px;margin-bottom:8px"><h3 style="margin:0">여린이에게 말씀 받기</h3>'
     +'<div style="font-size:12px;color:var(--b5);margin-top:4px">지금 어떤 마음이신가요?</div></div>'
     +'<div class="fg"><textarea class="input-field" id="yvInput" rows="3" placeholder="예: 마음이 무겁고 지쳐요..." style="resize:none"></textarea></div>'
     +'<button class="btn-primary" id="yvBtn" onclick="submitYeorinVerse()">말씀 받기</button>');
@@ -3272,7 +3357,7 @@ function startYeorinLoading(elId,messages){
   const el=document.getElementById(elId);
   if(!el)return;
   let idx=0;
-  el.innerHTML='<div class="card" style="background:linear-gradient(135deg,var(--b0),var(--b1));border:1px solid rgba(107,142,111,.2);padding:18px"><div style="display:flex;align-items:center;gap:10px"><img src="'+YIMG+'" style="height:32px;border-radius:50%;animation:pulse 1.4s infinite"><div><div style="font-size:13px;font-weight:700;color:var(--b7)" id="'+elId+'-msg">'+messages[0]+'</div><div style="font-size:11px;color:var(--b5);margin-top:2px">잠시만 기다려주세요</div></div></div></div>';
+  el.innerHTML='<div class="card" style="background:var(--brand-soft);padding:18px"><div style="display:flex;align-items:center;gap:12px"><img src="'+YIMG_FULL+'" style="height:52px;animation:pulse 1.4s infinite"><div><div style="font-size:13.5px;font-weight:800;color:var(--brand2)" id="'+elId+'-msg">'+messages[0]+'</div><div style="font-size:11.5px;color:var(--ink3);margin-top:3px;font-weight:600">잠시만 기다려주세요</div></div></div></div>';
   _yeorinLoadingTimers[elId]=setInterval(function(){
     idx=(idx+1)%messages.length;
     const m=document.getElementById(elId+'-msg');
@@ -3291,7 +3376,7 @@ function showYeorinBibleInput(book){
   const bk=BIBLE.find(function(b){return b.n===book;});
   const maxCh=bk?bk.c:0;
   showPopup('<button class="popup-close" onclick="closePopup()">'+ico('close',14)+'</button>'
-    +'<div style="text-align:center;margin-bottom:14px"><img src="'+YIMG+'" style="height:40px;border-radius:50%;margin-bottom:6px"><h3 style="margin:0">여린이에게 물어보기</h3>'
+    +'<div style="text-align:center;margin-bottom:16px"><img src="'+YIMG_FULL+'" style="height:96px;margin-bottom:8px"><h3 style="margin:0">여린이에게 물어보기</h3>'
     +'<div style="font-size:12px;color:var(--b5);margin-top:4px">'+escapeHtml(book)+' 몇 장이 궁금하세요? (1~'+maxCh+'장)</div></div>'
     +'<div class="fg"><input class="input-field" id="ybChInput" type="number" min="1" max="'+maxCh+'" placeholder="예: 1" style="text-align:center;font-size:18px;font-weight:700"></div>'
     +'<button class="btn-primary" id="ybBtn" onclick="submitYeorinBible(\''+book.replace(/'/g,"\\'")+'\','+maxCh+')">물어보기</button>');
