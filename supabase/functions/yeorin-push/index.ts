@@ -87,7 +87,7 @@ async function dispatch(req:Request){
     if(row.target_profile_id)q=q.eq('profile_id',row.target_profile_id);
     else if(row.actor_profile_id)q=q.neq('profile_id',row.actor_profile_id);
     const {data:subs}=await q;
-    const payload=JSON.stringify({title:row.title||'여린교회',body:row.body,icon:'/icons/icon-192.png',badge:'/icons/favicon-32.png',tag:row.dedupe_key,data:row.data||{}});
+    const payload=JSON.stringify({title:row.title||'여린교회',body:row.body,icon:'/icons/icon-192.png',badge:'/icons/notification-badge.png',tag:row.dedupe_key,data:row.data||{}});
     for(const s of subs||[]){
       try{
         await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},payload,{TTL:86400,urgency:'normal'} as any);
