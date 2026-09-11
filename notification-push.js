@@ -12,10 +12,10 @@
   const SUPABASE_KEY='sb_publishable_u2DS4ojwca6PYqBZl5LwbQ_Lse_EiPV';
   const PUSH_URL=SUPABASE_URL+'/functions/v1/yeorin-push';
   let swRegPromise=null;
-  let modalOpen=false;
 
   function supported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
   function standalone(){return !!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;}
+  function currentUser(){try{return typeof CU!=='undefined'&&CU?CU:null;}catch(e){return null;}}
   function sessionToken(){try{return window.YeorinNative&&window.YeorinNative.session&&window.YeorinNative.session.access_token||'';}catch(e){return'';}}
   function b64ToU8(base64){const p='='.repeat((4-base64.length%4)%4),s=(base64+p).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(s),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 
@@ -36,7 +36,7 @@
   async function currentSubscription(){try{return (await sw()).pushManager.getSubscription();}catch(e){return null;}}
 
   async function syncExisting(){
-    if(!supported()||Notification.permission!=='granted'||!window.CU)return false;
+    if(!supported()||Notification.permission!=='granted'||!currentUser())return false;
     const reg=await sw();const sub=await reg.pushManager.getSubscription();if(!sub)return false;
     await pushApi('subscribe',{subscription:sub.toJSON()});return true;
   }
@@ -117,11 +117,11 @@
       '<div class="push-desc">새 글과 내 글의 반응, 캘린더 일정을 휴대폰 알림으로 알려드려요.</div>'+
       '<div class="push-list"><div>• 새로운 나눔 / 기도제목</div><div>• 커뮤니티 새 글</div><div>• 내 글의 좋아요 / 댓글</div><div>• 생일 및 주요 캘린더 일정</div></div>'+
       '<div class="push-actions">'+main+'</div><div class="push-help">내가 작성한 새 글은 내 휴대폰에 다시 알리지 않아요.</div></div>';
-    document.body.appendChild(root);modalOpen=true;
+    document.body.appendChild(root);
   }
 
-  window.openYeorinPushSettings=function(){renderModal().catch(e=>showToast&&showToast('알림 설정을 열지 못했어요','error'));};
-  window.closeYeorinPushSettings=function(){document.getElementById('yeorinPushModal')?.remove();modalOpen=false;};
+  window.openYeorinPushSettings=function(){renderModal().catch(()=>{if(typeof showToast==='function')showToast('알림 설정을 열지 못했어요','error');});};
+  window.closeYeorinPushSettings=function(){document.getElementById('yeorinPushModal')?.remove();};
   window.turnOnYeorinPush=async function(){
     const b=document.querySelector('#yeorinPushModal .push-btn');if(b){b.disabled=true;b.textContent='알림 연결 중...';}
     try{await enablePush();if(typeof showToast==='function')showToast('휴대폰 알림을 켰어요','success');await renderModal();paintState();}
@@ -135,8 +135,8 @@
 
   async function navigate(data){
     if(!data||!data.tab)return;
-    for(let i=0;i<30&&!window.CU;i++)await new Promise(r=>setTimeout(r,150));
-    if(!window.CU)return;
+    for(let i=0;i<30&&!currentUser();i++)await new Promise(r=>setTimeout(r,150));
+    if(!currentUser())return;
     if(data.tab==='community'){
       if(typeof window.switchTab==='function')window.switchTab('community');
       try{if(typeof window.refreshCommunity==='function')await window.refreshCommunity();}catch(e){}
