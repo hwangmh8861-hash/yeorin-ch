@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node build.mjs && node ui-patch.mjs && node date-speed-patch.mjs",
+  "buildCommand": "node build.mjs",
   "outputDirectory": "dist",
   "cleanUrls": true
 }
