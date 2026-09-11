@@ -53,9 +53,8 @@ html=html.slice(0,headAt)+yeorinUiPatch+'\n'+html.slice(headAt);
 const native=await readFile(join(root,'supabase-native.js'),'utf8');
 const gasZero=await readFile(join(root,'gas-zero-patch.js'),'utf8');
 const community=await readFile(join(root,'community.js'),'utf8');
-const communityImageFix=await readFile(join(root,'community-image-fix.js'),'utf8');
-const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
-  +'\n\n'+communityImageFix.replace(/<\/script/gi,'<\\/script');
+// 사진 주소 보정은 community.js에 통합되어 community-image-fix.js는 더 이상 넣지 않습니다.
+const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
