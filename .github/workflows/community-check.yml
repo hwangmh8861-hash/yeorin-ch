@@ -4,6 +4,8 @@ on:
     paths:
       - 'community.js'
       - 'community-image-fix.js'
+      - 'notification-push.js'
+      - 'sw.js'
       - 'build.mjs'
       - 'scripts/validate-community.mjs'
       - '.github/workflows/community-check.yml'
@@ -16,6 +18,9 @@ jobs:
         with:
           node-version: '20'
       - run: node --check community-image-fix.js
+      - run: node --check notification-push.js
+      - run: node --check sw.js
       - run: node scripts/validate-community.mjs
       - run: node build.mjs
       - run: test -s dist/index.html
+      - run: test -s dist/sw.js
