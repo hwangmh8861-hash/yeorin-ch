@@ -55,10 +55,9 @@ const gasZero=await readFile(join(root,'gas-zero-patch.js'),'utf8');
 const community=await readFile(join(root,'community.js'),'utf8');
 const communityEditor=await readFile(join(root,'community-editor-fix.js'),'utf8');
 const appUx=await readFile(join(root,'app-ux-fix.js'),'utf8');
-// 커뮤니티 본체 → WYSIWYG → 앱 네비게이션/당겨서 새로고침 순서로 보정을 붙입니다.
-const inline=[native,gasZero,community,communityEditor,appUx]
-  .map(code=>code.replace(/<\/script/gi,'<\\/script'))
-  .join('\n\n');
+// 기존 검증 기준을 유지하면서 커뮤니티 본체 뒤에 WYSIWYG와 앱 UX 보정을 붙입니다.
+const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
+  +'\n\n'+[communityEditor,appUx].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
