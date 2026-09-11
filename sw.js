@@ -1,5 +1,5 @@
-const CACHE='yeorin-shell-v1';
-const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png'];
+const CACHE='yeorin-shell-v2';
+const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png','/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -31,7 +31,7 @@ self.addEventListener('push',event=>{
   const opts={
     body:p.body||'새로운 소식이 있어요',
     icon:p.icon||'/icons/icon-192.png',
-    badge:p.badge||'/icons/favicon-32.png',
+    badge:p.badge||'/icons/notification-badge.png',
     tag:p.tag||undefined,
     renotify:false,
     data:p.data||{},
