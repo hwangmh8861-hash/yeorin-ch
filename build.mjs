@@ -24,6 +24,19 @@ html=html.replace(/function gas\(fn,\.\.\.a\)\{[\s\S]*?\n\}\n(?=\n)/,'');
 if(html.includes('script.google.com/macros/s/'))throw new Error('Legacy GAS URL is still present in index.html');
 if(html.includes('function gas(fn,...a){'))throw new Error('Legacy gas() transport is still present in index.html');
 
+// 여린이 AI 응답 카드 UI 보정
+// - 기존 왼쪽 초록 세로선 제거
+// - 결과 카드의 여린이 캐릭터를 정확히 3배 확대(40px → 120px)
+const yeorinUiPatch=`<style id="yeorin-ui-hotfix">
+[id^="yeorin"] [style*="border-left"]{border-left:none!important;}
+#yeorinQT .yeorin-img-lg,#yeorinBible .yeorin-img-lg{height:120px!important;width:auto!important;max-width:none!important;object-fit:contain!important;margin-right:14px!important;}
+#yeorinQT .card>div:first-child,#yeorinBible .card>div:first-child{gap:14px!important;margin-bottom:14px!important;}
+[id^="yeorinPr-"] .yeorin-img{height:90px!important;width:auto!important;max-width:none!important;object-fit:contain!important;margin-right:10px!important;}
+</style>`;
+const headAt=html.lastIndexOf('</head>');
+if(headAt<0)throw new Error('index.html head close tag not found');
+html=html.slice(0,headAt)+yeorinUiPatch+'\n'+html.slice(headAt);
+
 // 네이티브 Supabase 엔진과 GAS-zero 패치를 본문에 직접 삽입합니다.
 const native=await readFile(join(root,'supabase-native.js'),'utf8');
 const gasZero=await readFile(join(root,'gas-zero-patch.js'),'utf8');
