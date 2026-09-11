@@ -11,7 +11,7 @@ async function copyDir(src,dst){
     if(['.git','dist','node_modules'].includes(name))continue;
     const from=join(src,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
-    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js'].includes(name))await copyFile(from,to);
+    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js'].includes(name))await copyFile(from,to);
   }
 }
 await copyDir(root,dist);
@@ -49,10 +49,11 @@ const headAt=html.lastIndexOf('</head>');
 if(headAt<0)throw new Error('index.html head close tag not found');
 html=html.slice(0,headAt)+yeorinUiPatch+'\n'+html.slice(headAt);
 
-// 네이티브 Supabase 엔진과 GAS-zero 패치를 본문에 직접 삽입합니다.
+// 네이티브 Supabase 엔진과 UI 패치를 본문에 직접 삽입합니다.
 const native=await readFile(join(root,'supabase-native.js'),'utf8');
 const gasZero=await readFile(join(root,'gas-zero-patch.js'),'utf8');
-const inline=[native,gasZero].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
+const community=await readFile(join(root,'community.js'),'utf8');
+const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
