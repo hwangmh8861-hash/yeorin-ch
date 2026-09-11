@@ -24,10 +24,22 @@ html=html.replace(/function gas\(fn,\.\.\.a\)\{[\s\S]*?\n\}\n(?=\n)/,'');
 if(html.includes('script.google.com/macros/s/'))throw new Error('Legacy GAS URL is still present in index.html');
 if(html.includes('function gas(fn,...a){'))throw new Error('Legacy gas() transport is still present in index.html');
 
-// 여린이 AI 응답 카드 UI 보정
-// - 기존 왼쪽 초록 세로선 제거
-// - 결과 카드의 여린이 캐릭터를 정확히 3배 확대(40px → 120px)
+// 설치형 PWA의 최상단 상태바를 hero와 자연스럽게 이어지게 합니다.
+// iOS에서는 theme-color만으로 임의 색상 상태바를 만들 수 없어서
+// black-translucent로 콘텐츠를 상태바 뒤까지 확장하고 safe-area만큼 hero 여백을 확보합니다.
+html=html.replace(
+  /<meta name="apple-mobile-web-app-status-bar-style" content="[^"]*">/,
+  '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
+);
+html=html.replace(
+  /<meta name="theme-color" content="[^"]*">/,
+  '<meta name="theme-color" content="#2F6B47">'
+);
+
+// 여린이 AI 응답 카드 UI 보정 + PWA 상단 safe-area 보정
 const yeorinUiPatch=`<style id="yeorin-ui-hotfix">
+html{background:#2F6B47!important;}
+.hero{padding-top:calc(12px + env(safe-area-inset-top))!important;}
 [id^="yeorin"] [style*="border-left"]{border-left:none!important;}
 #yeorinQT .yeorin-img-lg,#yeorinBible .yeorin-img-lg{height:120px!important;width:auto!important;max-width:none!important;object-fit:contain!important;margin-right:14px!important;}
 #yeorinQT .card>div:first-child,#yeorinBible .card>div:first-child{gap:14px!important;margin-bottom:14px!important;}
