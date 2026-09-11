@@ -127,11 +127,24 @@
   }
 
   // 기존 UI 함수들은 그대로 이 API만 호출합니다. GAS 네트워크는 더 이상 사용하지 않습니다.
-  window.gas=function(fn,...args){return call(fn,args);};
+  // 글·댓글·반응이 바뀌면 주간 캐시를 비워서, 날짜를 다시 열었을 때 예전 목록이 뜨지 않게 합니다.
+  const POST_WRITES=new Set(['addQTPost','updateQTPost','deleteQTPost','addPrayerPost','updatePrayerPost','deletePrayerPost','addComment','deleteComment','toggleReaction']);
+  function invalidateWeeks(){
+    weekMem.clear();weekInflight.clear();
+    try{Object.keys(localStorage).forEach(k=>{if(k.indexOf('yeorin_native_week_')===0)localStorage.removeItem(k);});}catch(e){}
+  }
+  window.gas=async function(fn,...args){
+    const r=await call(fn,args);
+    if(POST_WRITES.has(fn))invalidateWeeks();
+    if(fn==='updateProfile'&&typeof CU!=='undefined'&&CU)saveProfile(CU);
+    return r;
+  };
   window.YeorinNative={call,directRpc,edgeRpc,fetchWeek,prefetchAround,clearCaches,get session(){return session;},get profile(){return profile;}};
 
   // 로그인 성공 후 데이터가 올 때까지 앱 진입을 막지 않습니다.
   window.enterApp=async function(){
+    // 로그인할 때 기존 코드가 저장한 평문 비밀번호를 바로 지웁니다. 이제 세션 토큰으로 자동 로그인합니다.
+    try{localStorage.removeItem('yeorin_user');}catch(e){}
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('registerScreen').style.display='none';
     document.getElementById('app').style.display='block';
