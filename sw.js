@@ -1,4 +1,4 @@
-const CACHE='yeorin-shell-v2';
+const CACHE='yeorin-shell-v3';
 const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png','/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
