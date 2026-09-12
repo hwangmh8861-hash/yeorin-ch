@@ -6,6 +6,7 @@ on:
       - 'community-image-fix.js'
       - 'notification-push.js'
       - 'nanum-v2.js'
+      - 'bible-provider.js'
       - 'sw.js'
       - 'build.mjs'
       - 'scripts/validate-community.mjs'
@@ -20,6 +21,7 @@ jobs:
           node-version: '20'
       - run: node --check community-image-fix.js
       - run: node --check notification-push.js
+      - run: node --check bible-provider.js
       - run: node --check nanum-v2.js
       - run: node --check sw.js
       - run: node scripts/validate-community.mjs
