@@ -95,13 +95,7 @@
     linkInflight[u] = fetch(LINK_FN, {method:'POST', headers:headers, body:JSON.stringify({url:u})})
       .then(function(r){ return r.json(); })
       .then(function(d){
-        var raw = (d && d.preview) ? d.preview : d;
-        var data = (raw && !raw.error) ? {
-          url: (d && d.url) || raw.url || u,
-          title: raw.title || u,
-          image: raw.image || '',
-          site: raw.site || raw.siteName || hostOf(u)
-        } : {url:u, title:u, site:hostOf(u)};
+        var data = (d && !d.error) ? d : {url:u, title:u, site:hostOf(u)};
         linkStore(u, data);
         delete linkInflight[u];
         return data;
@@ -320,12 +314,12 @@
       + '<div class="fg"><label class="q-label">읽은 말씀</label>'
       + '<div style="display:flex;gap:8px">'
       + '<select class="select-field" id="qB" style="flex:1">' + opts + '</select>'
-      + '<input class="input-field" id="qCF" type="number" inputmode="numeric" style="width:88px;text-align:center">'
+      + (hasBible ? '<select class="select-field" id="qCF" style="width:104px;text-align:center"><option value="">장 선택</option></select>' : '<input class="input-field" id="qCF" type="number" inputmode="numeric" style="width:88px;text-align:center">')
       + '</div></div>'
       + (hasBible
           ? '<div class="fg"><div class="nv-vlist" id="qVL"></div><div class="nv-hint" id="qVH">마음에 닿은 절을 탭하면 인상 깊은 구절로 담겨요</div></div>'
           : '<div class="fg"><label class="q-label">인상 깊은 구절</label><textarea class="input-field" id="qBV" rows="3"></textarea></div>')
-      + '<input type="hidden" id="qVF"><input type="hidden" id="qVT"><input type="hidden" id="qCT">'
+      + (hasBible ? '<input type="hidden" id="qBV">' : '') + '<input type="hidden" id="qVF"><input type="hidden" id="qVT"><input type="hidden" id="qCT">'
       + '<div class="fg"><label class="q-label">나누고 싶은 내용</label><textarea class="input-field" id="qSH" rows="4"></textarea></div>'
       + '<div class="fg"><label class="q-label">적용할 점</label><textarea class="input-field" id="qAP" rows="3"></textarea></div>'
       + '<div class="fg"><label class="q-label">궁금한 점 (선택)</label><textarea class="input-field" id="qQQ" rows="2"></textarea></div>'
@@ -356,10 +350,27 @@
 
     var bookEl = document.getElementById('qB'), chEl = document.getElementById('qCF');
     if(!bookEl || !chEl) return;
-    var load = function(){ loadChapter(bookEl.value, chEl.value); };
-    bookEl.addEventListener('change', load);
+
+    function fillChapters(selected){
+      if(chEl.tagName !== 'SELECT') return;
+      var info = (typeof BIBLE !== 'undefined' ? BIBLE : []).find(function(x){ return x.n === bookEl.value; });
+      var max = info ? Number(info.c) : 0;
+      var html = '<option value="">장 선택</option>';
+      for(var n=1;n<=max;n++) html += '<option value="'+n+'"'+(String(selected)===String(n)?' selected':'')+'>'+n+'장</option>';
+      chEl.innerHTML = html;
+    }
+
+    var draftCh = (typeof qtDraft !== 'undefined' && qtDraft && qtDraft.cf) ? String(qtDraft.cf) : chEl.value;
+    fillChapters(draftCh);
+    var load = function(){
+      setHidden('qVF','');setHidden('qVT','');setHidden('qCT',chEl.value||'');setHidden('qBV','');
+      var list=document.getElementById('qVL');
+      if(list&&!chEl.value)list.innerHTML='<div style="padding:14px;color:var(--ink3);font-size:13px">장을 선택하면 본문을 자동으로 불러와요</div>';
+      loadChapter(bookEl.value, chEl.value);
+    };
+    bookEl.addEventListener('change', function(){ fillChapters(''); load(); });
     chEl.addEventListener('change', load);
-    if(chEl.value) load();
+    if(chEl.value) loadChapter(bookEl.value, chEl.value);
   }
 
   function loadChapter(book, ch){
@@ -369,39 +380,54 @@
     list.innerHTML = '<div style="padding:14px;color:var(--ink3);font-size:13px">본문을 불러오는 중</div>';
 
     window.YeorinBible.getChapter(book, ch).then(function(verses){
-      list.innerHTML = (verses || []).map(function(v){
-        return '<div class="nv-vr" data-v="' + v.v + '"><div class="nv-vn">' + v.v + '</div>'
+      if(!verses || !verses.length){
+        list.innerHTML = '<div style="padding:14px;color:var(--ink3);font-size:13px">이 장의 본문을 찾지 못했어요</div>';
+        return;
+      }
+      list.innerHTML = verses.map(function(v){
+        var key = String(v.key || v.label || v.v);
+        var label = String(v.label || v.v);
+        return '<div class="nv-vr" data-v="' + escapeHtml(key) + '"><div class="nv-vn">' + escapeHtml(label) + '</div>'
           + '<div class="nv-vt">' + escapeHtml(v.t) + '</div></div>';
       }).join('');
       list.querySelectorAll('.nv-vr').forEach(function(row){
-        row.addEventListener('click', function(){ toggleVerse(row, verses); });
+        row.addEventListener('click', function(){ toggleVerse(row, verses, ch); });
       });
-    }).catch(function(){
-      list.innerHTML = '<div style="padding:14px;color:var(--ink3);font-size:13px">본문을 불러오지 못했어요</div>';
+    }).catch(function(e){
+      console.warn('[bible chapter]', e);
+      list.innerHTML = '<div style="padding:14px;color:var(--ink3);font-size:13px">본문을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>';
     });
   }
 
-  function toggleVerse(row, verses){
-    var v = Number(row.dataset.v);
-    var i = picked.indexOf(v);
+  function toggleVerse(row, verses, ch){
+    var key = String(row.dataset.v || '');
+    var i = picked.indexOf(key);
     if(i >= 0){ picked.splice(i, 1); row.classList.remove('on'); }
-    else { picked.push(v); row.classList.add('on'); }
-    picked.sort(function(a, b){ return a - b; });
+    else { picked.push(key); row.classList.add('on'); }
+
+    var map = {};
+    (verses || []).forEach(function(x){ map[String(x.key || x.label || x.v)] = x; });
+    picked.sort(function(a, b){
+      var av=map[a],bv=map[b];
+      return Number(av&&av.v||0)-Number(bv&&bv.v||0);
+    });
+    var selected = picked.map(function(k){return map[k];}).filter(Boolean);
 
     var hint = document.getElementById('qVH');
     if(hint){
-      hint.innerHTML = picked.length
-        ? '<span style="color:var(--brand);font-weight:500">' + picked.length + '절 담김</span> · 다시 탭하면 빠져요'
+      hint.innerHTML = selected.length
+        ? '<span style="color:var(--brand);font-weight:500">' + selected.length + '개 구절 담김</span> · 다시 탭하면 빠져요'
         : '마음에 닿은 절을 탭하면 인상 깊은 구절로 담겨요';
     }
 
-    var map = {};
-    (verses || []).forEach(function(x){ map[x.v] = x.t; });
-    var text = picked.map(function(n){ return map[n] || ''; }).join(' ');
+    var text = selected.map(function(x){ return x.t || ''; }).join(' ');
+    var first = selected.length ? selected[0] : null;
+    var last = selected.length ? selected[selected.length-1] : null;
 
     setHidden('qBV', text);
-    setHidden('qVF', picked.length ? picked[0] : '');
-    setHidden('qVT', picked.length ? picked[picked.length - 1] : '');
+    setHidden('qVF', first ? first.v : '');
+    setHidden('qVT', last ? (last.to || last.v) : '');
+    setHidden('qCT', selected.length ? ch : '');
   }
 
   function setHidden(id, val){
