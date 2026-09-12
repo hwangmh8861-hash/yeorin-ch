@@ -12,8 +12,12 @@
 
   const STYLE_ID='yeorin-app-ux-style';
   const PTR_ID='yeorinPullRefresh';
-  const PULL_TRIGGER=72;
+  const PULL_TRIGGER=76;
+  const PULL_RAW_TRIGGER=120;
   const PULL_MAX=112;
+  const PULL_ACTIVATE_DISTANCE=14;
+  const PULL_HOLD_MS=170;
+  const PULL_HORIZONTAL_TOLERANCE=24;
   let historyReady=false;
   let historyNavigating=false;
   let overlayBounce=false;
@@ -21,8 +25,13 @@
   let lastRootBackAt=0;
   let refreshing=false;
   let pullActive=false;
+  let pullIntent=false;
+  let pullArmed=false;
+  let pullStartX=0;
   let pullStartY=0;
   let pullDistance=0;
+  let pullRawDistance=0;
+  let pullArmTimer=null;
 
   function inApp(){
     try{return typeof CU!=='undefined'&&!!CU;}catch(e){return false;}
@@ -71,6 +80,32 @@
   }
   function hideIndicator(){
     const el=indicator();el.classList.remove('show','ready','loading');el.style.transform='translate(-50%,-72px)';
+  }
+  function clearPullArm(){
+    if(pullArmTimer){clearTimeout(pullArmTimer);pullArmTimer=null;}
+    pullArmed=false;
+    const el=document.getElementById(PTR_ID);if(el)delete el.dataset.vib;
+  }
+  function cancelPull(){
+    clearPullArm();
+    pullActive=false;
+    pullIntent=false;
+    pullDistance=0;
+    pullRawDistance=0;
+    hideIndicator();
+  }
+  function armPullRefresh(){
+    if(pullArmed||pullArmTimer)return;
+    pullArmTimer=setTimeout(function(){
+      pullArmTimer=null;
+      if(!pullActive||!pullIntent||pullRawDistance<PULL_RAW_TRIGGER)return;
+      pullArmed=true;
+      setIndicator(pullDistance,'ready','놓으면 업데이트');
+      const el=indicator();
+      if(navigator.vibrate&&!el.dataset.vib){
+        el.dataset.vib='1';try{navigator.vibrate(8);}catch(err){}
+      }
+    },PULL_HOLD_MS);
   }
 
   function popupOpen(){
@@ -212,35 +247,64 @@
   document.addEventListener('touchstart',function(e){
     if(refreshing||popupOpen()||isEditable(e.target)||window.scrollY>1||!inApp())return;
     if(!e.touches||e.touches.length!==1)return;
-    pullActive=true;pullStartY=e.touches[0].clientY;pullDistance=0;
+    clearPullArm();
+    const touch=e.touches[0];
+    pullActive=true;
+    pullIntent=false;
+    pullStartX=touch.clientX;
+    pullStartY=touch.clientY;
+    pullDistance=0;
+    pullRawDistance=0;
   },{passive:true});
 
   document.addEventListener('touchmove',function(e){
     if(!pullActive||!e.touches||e.touches.length!==1)return;
-    const raw=e.touches[0].clientY-pullStartY;
-    if(raw<=0){pullDistance=0;hideIndicator();return;}
-    if(window.scrollY>1){pullActive=false;hideIndicator();return;}
-    pullDistance=Math.min(PULL_MAX,raw*.58);
-    if(pullDistance>5)e.preventDefault();
-    const ready=pullDistance>=PULL_TRIGGER;
-    setIndicator(pullDistance,ready?'ready':'pull',ready?'놓으면 업데이트':'당겨서 새로고침');
-    if(ready&&navigator.vibrate&&!indicator().dataset.vib){
-      indicator().dataset.vib='1';try{navigator.vibrate(8);}catch(err){}
+    const touch=e.touches[0];
+    const dx=touch.clientX-pullStartX;
+    const raw=touch.clientY-pullStartY;
+    const absX=Math.abs(dx);
+
+    if(window.scrollY>1){cancelPull();return;}
+    if(raw<-6){cancelPull();return;}
+
+    if(!pullIntent){
+      if(raw<PULL_ACTIVATE_DISTANCE)return;
+      if(absX>PULL_HORIZONTAL_TOLERANCE&&absX>raw*.75){cancelPull();return;}
+      if(raw<=absX*1.15)return;
+      pullIntent=true;
     }
-    if(!ready)delete indicator().dataset.vib;
+
+    if(absX>36&&absX>raw*.9){cancelPull();return;}
+
+    pullRawDistance=Math.max(0,raw);
+    pullDistance=Math.min(PULL_MAX,Math.max(0,(pullRawDistance-PULL_ACTIVATE_DISTANCE)*.72));
+    if(pullDistance>5)e.preventDefault();
+
+    if(pullRawDistance>=PULL_RAW_TRIGGER){
+      if(pullArmed)setIndicator(pullDistance,'ready','놓으면 업데이트');
+      else{
+        setIndicator(pullDistance,'pull','잠깐 유지해주세요');
+        armPullRefresh();
+      }
+    }else{
+      clearPullArm();
+      setIndicator(pullDistance,'pull','당겨서 새로고침');
+    }
   },{passive:false});
 
   function finishPull(){
     if(!pullActive)return;
-    const shouldRefresh=pullDistance>=PULL_TRIGGER;
+    const shouldRefresh=pullIntent&&pullArmed&&pullRawDistance>=PULL_RAW_TRIGGER;
+    clearPullArm();
     pullActive=false;
-    const el=indicator();delete el.dataset.vib;
+    pullIntent=false;
+    pullDistance=0;
+    pullRawDistance=0;
     if(shouldRefresh)refreshCurrentView();
     else hideIndicator();
-    pullDistance=0;
   }
   document.addEventListener('touchend',finishPull,{passive:true});
-  document.addEventListener('touchcancel',finishPull,{passive:true});
+  document.addEventListener('touchcancel',cancelPull,{passive:true});
 
   document.addEventListener('scroll',function(){
     if(historyReady&&!historyNavigating){
