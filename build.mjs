@@ -11,7 +11,7 @@ async function copyDir(src,dst){
     if(['.git','dist','node_modules'].includes(name))continue;
     const from=join(src,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
-    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js'].includes(name))await copyFile(from,to);
+    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js'].includes(name))await copyFile(from,to);
   }
 }
 await copyDir(root,dist);
@@ -58,9 +58,10 @@ const appUx=await readFile(join(root,'app-ux-fix.js'),'utf8');
 const exitHint=await readFile(join(root,'exit-hint-timeout.js'),'utf8');
 const nanumTime=await readFile(join(root,'nanum-time-fix.js'),'utf8');
 const push=await readFile(join(root,'notification-push.js'),'utf8');
+const nanumV2=await readFile(join(root,'nanum-v2.js'),'utf8');
 // 기존 검증 기준을 유지하면서 커뮤니티 본체 뒤에 WYSIWYG, 앱 UX, 나눔 날짜/시각, 푸시 알림 보정을 붙입니다.
 const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
-  +'\n\n'+[communityEditor,appUx,exitHint,nanumTime,push].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
+  +'\n\n'+[communityEditor,appUx,exitHint,nanumV2,nanumTime,push].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
