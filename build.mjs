@@ -9,9 +9,9 @@ async function copyDir(src,dst){
   await mkdir(dst,{recursive:true});
   for(const name of await readdir(src)){
     if(['.git','dist','node_modules'].includes(name))continue;
-    const from=join(src,name),to=join(dst,name),info=await stat(from);
+    const from=join(root,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
-    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js','bible-provider.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js'].includes(name))await copyFile(from,to);
+    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js','bible-provider.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js'].includes(name))await copyFile(from,to);
   }
 }
 await copyDir(root,dist);
@@ -63,9 +63,10 @@ const nanumV2=await readFile(join(root,'nanum-v2.js'),'utf8');
 const nanumV2ComposeFix=await readFile(join(root,'nanum-v2-compose-fix.js'),'utf8');
 const nanumRangePatch=await readFile(join(root,'nanum-range-patch.js'),'utf8');
 const nanumRangeOpenEndedFix=await readFile(join(root,'nanum-range-open-ended-fix.js'),'utf8');
-// 기존 검증 기준을 유지하면서 커뮤니티 본체 뒤에 WYSIWYG, 앱 UX, 성경 본문 공급자, 나눔 V2, 작성 버튼 복구, 다중 장 선택, 자유 범위 선택, 날짜/시각, 푸시 알림 보정을 붙입니다.
+const addressbookFix=await readFile(join(root,'addressbook-fix.js'),'utf8');
+// 기존 검증 기준을 유지하면서 커뮤니티 본체 뒤에 WYSIWYG, 앱 UX, 주소록 지연 로드, 성경 본문 공급자, 나눔 V2, 작성 버튼 복구, 다중 장 선택, 자유 범위 선택, 날짜/시각, 푸시 알림 보정을 붙입니다.
 const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
-  +'\n\n'+[communityEditor,appUx,exitHint,bibleProvider,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,push].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
+  +'\n\n'+[communityEditor,appUx,addressbookFix,exitHint,bibleProvider,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,push].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
