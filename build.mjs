@@ -9,7 +9,7 @@ async function copyDir(src,dst){
   await mkdir(dst,{recursive:true});
   for(const name of await readdir(src)){
     if(['.git','dist','node_modules'].includes(name))continue;
-    const from=join(root,name),to=join(dst,name),info=await stat(from);
+    const from=join(src,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
     else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js','bible-provider.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js'].includes(name))await copyFile(from,to);
   }
