@@ -6,6 +6,8 @@ on:
       - 'community-image-fix.js'
       - 'notification-push.js'
       - 'nanum-v2.js'
+      - 'nanum-v2-compose-fix.js'
+      - 'nanum-range-patch.js'
       - 'bible-provider.js'
       - 'sw.js'
       - 'build.mjs'
@@ -23,6 +25,8 @@ jobs:
       - run: node --check notification-push.js
       - run: node --check bible-provider.js
       - run: node --check nanum-v2.js
+      - run: node --check nanum-v2-compose-fix.js
+      - run: node --check nanum-range-patch.js
       - run: node --check sw.js
       - run: node scripts/validate-community.mjs
       - run: node build.mjs
