@@ -1,4 +1,4 @@
-const CACHE='yeorin-shell-v5';
+const CACHE='yeorin-shell-v6';
 const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png','/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
@@ -47,6 +47,8 @@ function pushUrl(data){
   if(data&&data.date)u.searchParams.set('pushDate',String(data.date));
   if(data&&data.postId)u.searchParams.set('pushPost',String(data.postId));
   if(data&&data.challengeId)u.searchParams.set('pushChallenge',String(data.challengeId));
+  if(data&&data.authorId)u.searchParams.set('pushAuthor',String(data.authorId));
+  if(data&&data.storyId)u.searchParams.set('pushStory',String(data.storyId));
   return u.toString();
 }
 
