@@ -19,4 +19,4 @@ installModalPatch();setTimeout(()=>{installModalPatch();paintBadge();if(coldStor
 console.log('[Yeorin] iPhone/story push fix ready');
 })();
 
-(function(){if(document.getElementById('yeorin-story-v2-runtime'))return;const s=document.createElement('script');s.id='yeorin-story-v2-runtime';s.src='/story-experience-v2.js?v=20260913-2';s.defer=true;document.head.appendChild(s)})();
+(function(){if(document.getElementById('yeorin-story-v2-runtime'))return;const s=document.createElement('script');s.id='yeorin-story-v2-runtime';s.src='/story-experience-v2.js?v=20260913-3';s.defer=true;document.head.appendChild(s)})();
