@@ -1,4 +1,4 @@
-const CACHE='yeorin-shell-v4';
+const CACHE='yeorin-shell-v5';
 const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png','/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
@@ -17,7 +17,7 @@ self.addEventListener('fetch',event=>{
   const req=event.request;if(req.method!=='GET')return;
   const url=new URL(req.url);if(url.origin!==self.location.origin)return;
   if(req.mode==='navigate'){
-    event.respondWith(fetch(req).catch(()=>caches.match('/')));
+    event.respondWith(fetch(req,{cache:'no-store'}).catch(()=>caches.match('/')));
     return;
   }
   if(url.pathname.startsWith('/icons/')||url.pathname==='/manifest.json'){
