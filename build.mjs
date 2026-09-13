@@ -66,7 +66,15 @@ const nanumRangePatch=await readFile(join(root,'nanum-range-patch.js'),'utf8');
 const nanumRangeOpenEndedFix=await readFile(join(root,'nanum-range-open-ended-fix.js'),'utf8');
 const addressbookFix=await readFile(join(root,'addressbook-fix.js'),'utf8');
 const avatar=await readFile(join(root,'avatar.js'),'utf8');
-const socialFeed=await readFile(join(root,'social-feed.js'),'utf8');
+let socialFeed=await readFile(join(root,'social-feed.js'),'utf8');
+
+// 소셜 피드에서도 QT 원문을 상세 나눔 화면과 동일하게 빠짐없이 노출합니다.
+// 기존 구현은 적용/나눔 내용이 있으면 bestVerse와 question을 숨겨 글이 잘린 것처럼 보였습니다.
+const oldSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const a=[p.shareContent,p.applyContent].filter(Boolean).join('\n\n');return esc(a||p.bestVerse||'').replace(/\n/g,'<br>')}return esc(p.situation||'').replace(/\n/g,'<br>')}`;
+const fullSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const rows=[['인상 깊은 구절',p.bestVerse],['적용할 점',p.applyContent],['나누고 싶은 내용',p.shareContent],['궁금한 점',p.question]].filter(x=>x[1]);return rows.map((x,i)=>'<div'+(i?' style="margin-top:14px"':'')+'><div style="font-size:11px;font-weight:850;color:var(--brand);margin-bottom:4px">'+x[0]+'</div><div>'+esc(x[1]).replace(/\n/g,'<br>')+'</div></div>').join('')}return esc(p.situation||'').replace(/\n/g,'<br>')}`;
+if(!socialFeed.includes(oldSocialBody))throw new Error('social-feed bodyText patch target not found');
+socialFeed=socialFeed.replace(oldSocialBody,fullSocialBody);
+
 const challengeReminder=await readFile(join(root,'challenge-reminder-ui.js'),'utf8');
 const challengePushNav=await readFile(join(root,'challenge-push-nav.js'),'utf8');
 
