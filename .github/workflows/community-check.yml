@@ -5,6 +5,9 @@ on:
       - 'community.js'
       - 'community-image-fix.js'
       - 'notification-push.js'
+      - 'push-ios-story-fix.js'
+      - 'story-picker-ui.js'
+      - 'story-experience-v2.js'
       - 'nanum-v2.js'
       - 'nanum-v2-compose-fix.js'
       - 'nanum-range-patch.js'
@@ -31,6 +34,9 @@ jobs:
           node-version: '20'
       - run: node --check community-image-fix.js
       - run: node --check notification-push.js
+      - run: node --check push-ios-story-fix.js
+      - run: node --check story-picker-ui.js
+      - run: node --check story-experience-v2.js
       - run: node --check bible-provider.js
       - run: node --check bible-reader.js
       - run: node --check nanum-v2.js
