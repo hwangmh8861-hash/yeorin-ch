@@ -13,10 +13,10 @@ async function openChallenge(data){
     bsub='challenge';selBook=null;viewChId=data.challengeId||null;
     if(typeof renderBible==='function')renderBible();
     setTimeout(()=>{
-      if(data.challengeId){
-        const btn=document.querySelector('[onclick*="openChallengeReminder(\\''+String(data.challengeId).replace(/'/g,'')+'\\')"]');
-        if(btn)btn.scrollIntoView({behavior:'smooth',block:'center'});
-      }
+      if(!data.challengeId)return;
+      const id=String(data.challengeId);
+      const btn=Array.from(document.querySelectorAll('#page-bible button')).find(el=>String(el.getAttribute('onclick')||'').includes('openChallengeReminder')&&String(el.getAttribute('onclick')||'').includes(id));
+      if(btn)btn.scrollIntoView({behavior:'smooth',block:'center'});
     },180);
   }catch(e){console.warn('[challenge push nav]',e);}
 }
