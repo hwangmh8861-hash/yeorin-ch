@@ -78,6 +78,20 @@ const fullSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const row
 if(!socialFeed.includes(oldSocialBody))throw new Error('social-feed bodyText patch target not found');
 socialFeed=socialFeed.replace(oldSocialBody,fullSocialBody);
 
+// 상단 달력에서 날짜·사람·종류를 한 번에 적용할 수 있도록 소셜 피드 상태를 원자적으로 갱신합니다.
+const socialDateHook=String.raw`window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};`;
+const unifiedFilterHook=String.raw`window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};
+window.getUnifiedSocialFilter=()=>({kind:state.kind,date:state.date,authors:state.authors.slice()});
+window.applyUnifiedSocialFilter=function(next){
+  const kind=next&&next.kind||'all',date=next&&next.date||'',authors=(next&&Array.isArray(next.authors)?next.authors.filter(Boolean):[]);
+  const same=kind===state.kind&&date===state.date&&authors.length===state.authors.length&&authors.every(x=>state.authors.indexOf(x)>=0);
+  state.kind=kind;state.date=date;state.authors=authors.slice();
+  if(same){render();return Promise.resolve()}
+  return load(true)
+};`;
+if(!socialFeed.includes(socialDateHook))throw new Error('social-feed unified filter hook target not found');
+socialFeed=socialFeed.replace(socialDateHook,unifiedFilterHook);
+
 const challengeReminder=await readFile(join(root,'challenge-reminder-ui.js'),'utf8');
 const challengePushNav=await readFile(join(root,'challenge-push-nav.js'),'utf8');
 
