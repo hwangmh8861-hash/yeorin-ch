@@ -4,6 +4,7 @@
 if(window.__YEORIN_CHALLENGE_REMINDER__)return;window.__YEORIN_CHALLENGE_REMINDER__=true;
 const rpc=(name,body)=>window.YeorinNative.directRpc(name,body||{});
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+let challengeLoad=null,challengeLoadTried=false;
 function current(){try{return CU&&CU.id||''}catch(e){return''}}
 function joinedChallenges(){try{return (AD&&AD.challenges||[]).filter(c=>c.status==='active'&&Array.isArray(c.memberIds)&&c.memberIds.includes(current()))}catch(e){return[]}}
 function inject(){if(document.getElementById('challenge-reminder-style'))return;const s=document.createElement('style');s.id='challenge-reminder-style';s.textContent=`
@@ -14,8 +15,29 @@ window.openChallengeReminder=openModal;
 window.toggleChallengeReminderUI=function(){const b=document.getElementById('crToggle'),t=document.getElementById('crTime');if(!b||!t)return;b.classList.toggle('on');t.disabled=!b.classList.contains('on')};
 window.saveChallengeReminder=async function(id){const b=document.getElementById('crToggle'),t=document.getElementById('crTime'),save=document.querySelector('#challengeReminderModal .cr-save');if(!b||!t)return;const enabled=b.classList.contains('on');if(enabled&&!t.value){showToast('알림 시간을 선택해주세요');return}save.disabled=true;save.textContent='저장 중...';try{await rpc('yeorin_set_challenge_reminder',{p_challenge_id:id,p_enabled:enabled,p_time:enabled?t.value:null});showToast(enabled?'챌린지 알림을 설정했어요':'챌린지 알림을 껐어요','success');document.getElementById('challengeReminderModal')?.remove();if(enabled&&('Notification' in window)&&Notification.permission!=='granted'&&typeof window.openYeorinPushSettings==='function'){setTimeout(()=>window.openYeorinPushSettings(),180)}}catch(e){console.error('[challenge reminder save]',e);showToast('알림 설정 저장 실패','error');save.disabled=false;save.textContent='저장'}};
 function appendCard(){try{if(typeof bsub==='undefined'||bsub!=='challenge')return;const page=document.getElementById('page-bible');if(!page||page.querySelector('[data-challenge-reminder-card]'))return;const list=joinedChallenges();if(!list.length)return;const d=document.createElement('div');d.className='cr-card';d.dataset.challengeReminderCard='1';d.innerHTML='<div class="cr-head"><div class="cr-head-icon">🔔</div><div class="cr-head-main"><div class="cr-title">내 챌린지 알림</div><div class="cr-sub">참여 중인 챌린지마다 원하는 시간을 따로 설정할 수 있어요.</div></div></div>'+list.map(c=>'<div class="cr-row"><div class="cr-row-name">'+esc(c.title)+'</div><button class="cr-btn" onclick="openChallengeReminder(\''+esc(c.id)+'\')">알림 설정</button></div>').join('');page.appendChild(d)}catch(e){console.warn('[challenge reminder card]',e)}}
-const baseRenderBible=window.renderBible;if(typeof baseRenderBible==='function')window.renderBible=function(){const r=baseRenderBible.apply(this,arguments);setTimeout(appendCard,0);return r};
+function ensureChallengeTab(){try{const tabs=document.querySelector('#page-bible .sub-tabs');if(!tabs)return;const exists=[...tabs.querySelectorAll('button')].some(b=>(b.textContent||'').includes('챌린지'));if(exists)return;const b=document.createElement('button');b.className='sub-tab'+((typeof bsub!=='undefined'&&bsub==='challenge')?' active':'');b.innerHTML=(typeof ico==='function'?ico('trophy',15):'🏆')+' 챌린지';b.onclick=()=>{bsub='challenge';selBook=null;viewChId=null;renderBible()};tabs.appendChild(b)}catch(e){console.warn('[challenge tab]',e)}}
+async function ensureChallengeData(force){
+  try{
+    const has=!!(AD&&Array.isArray(AD.challenges)&&AD.challenges.length);
+    if(has&&!force){challengeLoadTried=true;return AD.challenges}
+    if(challengeLoad)return challengeLoad;
+    if(challengeLoadTried&&!force)return (AD&&AD.challenges)||[];
+    challengeLoadTried=true;
+    challengeLoad=rpc('yeorin_full_extra_payload',{}).then(full=>{
+      if(!AD||!full)return[];
+      AD.allBibleProgress=full.allBibleProgress||AD.allBibleProgress||{};
+      AD.challenges=Array.isArray(full.challenges)?full.challenges:[];
+      AD.challengeCerts=Array.isArray(full.challengeCerts)?full.challengeCerts:[];
+      if(typeof curTab!=='undefined'&&curTab==='bible'&&typeof renderBible==='function')setTimeout(()=>renderBible(),0);
+      return AD.challenges;
+    }).catch(e=>{console.warn('[challenge reload]',e);return (AD&&AD.challenges)||[]}).finally(()=>{challengeLoad=null});
+    return challengeLoad;
+  }catch(e){console.warn('[challenge ensure]',e);return[]}
+}
+const baseRenderBible=window.renderBible;if(typeof baseRenderBible==='function')window.renderBible=function(){const r=baseRenderBible.apply(this,arguments);setTimeout(()=>{ensureChallengeTab();appendCard();if(typeof bsub!=='undefined'&&bsub==='challenge'&&(!AD||!Array.isArray(AD.challenges)||!AD.challenges.length))ensureChallengeData(false)},0);return r};
+const baseSwitchTab=window.switchTab;if(typeof baseSwitchTab==='function')window.switchTab=function(tab){const r=baseSwitchTab.apply(this,arguments);if(tab==='bible')setTimeout(()=>ensureChallengeData(false),50);return r};
 const baseJoin=window.joinCh;if(typeof baseJoin==='function')window.joinCh=async function(id){const r=await baseJoin.apply(this,arguments);setTimeout(()=>{const ch=((AD&&AD.challenges)||[]).find(x=>x.id===id);if(ch&&Array.isArray(ch.memberIds)&&ch.memberIds.includes(current()))openModal(id)},120);return r};
-setTimeout(appendCard,800);
+window.refreshChallengeData=()=>ensureChallengeData(true);
+setTimeout(()=>{ensureChallengeTab();appendCard();ensureChallengeData(false)},800);
 console.log('[Yeorin] challenge reminder settings ready');
 })();
