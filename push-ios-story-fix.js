@@ -33,13 +33,21 @@ console.log('[Yeorin] iPhone/story push fix ready');
   if(existing){
     if(window.YeorinStoryV2)loadHotfix();
     else existing.addEventListener('load',loadHotfix,{once:true});
-    return;
+  }else{
+    const s=document.createElement('script');
+    s.id='yeorin-story-v2-runtime';
+    s.src='/story-experience-v2.js?v=20260913-4';
+    s.defer=true;
+    s.addEventListener('load',loadHotfix,{once:true});
+    document.head.appendChild(s);
   }
+})();
 
+(function(){
+  if(document.getElementById('yeorin-bible-avatar-hotfix'))return;
   const s=document.createElement('script');
-  s.id='yeorin-story-v2-runtime';
-  s.src='/story-experience-v2.js?v=20260913-4';
+  s.id='yeorin-bible-avatar-hotfix';
+  s.src='/bible-avatar-hotfix.js?v=20260913-1';
   s.defer=true;
-  s.addEventListener('load',loadHotfix,{once:true});
   document.head.appendChild(s);
 })();
