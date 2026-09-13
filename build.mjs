@@ -11,7 +11,7 @@ async function copyDir(src,dst){
     if(['.git','dist','node_modules'].includes(name))continue;
     const from=join(src,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
-    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js','bible-provider.js','bible-reader.js','bible-back-fix.js','bible-progress-sync-fix.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js'].includes(name))await copyFile(from,to);
+    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','nanum-v2.js','bible-provider.js','bible-reader.js','bible-back-fix.js','bible-progress-sync-fix.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js','social-feed.js','challenge-reminder-ui.js','challenge-push-nav.js'].includes(name))await copyFile(from,to);
   }
 }
 await copyDir(root,dist);
@@ -25,8 +25,6 @@ if(html.includes('script.google.com/macros/s/'))throw new Error('Legacy GAS URL 
 if(html.includes('function gas(fn,...a){'))throw new Error('Legacy gas() transport is still present in index.html');
 
 // 설치형 PWA의 최상단 상태바를 hero와 자연스럽게 이어지게 합니다.
-// iOS에서는 theme-color만으로 임의 색상 상태바를 만들 수 없어서
-// black-translucent로 콘텐츠를 상태바 뒤까지 확장하고 safe-area만큼 hero 여백을 확보합니다.
 html=html.replace(
   /<meta name="apple-mobile-web-app-status-bar-style" content="[^"]*">/,
   '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
@@ -36,7 +34,6 @@ html=html.replace(
   '<meta name="theme-color" content="#2F6B47">'
 );
 
-// 여린이 AI 응답 카드 UI 보정 + PWA 상단 safe-area 보정
 const yeorinUiPatch=`<style id="yeorin-ui-hotfix">
 html{background:#2F6B47!important;}
 .hero{padding-top:calc(12px + env(safe-area-inset-top))!important;}
@@ -67,9 +64,12 @@ const nanumV2ComposeFix=await readFile(join(root,'nanum-v2-compose-fix.js'),'utf
 const nanumRangePatch=await readFile(join(root,'nanum-range-patch.js'),'utf8');
 const nanumRangeOpenEndedFix=await readFile(join(root,'nanum-range-open-ended-fix.js'),'utf8');
 const addressbookFix=await readFile(join(root,'addressbook-fix.js'),'utf8');
-// 기존 검증 기준을 유지하면서 커뮤니티 본체 뒤에 WYSIWYG, 성경 리더 뒤로가기 가드, 앱 UX, 주소록 지연 로드, 성경 본문 공급자/리더와 읽기현황 동기화, 나눔 V2, 작성 버튼 복구, 다중 장 선택, 자유 범위 선택, 날짜/시각, 푸시 알림 보정을 붙입니다.
+const socialFeed=await readFile(join(root,'social-feed.js'),'utf8');
+const challengeReminder=await readFile(join(root,'challenge-reminder-ui.js'),'utf8');
+const challengePushNav=await readFile(join(root,'challenge-push-nav.js'),'utf8');
+
 const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
-  +'\n\n'+[communityEditor,bibleBack,appUx,addressbookFix,exitHint,bibleProvider,bibleReader,bibleProgressSync,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,push].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
+  +'\n\n'+[communityEditor,bibleBack,appUx,addressbookFix,exitHint,bibleProvider,bibleReader,bibleProgressSync,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,socialFeed,challengeReminder,push,challengePushNav].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
