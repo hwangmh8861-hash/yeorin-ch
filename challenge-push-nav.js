@@ -30,5 +30,6 @@ function fromQuery(){
     openChallenge({tab:'bible',sub:'challenge',challengeId});
   }catch(e){}
 }
-setTimeout(fromQuery,950);
+// 기존 notification-push의 900ms URL 정리보다 먼저 챌린지 목적지를 소비합니다.
+setTimeout(fromQuery,300);
 })();
