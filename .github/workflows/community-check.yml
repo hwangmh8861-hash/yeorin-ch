@@ -12,6 +12,9 @@ on:
       - 'addressbook-fix.js'
       - 'bible-provider.js'
       - 'bible-reader.js'
+      - 'social-feed.js'
+      - 'challenge-reminder-ui.js'
+      - 'challenge-push-nav.js'
       - 'sw.js'
       - 'build.mjs'
       - 'scripts/validate-community.mjs'
@@ -33,6 +36,9 @@ jobs:
       - run: node --check nanum-range-patch.js
       - run: node --check nanum-range-open-ended-fix.js
       - run: node --check addressbook-fix.js
+      - run: node --check social-feed.js
+      - run: node --check challenge-reminder-ui.js
+      - run: node --check challenge-push-nav.js
       - run: node --check sw.js
       - run: node scripts/validate-community.mjs
       - run: node build.mjs
