@@ -24,6 +24,10 @@ function injectStyle(){
 #nanum-social-root .ys-view-ico{font-size:12px!important;opacity:.72!important}
 #nanum-social-root .ys-view-clear{padding:9px 7px!important;color:#718078!important;font-size:11.5px!important}
 
+/* 나눔 본문 성경 구절: 본문과 분리되는 말씀 카드 */
+#nanum-social-root .ys-ref{margin:14px 0 3px!important;padding:13px 15px 12px!important;border:1px solid #dce9e0!important;border-radius:16px!important;background:linear-gradient(145deg,#f4faf6 0%,#fbfdfb 100%)!important;color:var(--brand)!important;font-size:14px!important;font-weight:900!important;line-height:1.35!important;letter-spacing:-.2px!important;box-shadow:0 3px 12px rgba(47,107,71,.045)!important}
+#nanum-social-root .ys-ref::before{content:'성경 구절';display:block;margin-bottom:5px;color:#809287;font-size:10.5px;font-weight:850;line-height:1.2;letter-spacing:.1px}
+
 /* 필터 날짜: 브라우저 기본 date picker를 노출하지 않습니다. */
 #nanum-social-root .ys-pebdate{cursor:pointer!important;user-select:none!important}
 #nanum-social-root .ys-pebdate input{pointer-events:none!important}
