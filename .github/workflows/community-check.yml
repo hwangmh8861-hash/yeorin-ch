@@ -14,6 +14,7 @@ on:
       - 'bible-reader.js'
       - 'avatar.js'
       - 'social-feed.js'
+      - 'pwa-update.js'
       - 'challenge-reminder-ui.js'
       - 'challenge-push-nav.js'
       - 'sw.js'
@@ -39,6 +40,7 @@ jobs:
       - run: node --check addressbook-fix.js
       - run: node --check avatar.js
       - run: node --check social-feed.js
+      - run: node --check pwa-update.js
       - run: node --check challenge-reminder-ui.js
       - run: node --check challenge-push-nav.js
       - run: node --check sw.js
