@@ -132,7 +132,7 @@
     const page=document.getElementById('page-mypage');if(!page||page.querySelector('[data-push-setting]'))return;
     const cards=page.querySelectorAll('.card');const target=cards[cards.length-1];if(!target)return;
     const row=document.createElement('div');row.className='my-menu-item';row.dataset.pushSetting='1';row.onclick=()=>window.openYeorinPushSettings();
-    row.innerHTML='<span class="mi-icon">🔔</span> 알림 설정 <span id="pushStateBadge" class="push-state">확인 중</span>';
+    row.innerHTML='<span class="mi-icon">'+(typeof ico==='function'?ico('bell',19):'')+'</span> 알림 설정 <span id="pushStateBadge" class="push-state">확인 중</span>';
     target.insertBefore(row,target.lastElementChild||null);paintState();
   }
 
