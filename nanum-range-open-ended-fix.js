@@ -50,7 +50,7 @@
   if(typeof baseRender==='function'){
     window.renderQt=function(){
       var r=baseRender.apply(this,arguments);
-      setTimeout(function(){expandEndOptions();ensureSelectedRefField();},0);
+      setTimeout(function(){expandEndOptions();ensureSelectedRefField();syncSelectedRefs();},0);
       return r;
     };
   }
@@ -119,13 +119,57 @@
       .map(parseSelectedRow).filter(Boolean)
       .sort(function(a,b){return(a.ch-b.ch)||(a.v-b.v)||(a.to-b.to);});
   }
+  /* 선택한 절만 장절 표기로 만듭니다. 피드 표기와 같은 규칙입니다.
+     골로새서 1:17 / 골로새서 1:9–12 / 빌립보서 3:10–11, 15–16, 20–21 / 로마서 8:38–39, 9:1–2 */
+  function formatRefs(book,refs){
+    if(!book||!refs||!refs.length)return'';
+    var rows=refs.map(function(r){
+      var ch=Number(r&&r.ch),from=Number(r&&(r.v!=null?r.v:r.from));
+      var to=Number(r&&(r.to!=null?r.to:(r.v!=null?r.v:r.from)));
+      return{ch:ch,v:from,to:Math.max(from,to||from)};
+    }).filter(function(r){return r.ch>0&&r.v>0;})
+      .sort(function(a,b){return(a.ch-b.ch)||(a.v-b.v)||(a.to-b.to);});
+    if(!rows.length)return'';
+    var merged=[];
+    rows.forEach(function(r){
+      var last=merged[merged.length-1];
+      if(last&&last.ch===r.ch&&r.v<=last.to+1){last.to=Math.max(last.to,r.to);return;}
+      merged.push({ch:r.ch,v:r.v,to:r.to});
+    });
+    var groups=[];
+    merged.forEach(function(r){
+      var seg=r.v===r.to?String(r.v):r.v+'–'+r.to,last=groups[groups.length-1];
+      if(last&&last.ch===r.ch)last.segs.push(seg);else groups.push({ch:r.ch,segs:[seg]});
+    });
+    return book+' '+groups.map(function(g){return g.ch+':'+g.segs.join(', ');}).join(', ');
+  }
+  function esc(v){
+    return typeof escapeHtml==='function'?escapeHtml(String(v==null?'':v))
+      :String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  /* 탭할 때마다 지금 무엇을 담았는지 바로 보이게 합니다. */
+  function paintPickSummary(refs){
+    var el=byId('qPickSummary');if(!el)return;
+    var bookEl=byId('qB'),label=formatRefs(bookEl?bookEl.value:'',refs||[]);
+    if(!label){
+      el.classList.remove('on');
+      el.innerHTML='<span class="nvr-pick-sum-lb">선택한 구절</span>'
+        +'<span class="nvr-pick-sum-v muted">아직 선택한 구절이 없어요</span>';
+      return;
+    }
+    el.classList.add('on');
+    el.innerHTML='<span class="nvr-pick-sum-lb">선택한 구절</span>'
+      +'<span class="nvr-pick-sum-v">'+esc(label)+'</span>';
+  }
   function syncSelectedRefs(){
     var refs=collectSelectedRefs(),el=ensureSelectedRefField();
     if(el)el.value=JSON.stringify(refs);
+    paintPickSummary(refs);
     return refs;
   }
   function clearSelectedRefs(){
     var el=ensureSelectedRefField();if(el)el.value='[]';
+    paintPickSummary([]);
   }
 
   document.addEventListener('click',function(e){
@@ -165,5 +209,6 @@
     };
   }
 
-  setTimeout(function(){expandEndOptions();ensureSelectedRefField();},0);
+  setTimeout(function(){expandEndOptions();ensureSelectedRefField();syncSelectedRefs();},0);
+  window.YeorinQtRef={format:formatRefs};
 })();
