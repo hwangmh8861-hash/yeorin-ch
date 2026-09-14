@@ -9,7 +9,7 @@ async function copyDir(src,dst){
   await mkdir(dst,{recursive:true});
   for(const name of await readdir(src)){
     if(['.git','dist','node_modules'].includes(name))continue;
-    const from=join(src,name),to=join(dst,name),info=await stat(from);
+    const from=join(root,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
     else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','pwa-update.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','push-ios-story-fix.js','nanum-v2.js','bible-provider.js','bible-reader.js','bible-back-fix.js','bible-progress-sync-fix.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js','avatar.js','social-feed.js','story-picker-ui.js','nanum-ui-refresh.js','filter-control-polish.js','challenge-reminder-ui.js','challenge-push-nav.js'].includes(name))await copyFile(from,to);
   }
@@ -78,6 +78,12 @@ const oldSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const a=[p
 const fullSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const rows=[['인상 깊은 구절',p.bestVerse],['적용할 점',p.applyContent],['나누고 싶은 내용',p.shareContent],['궁금한 점',p.question]].filter(x=>x[1]);return rows.map((x,i)=>'<div'+(i?' style="margin-top:14px"':'')+'><div style="font-size:11px;font-weight:850;color:var(--brand);margin-bottom:4px">'+x[0]+'</div><div>'+esc(x[1]).replace(/\n/g,'<br>')+'</div></div>').join('')}return esc(p.situation||'').replace(/\n/g,'<br>')}`;
 if(!socialFeed.includes(oldSocialBody))throw new Error('social-feed bodyText patch target not found');
 socialFeed=socialFeed.replace(oldSocialBody,fullSocialBody);
+
+// 같은 장 안에서 여러 절을 읽은 경우에도 피드에 끝 절까지 표시합니다.
+const oldSocialRef=String.raw`function refText(p){if(p.kind!=='qt'||!p.book)return'';let s=p.book;if(p.chFrom)s+=' '+p.chFrom+(p.vsFrom?':'+p.vsFrom:'');if(p.chTo&&String(p.chTo)!==String(p.chFrom))s+=' ~ '+p.chTo+(p.vsTo?':'+p.vsTo:'');return s}`;
+const fullSocialRef=String.raw`function refText(p){if(p.kind!=='qt'||!p.book)return'';const cf=String(p.chFrom||''),ct=String(p.chTo||p.chFrom||''),vf=String(p.vsFrom||''),vt=String(p.vsTo||p.vsFrom||'');if(!cf)return p.book;if(cf===ct){if(vf&&vt&&vf!==vt)return p.book+' '+cf+':'+vf+'–'+vt;return p.book+' '+cf+(vf?':'+vf:'')}return p.book+' '+cf+(vf?':'+vf:'')+' ~ '+ct+(vt?':'+vt:'')}`;
+if(!socialFeed.includes(oldSocialRef))throw new Error('social-feed refText patch target not found');
+socialFeed=socialFeed.replace(oldSocialRef,fullSocialRef);
 
 // 상단 달력에서 날짜·사람·종류를 한 번에 적용할 수 있도록 소셜 피드 상태를 원자적으로 갱신합니다.
 const socialDateHook=String.raw`window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};`;
