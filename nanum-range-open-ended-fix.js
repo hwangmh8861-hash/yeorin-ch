@@ -2,6 +2,7 @@
  * - 끝 장은 선택한 성경책의 마지막 장까지 자유롭게 선택
  * - 기존 최대 3장 제한 제거
  * - 긴 범위는 6장씩 나눠 불러와 과도한 동시 요청을 방지
+ * - 인상 깊은 구절의 실제 장절을 별도 저장
  */
 (function(){
   'use strict';
@@ -49,7 +50,7 @@
   if(typeof baseRender==='function'){
     window.renderQt=function(){
       var r=baseRender.apply(this,arguments);
-      setTimeout(expandEndOptions,0);
+      setTimeout(function(){expandEndOptions();ensureSelectedRefField();},0);
       return r;
     };
   }
@@ -57,8 +58,10 @@
   document.addEventListener('change',function(e){
     if(!e.target)return;
     if(e.target.id==='qB'||e.target.id==='qCF'){
+      clearSelectedRefs();
       setTimeout(expandEndOptions,0);
     }else if(e.target.id==='qCTSelect'){
+      clearSelectedRefs();
       var book=byId('qB'),start=byId('qCF'),end=byId('qCTSelect'),hidden=byId('qCT');
       if(book&&start&&end){
         var s=Number(start.value)||0,e2=Number(end.value)||s;
@@ -90,5 +93,77 @@
     };
   }
 
-  setTimeout(expandEndOptions,0);
+  /* ---------- 인상 깊은 구절의 실제 장절 보존 ---------- */
+  function ensureSelectedRefField(){
+    var el=byId('qSR');
+    if(el)return el;
+    var form=byId('qVL');
+    if(!form)return null;
+    el=document.createElement('input');
+    el.type='hidden';el.id='qSR';el.value='[]';
+    form.parentNode.appendChild(el);
+    return el;
+  }
+  function parseSelectedRow(row){
+    if(!row)return null;
+    var key=String(row.getAttribute('data-range-key')||'');
+    var ch=Number(key.split('|')[0]||0);
+    var label=String((row.querySelector('.nv-vn')||{}).textContent||'').trim();
+    var m=label.match(/^(\d+)(?:\s*[-–~]\s*(\d+))?$/);
+    if(!ch||!m)return null;
+    var v=Number(m[1]),to=Number(m[2]||m[1]);
+    return{ch:ch,v:v,to:to};
+  }
+  function collectSelectedRefs(){
+    return Array.prototype.slice.call(document.querySelectorAll('#qVL .nv-vr.on[data-range-key]'))
+      .map(parseSelectedRow).filter(Boolean)
+      .sort(function(a,b){return(a.ch-b.ch)||(a.v-b.v)||(a.to-b.to);});
+  }
+  function syncSelectedRefs(){
+    var refs=collectSelectedRefs(),el=ensureSelectedRefField();
+    if(el)el.value=JSON.stringify(refs);
+    return refs;
+  }
+  function clearSelectedRefs(){
+    var el=ensureSelectedRefField();if(el)el.value='[]';
+  }
+
+  document.addEventListener('click',function(e){
+    var t=e.target&&e.target.closest?e.target.closest('#qVL .nv-vr[data-range-key]'):null;
+    if(t)setTimeout(syncSelectedRefs,0);
+  });
+
+  var pendingSelectedRefs=null;
+  var baseGas=window.gas;
+  if(typeof baseGas==='function'){
+    window.gas=async function(fn){
+      var args=Array.prototype.slice.call(arguments,1);
+      var res=await baseGas.apply(this,[fn].concat(args));
+      if(fn==='addQTPost'&&pendingSelectedRefs&&pendingSelectedRefs.length&&res&&res.id&&window.YeorinNative&&typeof window.YeorinNative.directRpc==='function'){
+        try{
+          await window.YeorinNative.directRpc('yeorin_set_qt_selected_refs',{p_post_id:String(res.id),p_refs:pendingSelectedRefs});
+        }catch(err){
+          console.error('[qt selected refs]',err);
+        }
+      }
+      return res;
+    };
+  }
+
+  var baseAddQT=window.addQT;
+  if(typeof baseAddQT==='function'){
+    window.addQT=async function(){
+      var picker=byId('qVL');
+      var refs=syncSelectedRefs();
+      if(picker&&!refs.length){
+        if(typeof showToast==='function')showToast('인상 깊은 구절을 하나 이상 선택해주세요','error');
+        return;
+      }
+      pendingSelectedRefs=refs;
+      try{return await baseAddQT.apply(this,arguments);}
+      finally{pendingSelectedRefs=null;}
+    };
+  }
+
+  setTimeout(function(){expandEndOptions();ensureSelectedRefField();},0);
 })();
