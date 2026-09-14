@@ -27,6 +27,15 @@ function injectStyle(){
 /* 나눔 본문 성경 구절: 본문과 분리되는 말씀 카드 */
 #nanum-social-root .ys-ref{margin:14px 0 3px!important;padding:13px 15px 12px!important;border:1px solid #dce9e0!important;border-radius:16px!important;background:linear-gradient(145deg,#f4faf6 0%,#fbfdfb 100%)!important;color:var(--brand)!important;font-size:14px!important;font-weight:900!important;line-height:1.35!important;letter-spacing:-.2px!important;box-shadow:0 3px 12px rgba(47,107,71,.045)!important}
 #nanum-social-root .ys-ref::before{content:'성경 구절';display:block;margin-bottom:5px;color:#809287;font-size:10.5px;font-weight:850;line-height:1.2;letter-spacing:.1px}
+#nanum-social-root .ys-ref-title{font-size:14px!important;font-weight:900!important;color:var(--brand)!important;line-height:1.4!important;letter-spacing:-.2px!important;word-break:keep-all!important}
+#nanum-social-root .ys-verse{position:relative!important;margin-top:8px!important}
+#nanum-social-root .ys-verse-text{max-height:calc(1.75em * 4)!important;overflow:hidden!important;font-size:13.5px!important;font-weight:600!important;line-height:1.75!important;letter-spacing:-.1px!important;color:#33453a!important;word-break:break-word!important}
+#nanum-social-root .ys-verse.is-open .ys-verse-text{max-height:none!important}
+#nanum-social-root .ys-verse-fade{display:none;position:absolute;left:0;right:0;bottom:0;height:2.1em;pointer-events:none;background:linear-gradient(to bottom,rgba(249,252,250,0) 0%,rgba(249,252,250,.85) 58%,#f9fcfa 100%)}
+#nanum-social-root .ys-verse.is-clamped .ys-verse-fade{display:block}
+#nanum-social-root .ys-verse.is-open .ys-verse-fade{display:none}
+#nanum-social-root .ys-verse-more{display:block!important;margin-top:7px!important;padding:2px 0!important;border:0!important;background:none!important;font-family:inherit!important;font-size:12.5px!important;font-weight:850!important;letter-spacing:-.1px!important;color:var(--brand)!important}
+#nanum-social-root .ys-verse-more[hidden]{display:none!important}
 
 /* 필터 날짜: 브라우저 기본 date picker를 노출하지 않습니다. */
 #nanum-social-root .ys-pebdate{cursor:pointer!important;user-select:none!important}
