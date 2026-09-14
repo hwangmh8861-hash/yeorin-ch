@@ -1,5 +1,5 @@
 /* 여린교회 QT 다중 장 선택 보정
- * - 시작 장 / 끝 장(최대 3장) 선택
+ * - 시작 장 / 끝 장 선택
  * - 선택 범위 본문을 장별로 이어서 표시
  * - 인상 깊은 구절은 여러 장에 걸쳐 선택 가능
  * - 저장되는 읽은 범위는 시작 장 1절 ~ 끝 장 마지막 절로 유지
@@ -27,6 +27,18 @@
     '.nvr-chapter .nv-vr:first-of-type{border-top:none}',
     '.nvr-chapter .nv-vr.on{border-left:3px solid var(--brand)}',
     '.nvr-limit{font-size:11.5px;color:var(--ink3);margin-top:7px}',
+    '.nvr-cap{font-size:11.5px;font-weight:700;color:var(--ink3);margin:12px 0 5px 2px}',
+    '.nvr-book-row>select,.nvr-range-col>select{width:100%;min-width:0}',
+    '.nvr-range-col{min-width:0}',
+    '.nvr-pick-head{margin-bottom:9px}',
+    '.nvr-pick-title{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.02em}',
+    '.nvr-pick-desc{font-size:12.5px;color:var(--ink3);margin-top:3px;line-height:1.5}',
+    '.nvr-pick-sum{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 9px;margin-bottom:9px;padding:10px 13px;border:1px solid var(--line);border-radius:12px;background:#fff}',
+    '.nvr-pick-sum.on{border-color:#CFE0D4;background:var(--brand-soft)}',
+    '.nvr-pick-sum-lb{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--ink3)}',
+    '.nvr-pick-sum.on .nvr-pick-sum-lb{color:#809287}',
+    '.nvr-pick-sum-v{min-width:0;font-size:13.5px;font-weight:800;color:var(--brand);word-break:keep-all;line-height:1.5}',
+    '.nvr-pick-sum-v.muted{color:var(--ink3);font-weight:600}',
     '@media(max-width:360px){.nvr-range-row{grid-template-columns:1fr}.nvr-book-row{display:block}}'
   ].join('\n');
   document.head.appendChild(style);
@@ -40,12 +52,12 @@
     try{return (typeof BIBLE!=='undefined'?BIBLE:[]).find(function(x){return x.n===name;})||null;}catch(e){return null;}
   }
   function options(max,selected,min){
-    min=min||1;var h='<option value="">장 선택</option>';
+    min=min||1;var h='<option value="">선택</option>';
     for(var i=min;i<=max;i++)h+='<option value="'+i+'"'+(String(selected)===String(i)?' selected':'')+'>'+i+'장</option>';
     return h;
   }
   function endOptions(max,start,selected){
-    if(!start)return '<option value="">끝 장</option>';
+    if(!start)return '<option value="">선택</option>';
     var last=Math.min(max,start+2);var val=Number(selected);
     if(!val||val<start||val>last)val=start;
     var h='';for(var i=start;i<=last;i++)h+='<option value="'+i+'"'+(i===val?' selected':'')+'>'+i+'장</option>';
@@ -53,7 +65,7 @@
   }
   function summary(book,start,end){
     var el=byId('qRangeSummary');if(!el)return;
-    if(!start){el.innerHTML='시작 장을 선택해주세요.<small>한 번에 최대 3장까지 이어서 불러올 수 있어요.</small>';return;}
+    if(!start){el.innerHTML='시작 장을 선택해주세요.<small>읽은 범위를 선택하면 본문을 자동으로 불러옵니다.</small>';return;}
     end=end||start;
     el.innerHTML=(start===end?book+' '+start+'장':book+' '+start+'장 ~ '+end+'장')
       +'<small>'+(end-start+1)+'개 장 · 원하는 절은 여러 개 선택할 수 있어요.</small>';
@@ -134,18 +146,24 @@
     if(!fg)return;
     var label=fg.querySelector('.q-label');
     fg.innerHTML='';
-    if(label){var lb=label.cloneNode(true);fg.appendChild(lb);}
+    if(label){var lb=label.cloneNode(true);lb.textContent='읽은 말씀 선택';fg.appendChild(lb);}
+
+    var bookCap=document.createElement('div');bookCap.className='nvr-cap';bookCap.textContent='성경책';
+    bookCap.style.marginTop='4px';fg.appendChild(bookCap);
 
     var bookRow=document.createElement('div');bookRow.className='nvr-book-row';
     var book=bookOld.cloneNode(true);book.id='qB';book.value=bookVal;book.style.width='100%';book.style.flex='1';
     bookRow.appendChild(book);fg.appendChild(bookRow);
 
+    var rangeCap=document.createElement('div');rangeCap.className='nvr-cap';rangeCap.textContent='읽은 범위';
+    fg.appendChild(rangeCap);
+
     var info=bookInfo(book.value),max=info?Number(info.c):0;
     var range=document.createElement('div');range.className='nvr-range-row';
-    range.innerHTML='<div class="nvr-range-col"><label>시작 장</label><select class="select-field" id="qCF">'+options(max,startVal,1)+'</select></div>'
-      +'<div class="nvr-range-col"><label>끝 장</label><select class="select-field" id="qCTSelect">'+endOptions(max,Number(startVal),endVal)+'</select></div>';
+    range.innerHTML='<div class="nvr-range-col"><label>시작</label><select class="select-field" id="qCF">'+options(max,startVal,1)+'</select></div>'
+      +'<div class="nvr-range-col"><label>끝</label><select class="select-field" id="qCTSelect">'+endOptions(max,Number(startVal),endVal)+'</select></div>';
     fg.appendChild(range);
-    var limit=document.createElement('div');limit.className='nvr-limit';limit.textContent='최대 3장까지 선택할 수 있습니다.';fg.appendChild(limit);
+    var limit=document.createElement('div');limit.className='nvr-limit';limit.textContent='끝 장은 이 성경책의 마지막 장까지 선택할 수 있습니다.';fg.appendChild(limit);
     var sum=document.createElement('div');sum.id='qRangeSummary';sum.className='nvr-summary';fg.appendChild(sum);
 
     var start=byId('qCF'),end=byId('qCTSelect');
@@ -153,7 +171,7 @@
 
     function rebuildForBook(){
       var i=bookInfo(book.value),m=i?Number(i.c):0;
-      start.innerHTML=options(m,'',1);end.innerHTML='<option value="">끝 장</option>';
+      start.innerHTML=options(m,'',1);end.innerHTML='<option value="">선택</option>';
       setVal('qCT','');setVal('qVF','');setVal('qVT','');setVal('qBV','');
       list.innerHTML='<div style="padding:14px;color:var(--ink3);font-size:13px">장을 선택하면 본문을 자동으로 불러와요</div>';
       summary(book.value,0,0);resetVerseState(false);
@@ -180,12 +198,32 @@
     }
   }
 
+  /* 읽은 범위 선택과 인상 깊은 구절 선택을 눈으로 구분되게 나눕니다. */
+  function enhanceVerseSection(){
+    var list=byId('qVL');if(!list)return;
+    var fg=list.parentNode;if(!fg)return;
+    if(!byId('qPickHead')){
+      var head=document.createElement('div');
+      head.id='qPickHead';head.className='nvr-pick-head';
+      head.innerHTML='<div class="nvr-pick-title">인상 깊은 구절 선택</div>'
+        +'<div class="nvr-pick-desc">마음에 남은 구절을 눌러 선택해 주세요.</div>';
+      fg.insertBefore(head,list);
+    }
+    if(!byId('qPickSummary')){
+      var sum=document.createElement('div');
+      sum.id='qPickSummary';sum.className='nvr-pick-sum';
+      sum.innerHTML='<span class="nvr-pick-sum-lb">선택한 구절</span>'
+        +'<span class="nvr-pick-sum-v muted">아직 선택한 구절이 없어요</span>';
+      fg.insertBefore(sum,list);
+    }
+  }
+
   window.renderQt=function(){
     var r=baseRender.apply(this,arguments);
-    try{if(typeof sqf!=='undefined'&&sqf)enhanceForm();}catch(e){console.warn('[qt multi chapter enhance]',e);}
+    try{if(typeof sqf!=='undefined'&&sqf){enhanceForm();enhanceVerseSection();}}catch(e){console.warn('[qt multi chapter enhance]',e);}
     return r;
   };
 
-  try{if(typeof sqf!=='undefined'&&sqf)enhanceForm();}catch(e){}
-  window.YeorinQtRange={enhance:enhanceForm,load:loadRange};
+  try{if(typeof sqf!=='undefined'&&sqf){enhanceForm();enhanceVerseSection();}}catch(e){}
+  window.YeorinQtRange={enhance:enhanceForm,load:loadRange,enhanceVerseSection:enhanceVerseSection};
 })();
