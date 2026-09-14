@@ -83,14 +83,17 @@ function appendPosts(list){
   holder.innerHTML=list.map(postHtml).join('');
   const sent=document.getElementById('ysSentinel'),end=document.getElementById('ysEnd'),anchor=sent||end||null;
   while(holder.firstChild)feed.insertBefore(holder.firstChild,anchor);
-  if(feed.querySelector('.ys-empty'))feed.querySelector('.ys-empty').remove()
+  if(feed.querySelector('.ys-empty'))feed.querySelector('.ys-empty').remove();
+  scheduleVerseClamp(feed)
 }
 function replacePost(p){
   const el=document.getElementById('social-'+p.kind+'-'+p.id);
   if(!el)return;
   const holder=document.createElement('div');
   holder.innerHTML=postHtml(p);
-  el.replaceWith(holder.firstElementChild)
+  const next=holder.firstElementChild;
+  el.replaceWith(next);
+  scheduleVerseClamp(next)
 }
 
 /* ---------- 스토리 정렬/그룹 ---------- */
@@ -181,14 +184,93 @@ window.resetSocialFilter=function(){
   if(state.kind==='all'&&!state.date&&!state.authors.length)return;
   state.kind='all';state.date='';state.authors=[];load(true)
 };
-function bodyText(p){if(p.kind==='qt'){const a=[p.shareContent,p.applyContent].filter(Boolean).join('\n\n');return esc(a||p.bestVerse||'').replace(/\n/g,'<br>')}return esc(p.situation||'').replace(/\n/g,'<br>')}
-function refText(p){if(p.kind!=='qt'||!p.book)return'';let s=p.book;if(p.chFrom)s+=' '+p.chFrom+(p.vsFrom?':'+p.vsFrom:'');if(p.chTo&&String(p.chTo)!==String(p.chFrom))s+=' ~ '+p.chTo+(p.vsTo?':'+p.vsTo:'');return s}
+function bodyText(p){
+  if(p.kind!=='qt')return esc(p.situation||'').replace(/\n/g,'<br>');
+  /* 인상 깊은 구절 본문은 위쪽 말씀 카드에서 보여주므로 여기서는 중복 노출하지 않습니다. */
+  const rows=[['적용할 점',p.applyContent],['나누고 싶은 내용',p.shareContent],['궁금한 점',p.question]].filter(x=>x[1]);
+  return rows.map((x,i)=>'<div'+(i?' style="margin-top:14px"':'')+'><div style="font-size:11px;font-weight:850;color:var(--brand);margin-bottom:4px">'+x[0]+'</div><div>'+esc(x[1]).replace(/\n/g,'<br>')+'</div></div>').join('')
+}
+/* 사용자가 실제로 선택한 절만 장절 표기로 만듭니다.
+   골로새서 1:17 / 골로새서 1:9–12 / 빌립보서 3:10–11, 15–16, 20–21 / 로마서 8:38–39, 9:1–2 */
+function verseLabel(book,refs){
+  if(!book||!Array.isArray(refs)||!refs.length)return'';
+  const rows=refs.map(r=>{
+    const ch=Number(r&&r.ch),from=Number(r&&(r.v!=null?r.v:r.from));
+    const toRaw=Number(r&&(r.to!=null?r.to:(r.v!=null?r.v:r.from)));
+    return{ch:ch,from:from,to:Math.max(from,toRaw||from)}
+  }).filter(r=>r.ch>0&&r.from>0).sort((a,b)=>a.ch-b.ch||a.from-b.from||a.to-b.to);
+  if(!rows.length)return'';
+  const merged=[];
+  rows.forEach(r=>{
+    const last=merged[merged.length-1];
+    if(last&&last.ch===r.ch&&r.from<=last.to+1){last.to=Math.max(last.to,r.to);return}
+    merged.push({ch:r.ch,from:r.from,to:r.to})
+  });
+  const groups=[];
+  merged.forEach(r=>{
+    const seg=r.from===r.to?String(r.from):r.from+'–'+r.to,last=groups[groups.length-1];
+    if(last&&last.ch===r.ch)last.segs.push(seg);else groups.push({ch:r.ch,segs:[seg]})
+  });
+  return book+' '+groups.map(g=>g.ch+':'+g.segs.join(', ')).join(', ')
+}
+function refText(p){
+  if(p.kind!=='qt')return'';
+  /* 읽은 범위가 아니라 선택 구절을 우선합니다. */
+  const picked=verseLabel(p.readBook||'',p.selectedRefs||[]);
+  if(picked)return picked;
+  if(!p.book)return'';
+  const cf=String(p.chFrom||''),ct=String(p.chTo||p.chFrom||''),vf=String(p.vsFrom||''),vt=String(p.vsTo||p.vsFrom||'');
+  if(!cf)return p.book;
+  if(cf===ct)return p.book+' '+cf+(vf?(vt&&vt!==vf?':'+vf+'–'+vt:':'+vf):'');
+  return p.book+' '+cf+(vf?':'+vf:'')+' ~ '+ct+(vt?':'+vt:'')
+}
+/* 선택한 장절 + 선택한 본문을 한 장의 말씀 카드로 묶습니다. */
+function verseCard(p){
+  if(p.kind!=='qt')return'';
+  const ref=refText(p),text=String(p.bestVerse||'').trim();
+  if(!ref&&!text)return'';
+  return '<div class="ys-ref">'
+    +(ref?'<div class="ys-ref-title">'+esc(ref)+'</div>':'')
+    +(text?'<div class="ys-verse"><div class="ys-verse-text">'+esc(text).replace(/\n/g,'<br>')+'</div><span class="ys-verse-fade" aria-hidden="true"></span></div>'
+      +'<button type="button" class="ys-verse-more" hidden>더보기</button>':'')
+    +'</div>'
+}
+/* 실제로 넘치는 카드에만 페이드와 더보기를 붙입니다. */
+function syncVerseClamp(scope){
+  const nodes=(scope||document).querySelectorAll('.ys-ref .ys-verse');
+  for(const box of nodes){
+    const txt=box.querySelector('.ys-verse-text'),btn=box.parentElement&&box.parentElement.querySelector('.ys-verse-more');
+    if(!txt||!btn)continue;
+    if(box.classList.contains('is-open')){btn.hidden=false;continue}
+    const over=txt.scrollHeight-txt.clientHeight>4;
+    box.classList.toggle('is-clamped',over);
+    btn.hidden=!over;
+    btn.textContent='더보기'
+  }
+}
+function scheduleVerseClamp(scope){
+  requestAnimationFrame(()=>syncVerseClamp(scope));
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>syncVerseClamp(scope)).catch(()=>{})
+}
+document.addEventListener('click',function(e){
+  const btn=e.target&&e.target.closest?e.target.closest('.ys-verse-more'):null;
+  if(!btn)return;
+  e.preventDefault();
+  const box=btn.parentElement&&btn.parentElement.querySelector('.ys-verse');
+  if(!box)return;
+  const open=box.classList.toggle('is-open');
+  btn.textContent=open?'접기':'더보기';
+  if(!open)requestAnimationFrame(()=>syncVerseClamp(box.parentElement))
+});
+let clampTimer=null;
+window.addEventListener('resize',function(){clearTimeout(clampTimer);clampTimer=setTimeout(()=>syncVerseClamp(),180)});
 function reactions(p){const r=p.reactions||{},n=Object.values(r).reduce((a,x)=>a+(Array.isArray(x)?x.length:0),0),mine=Object.values(r).some(x=>Array.isArray(x)&&x.includes(uid()));return '<button class="ys-act" onclick="socialReact(\''+p.kind+'\',\''+p.id+'\')">'+(mine?'❤️':'♡')+' '+n+'</button><span class="ys-act">댓글 '+((p.comments||[]).length)+'</span>'}
-function postHtml(p){const cs=(p.comments||[]).slice(-3).map(c=>'<div class="ys-comment"><b>'+esc(c.author&&c.author.name||'')+'</b>'+esc(c.text)+'</div>').join('');return '<article class="ys-post" id="social-'+p.kind+'-'+p.id+'"><div class="ys-author"><button class="ys-av" style="border:0" onclick="socialPerson(\''+esc(p.authorId)+'\')">'+face(p.author)+'</button><div class="ys-meta"><div class="ys-user">'+esc(p.author&&p.author.name||'')+'</div><div class="ys-time">'+rel(p.createdAt||p.date)+'</div></div><span class="ys-type">'+(p.kind==='qt'?'나눔':'기도')+'</span></div>'+(refText(p)?'<div class="ys-ref">'+esc(refText(p))+'</div>':'')+'<div class="ys-body">'+bodyText(p)+'</div><div class="ys-actions">'+reactions(p)+'</div><div>'+cs+'</div><div class="ys-commentbox"><input id="sc-'+p.kind+'-'+p.id+'" placeholder="댓글 남기기"><button class="ys-send" onclick="socialComment(\''+p.kind+'\',\''+p.id+'\')">등록</button></div></article>'}
+function postHtml(p){const cs=(p.comments||[]).slice(-3).map(c=>'<div class="ys-comment"><b>'+esc(c.author&&c.author.name||'')+'</b>'+esc(c.text)+'</div>').join('');return '<article class="ys-post" id="social-'+p.kind+'-'+p.id+'"><div class="ys-author"><button class="ys-av" style="border:0" onclick="socialPerson(\''+esc(p.authorId)+'\')">'+face(p.author)+'</button><div class="ys-meta"><div class="ys-user">'+esc(p.author&&p.author.name||'')+'</div><div class="ys-time">'+rel(p.createdAt||p.date)+'</div></div><span class="ys-type">'+(p.kind==='qt'?'나눔':'기도')+'</span></div>'+verseCard(p)+(bodyText(p)?'<div class="ys-body">'+bodyText(p)+'</div>':'')+'<div class="ys-actions">'+reactions(p)+'</div><div>'+cs+'</div><div class="ys-commentbox"><input id="sc-'+p.kind+'-'+p.id+'" placeholder="댓글 남기기"><button class="ys-send" onclick="socialComment(\''+p.kind+'\',\''+p.id+'\')">등록</button></div></article>'}
 function render(){
   const r=ensureRoot();if(!r)return;
   const posts=state.posts.length?state.posts.map(postHtml).join(''):'<div class="ys-empty" style="padding:55px 20px;text-align:center;color:var(--ink3);font-size:13px">아직 표시할 글이 없어요.</div>';
   r.innerHTML='<div class="ys-head">'+storyStrip()+viewBar()+'</div><div class="ys-feed">'+posts+'<div id="ysSentinel" class="ys-sentinel idle"><i></i></div></div><button class="ys-write" onclick="openSocialWrite()">＋</button>';
+  scheduleVerseClamp(r);
   syncObserver()
 }
 
@@ -196,6 +278,14 @@ function render(){
 window.socialKind=k=>{if(state.kind===k)return;state.kind=k;load(true)};
 window.socialPerson=id=>{const a=id?[id]:[];if(a.length===state.authors.length&&a.every(x=>state.authors.indexOf(x)>=0))return;state.authors=a;load(true)};
 window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};
+window.getUnifiedSocialFilter=()=>({kind:state.kind,date:state.date,authors:state.authors.slice()});
+window.applyUnifiedSocialFilter=function(next){
+  const kind=next&&next.kind||'all',date=next&&next.date||'',authors=(next&&Array.isArray(next.authors)?next.authors.filter(Boolean):[]);
+  const same=kind===state.kind&&date===state.date&&authors.length===state.authors.length&&authors.every(x=>state.authors.indexOf(x)>=0);
+  state.kind=kind;state.date=date;state.authors=authors.slice();
+  if(same){render();return Promise.resolve()}
+  return load(true)
+};
 window.loadMoreSocial=()=>{if(state.loading||!state.hasMore)return;state.page++;load(false)};
 window.refreshSocialFeed=()=>load(true);
 window.socialReact=async function(kind,id){
@@ -220,7 +310,7 @@ window.socialComment=async function(kind,id){
     }else if(input)input.value=''
   }catch(e){console.error(e);showToast('댓글 저장 실패','error');if(input)input.disabled=false}
 };
-window.openSocialWrite=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysWrite';m.onclick=e=>{if(e.target===m)m.remove()};m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysWrite.remove()">×</button><h3>새로 작성하기</h3><button class="choice" onclick="socialLegacyWrite(\'qt\')">📖 나눔 작성</button><button class="choice" onclick="socialLegacyWrite(\'prayer\')">🙏 기도 작성</button><button class="choice" onclick="ysWrite.remove();openStoryUploader()">📷 24시간 스토리</button></div>';document.body.appendChild(m)};
+window.openSocialWrite=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysWrite';m.onclick=e=>{if(e.target===m)m.remove()};const common='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;flex:0 0 auto;color:var(--brand2)"';const close='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px"><path d="M18 6 6 18M6 6l12 12"></path></svg>';const book='<svg '+common+'><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>';const heart='<svg '+common+'><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';const camera='<svg '+common+'><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysWrite.remove()" aria-label="닫기" style="display:flex;align-items:center;justify-content:center">'+close+'</button><h3>새로 작성하기</h3><button class="choice" onclick="socialLegacyWrite(\'qt\')" style="display:flex;align-items:center;gap:12px">'+book+'<span>나눔 작성</span></button><button class="choice" onclick="socialLegacyWrite(\'prayer\')" style="display:flex;align-items:center;gap:12px">'+heart+'<span>기도 작성</span></button><button class="choice" onclick="ysWrite.remove();openStoryUploader()" style="display:flex;align-items:center;gap:12px">'+camera+'<span>스토리</span></button></div>';document.body.appendChild(m)};
 
 /* ---------- 기존 나눔 작성 화면 연동 (유지) ---------- */
 const oldSwitchNanum=window.switchNanum;
