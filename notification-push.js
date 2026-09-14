@@ -2,6 +2,7 @@
  * - 알림 권한/구독 관리
  * - 마이페이지 알림 설정 UI
  * - 푸시 클릭 시 해당 나눔/기도/커뮤니티/캘린더 화면으로 이동
+ * - 배포/서비스워커 갱신 후에도 사용자가 켜둔 알림 의도를 보존하고 구독을 자동 복구
  */
 (function(){
   'use strict';
@@ -11,13 +12,17 @@
   const SUPABASE_URL='https://putqauaiboychaalgyew.supabase.co';
   const SUPABASE_KEY='sb_publishable_u2DS4ojwca6PYqBZl5LwbQ_Lse_EiPV';
   const PUSH_URL=SUPABASE_URL+'/functions/v1/yeorin-push';
+  const PUSH_INTENT_KEY='yeorin_push_enabled';
   let swRegPromise=null;
+  let healPromise=null;
 
   function supported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
   function standalone(){return !!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;}
   function currentUser(){try{return typeof CU!=='undefined'&&CU?CU:null;}catch(e){return null;}}
   function sessionToken(){try{return window.YeorinNative&&window.YeorinNative.session&&window.YeorinNative.session.access_token||'';}catch(e){return'';}}
   function b64ToU8(base64){const p='='.repeat((4-base64.length%4)%4),s=(base64+p).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(s),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
+  function desiredEnabled(){try{return localStorage.getItem(PUSH_INTENT_KEY)==='1';}catch(e){return false;}}
+  function rememberEnabled(on){try{on?localStorage.setItem(PUSH_INTENT_KEY,'1'):localStorage.removeItem(PUSH_INTENT_KEY);}catch(e){}}
 
   async function pushApi(action,payload){
     const token=sessionToken();if(!token)throw new Error('session_expired');
@@ -35,10 +40,36 @@
 
   async function currentSubscription(){try{return (await sw()).pushManager.getSubscription();}catch(e){return null;}}
 
+  /* 사용자가 한 번 알림을 켰다면 배포/서비스워커 교체 뒤 구독이 사라져도
+     브라우저 권한이 살아 있는 한 새 구독을 만들어 Supabase와 다시 연결합니다.
+     기존 구독이 있으면 서버에 재등록만 해서 endpoint 누락도 함께 복구합니다. */
+  async function healPushSubscription(){
+    if(healPromise)return healPromise;
+    healPromise=(async function(){
+      if(!supported()||!currentUser())return false;
+      if(Notification.permission!=='granted')return false;
+      const reg=await sw();
+      let sub=await reg.pushManager.getSubscription();
+      const wanted=desiredEnabled();
+      if(!sub&&!wanted)return false;
+      if(!sub&&wanted){
+        const cfg=await pushApi('config');
+        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(cfg.publicKey)});
+      }
+      if(!sub)return false;
+      await pushApi('subscribe',{subscription:sub.toJSON()});
+      rememberEnabled(true);
+      return true;
+    })().catch(function(e){
+      console.warn('[Yeorin] push subscription heal',e);
+      return false;
+    }).finally(function(){healPromise=null;});
+    return healPromise;
+  }
+
   async function syncExisting(){
     if(!supported()||Notification.permission!=='granted'||!currentUser())return false;
-    const reg=await sw();const sub=await reg.pushManager.getSubscription();if(!sub)return false;
-    await pushApi('subscribe',{subscription:sub.toJSON()});return true;
+    return healPushSubscription();
   }
 
   async function enablePush(){
@@ -51,20 +82,21 @@
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(cfg.publicKey)});
     await pushApi('subscribe',{subscription:sub.toJSON()});
-    localStorage.setItem('yeorin_push_enabled','1');
+    rememberEnabled(true);
     return true;
   }
 
   async function disablePush(silent){
+    rememberEnabled(false);
     if(!supported())return true;
     const sub=await currentSubscription();
-    if(sub){try{await pushApi('unsubscribe',{endpoint:sub.endpoint});}catch(e){if(!silent)throw e;}try{await sub.unsubscribe();}catch(e){}}
-    localStorage.removeItem('yeorin_push_enabled');
+    if(sub){try{await pushApi('unsubscribe',{endpoint:sub.endpoint});}catch(e){if(!silent){rememberEnabled(true);throw e;}}try{await sub.unsubscribe();}catch(e){}}
     return true;
   }
 
   async function status(){
     if(!supported())return {supported:false,on:false,permission:'unsupported'};
+    if(Notification.permission==='granted'&&desiredEnabled())await healPushSubscription();
     const sub=await currentSubscription();
     return {supported:true,on:Notification.permission==='granted'&&!!sub,permission:Notification.permission,standalone:standalone()};
   }
@@ -174,7 +206,13 @@
   }
 
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='YEORIN_PUSH_NAV')navigate(e.data.data||{});});
+    navigator.serviceWorker.addEventListener('message',e=>{
+      if(e.data&&e.data.type==='YEORIN_PUSH_SUBSCRIPTION_CHANGED'){
+        healPushSubscription().then(()=>paintState()).catch(()=>{});
+        return;
+      }
+      if(e.data&&e.data.type==='YEORIN_PUSH_NAV')navigate(e.data.data||{});
+    });
     sw().catch(()=>{});
   }
 
@@ -186,6 +224,7 @@
 
   injectStyle();
   setTimeout(()=>{appendMyPage();syncExisting().catch(()=>{});const d=queryNav();if(d)navigate(d);},900);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncExisting().catch(()=>{});});
+  window.addEventListener('pageshow',()=>{syncExisting().then(()=>paintState()).catch(()=>{});});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncExisting().then(()=>paintState()).catch(()=>{});});
   console.log('[Yeorin] web push notifications ready');
 })();
