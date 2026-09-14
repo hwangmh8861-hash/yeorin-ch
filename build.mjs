@@ -11,7 +11,7 @@ async function copyDir(src,dst){
     if(['.git','dist','node_modules'].includes(name))continue;
     const from=join(src,name),to=join(dst,name),info=await stat(from);
     if(info.isDirectory())await copyDir(from,to);
-    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','pwa-update.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','push-ios-story-fix.js','nanum-v2.js','bible-provider.js','bible-reader.js','bible-back-fix.js','bible-progress-sync-fix.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js','avatar.js','social-feed.js','story-picker-ui.js','nanum-ui-refresh.js','filter-control-polish.js','challenge-reminder-ui.js','challenge-push-nav.js'].includes(name))await copyFile(from,to);
+    else if(!['index.html','build.mjs','package.json','vercel.json','ui-patch.mjs','date-speed-patch.mjs','supabase-native.js','gas-zero-patch.js','community.js','community-image-fix.js','community-editor-fix.js','app-ux-fix.js','pwa-update.js','exit-hint-timeout.js','nanum-time-fix.js','notification-push.js','push-ios-story-fix.js','nanum-v2.js','bible-provider.js','bible-reader.js','bible-back-fix.js','bible-progress-sync-fix.js','bible-reader-link-fix.js','nanum-v2-compose-fix.js','nanum-range-patch.js','nanum-range-open-ended-fix.js','addressbook-fix.js','avatar.js','social-feed.js','story-picker-ui.js','nanum-ui-refresh.js','filter-control-polish.js','challenge-reminder-ui.js','challenge-push-nav.js'].includes(name))await copyFile(from,to);
   }
 }
 await copyDir(root,dist);
@@ -61,6 +61,7 @@ const pushIosStoryFix=await readFile(join(root,'push-ios-story-fix.js'),'utf8');
 const bibleProvider=await readFile(join(root,'bible-provider.js'),'utf8');
 const bibleReader=await readFile(join(root,'bible-reader.js'),'utf8');
 const bibleProgressSync=await readFile(join(root,'bible-progress-sync-fix.js'),'utf8');
+const bibleReaderLinkFix=await readFile(join(root,'bible-reader-link-fix.js'),'utf8');
 const nanumV2=await readFile(join(root,'nanum-v2.js'),'utf8');
 const nanumV2ComposeFix=await readFile(join(root,'nanum-v2-compose-fix.js'),'utf8');
 const nanumRangePatch=await readFile(join(root,'nanum-range-patch.js'),'utf8');
@@ -76,7 +77,7 @@ const challengeReminder=await readFile(join(root,'challenge-reminder-ui.js'),'ut
 const challengePushNav=await readFile(join(root,'challenge-push-nav.js'),'utf8');
 
 const inline=[native,gasZero,community].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n')
-  +'\n\n'+[communityEditor,bibleBack,appUx,pwaUpdate,addressbookFix,exitHint,bibleProvider,bibleReader,bibleProgressSync,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,avatar,socialFeed,storyPicker,nanumUiRefresh,filterControlPolish,challengeReminder,push,pushIosStoryFix,challengePushNav].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
+  +'\n\n'+[communityEditor,bibleBack,appUx,pwaUpdate,addressbookFix,exitHint,bibleProvider,bibleReader,bibleProgressSync,bibleReaderLinkFix,nanumV2,nanumV2ComposeFix,nanumRangePatch,nanumRangeOpenEndedFix,nanumTime,avatar,socialFeed,storyPicker,nanumUiRefresh,filterControlPolish,challengeReminder,push,pushIosStoryFix,challengePushNav].map(code=>code.replace(/<\/script/gi,'<\\/script')).join('\n\n');
 const tag='<script>\n'+inline+'\n</script>';
 const at=html.lastIndexOf('</body>');
 if(at<0)throw new Error('index.html body close tag not found');
