@@ -67,43 +67,10 @@ const nanumRangePatch=await readFile(join(root,'nanum-range-patch.js'),'utf8');
 const nanumRangeOpenEndedFix=await readFile(join(root,'nanum-range-open-ended-fix.js'),'utf8');
 const addressbookFix=await readFile(join(root,'addressbook-fix.js'),'utf8');
 const avatar=await readFile(join(root,'avatar.js'),'utf8');
-let socialFeed=await readFile(join(root,'social-feed.js'),'utf8');
+const socialFeed=await readFile(join(root,'social-feed.js'),'utf8');
 const storyPicker=await readFile(join(root,'story-picker-ui.js'),'utf8');
 const nanumUiRefresh=await readFile(join(root,'nanum-ui-refresh.js'),'utf8');
 const filterControlPolish=await readFile(join(root,'filter-control-polish.js'),'utf8');
-
-// 소셜 피드에서도 QT 원문을 상세 나눔 화면과 동일하게 빠짐없이 노출합니다.
-// 기존 구현은 적용/나눔 내용이 있으면 bestVerse와 question을 숨겨 글이 잘린 것처럼 보였습니다.
-const oldSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const a=[p.shareContent,p.applyContent].filter(Boolean).join('\n\n');return esc(a||p.bestVerse||'').replace(/\n/g,'<br>')}return esc(p.situation||'').replace(/\n/g,'<br>')}`;
-const fullSocialBody=String.raw`function bodyText(p){if(p.kind==='qt'){const rows=[['인상 깊은 구절',p.bestVerse],['적용할 점',p.applyContent],['나누고 싶은 내용',p.shareContent],['궁금한 점',p.question]].filter(x=>x[1]);return rows.map((x,i)=>'<div'+(i?' style="margin-top:14px"':'')+'><div style="font-size:11px;font-weight:850;color:var(--brand);margin-bottom:4px">'+x[0]+'</div><div>'+esc(x[1]).replace(/\n/g,'<br>')+'</div></div>').join('')}return esc(p.situation||'').replace(/\n/g,'<br>')}`;
-if(!socialFeed.includes(oldSocialBody))throw new Error('social-feed bodyText patch target not found');
-socialFeed=socialFeed.replace(oldSocialBody,fullSocialBody);
-
-// 같은 장 안에서 여러 절을 읽은 경우에도 피드에 끝 절까지 표시합니다.
-const oldSocialRef=String.raw`function refText(p){if(p.kind!=='qt'||!p.book)return'';let s=p.book;if(p.chFrom)s+=' '+p.chFrom+(p.vsFrom?':'+p.vsFrom:'');if(p.chTo&&String(p.chTo)!==String(p.chFrom))s+=' ~ '+p.chTo+(p.vsTo?':'+p.vsTo:'');return s}`;
-const fullSocialRef=String.raw`function refText(p){if(p.kind!=='qt'||!p.book)return'';const cf=String(p.chFrom||''),ct=String(p.chTo||p.chFrom||''),vf=String(p.vsFrom||''),vt=String(p.vsTo||p.vsFrom||'');if(!cf)return p.book;if(cf===ct){if(vf&&vt&&vf!==vt)return p.book+' '+cf+':'+vf+'–'+vt;return p.book+' '+cf+(vf?':'+vf:'')}return p.book+' '+cf+(vf?':'+vf:'')+' ~ '+ct+(vt?':'+vt:'')}`;
-if(!socialFeed.includes(oldSocialRef))throw new Error('social-feed refText patch target not found');
-socialFeed=socialFeed.replace(oldSocialRef,fullSocialRef);
-
-// 상단 달력에서 날짜·사람·종류를 한 번에 적용할 수 있도록 소셜 피드 상태를 원자적으로 갱신합니다.
-const socialDateHook=String.raw`window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};`;
-const unifiedFilterHook=String.raw`window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};
-window.getUnifiedSocialFilter=()=>({kind:state.kind,date:state.date,authors:state.authors.slice()});
-window.applyUnifiedSocialFilter=function(next){
-  const kind=next&&next.kind||'all',date=next&&next.date||'',authors=(next&&Array.isArray(next.authors)?next.authors.filter(Boolean):[]);
-  const same=kind===state.kind&&date===state.date&&authors.length===state.authors.length&&authors.every(x=>state.authors.indexOf(x)>=0);
-  state.kind=kind;state.date=date;state.authors=authors.slice();
-  if(same){render();return Promise.resolve()}
-  return load(true)
-};`;
-if(!socialFeed.includes(socialDateHook))throw new Error('social-feed unified filter hook target not found');
-socialFeed=socialFeed.replace(socialDateHook,unifiedFilterHook);
-
-// 새로 작성하기 시트의 OS 이모지를 제거하고 앱 공통 톤의 inline SVG 아이콘으로 통일합니다.
-const oldSocialWrite=String.raw`window.openSocialWrite=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysWrite';m.onclick=e=>{if(e.target===m)m.remove()};m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysWrite.remove()">×</button><h3>새로 작성하기</h3><button class="choice" onclick="socialLegacyWrite(\'qt\')">📖 나눔 작성</button><button class="choice" onclick="socialLegacyWrite(\'prayer\')">🙏 기도 작성</button><button class="choice" onclick="ysWrite.remove();openStoryUploader()">📷 24시간 스토리</button></div>';document.body.appendChild(m)};`;
-const svgSocialWrite=String.raw`window.openSocialWrite=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysWrite';m.onclick=e=>{if(e.target===m)m.remove()};const common='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;flex:0 0 auto;color:var(--brand2)"';const close='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px"><path d="M18 6 6 18M6 6l12 12"></path></svg>';const book='<svg '+common+'><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>';const heart='<svg '+common+'><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';const camera='<svg '+common+'><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysWrite.remove()" aria-label="닫기" style="display:flex;align-items:center;justify-content:center">'+close+'</button><h3>새로 작성하기</h3><button class="choice" onclick="socialLegacyWrite(\'qt\')" style="display:flex;align-items:center;gap:12px">'+book+'<span>나눔 작성</span></button><button class="choice" onclick="socialLegacyWrite(\'prayer\')" style="display:flex;align-items:center;gap:12px">'+heart+'<span>기도 작성</span></button><button class="choice" onclick="ysWrite.remove();openStoryUploader()" style="display:flex;align-items:center;gap:12px">'+camera+'<span>스토리</span></button></div>';document.body.appendChild(m)};`;
-if(!socialFeed.includes(oldSocialWrite))throw new Error('social-feed write sheet patch target not found');
-socialFeed=socialFeed.replace(oldSocialWrite,svgSocialWrite);
 
 const challengeReminder=await readFile(join(root,'challenge-reminder-ui.js'),'utf8');
 const challengePushNav=await readFile(join(root,'challenge-push-nav.js'),'utf8');
