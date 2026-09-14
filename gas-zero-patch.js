@@ -1,6 +1,7 @@
 /* 여린교회 GAS 제거 전환 패치
  * AI 호출은 Supabase Edge Function(yeorin-ai)로,
  * 핵심 읽기/챌린지/주소록 데이터는 Supabase RPC에서 직접 보강합니다.
+ * 홈 '오늘의 말씀'은 로컬 데이터로만 처리해 AI/API 비용이 발생하지 않습니다.
  */
 (function(){
   'use strict';
@@ -8,7 +9,36 @@
   const SUPABASE_URL='https://putqauaiboychaalgyew.supabase.co';
   const SUPABASE_KEY='sb_publishable_u2DS4ojwca6PYqBZl5LwbQ_Lse_EiPV';
   const AI_URL=SUPABASE_URL+'/functions/v1/yeorin-ai';
-  const AI_FUNCTIONS=new Set(['askYeorinBible','askYeorinQT','askYeorinPrayer','getDailyVerseForUser','clearDailyVerseCache']);
+  const AI_FUNCTIONS=new Set(['askYeorinBible','askYeorinQT','askYeorinPrayer']);
+
+  function loadAddon(src,key){
+    return new Promise(function(resolve,reject){
+      const flag='__YEORIN_ADDON_'+key+'__';
+      if(window[flag]){resolve();return;}
+      const old=document.querySelector('script[data-yeorin-addon="'+key+'"]');
+      if(old){
+        if(old.dataset.loaded==='1'){resolve();return;}
+        old.addEventListener('load',function(){resolve();},{once:true});
+        old.addEventListener('error',function(){reject(new Error('addon_load_failed:'+key));},{once:true});
+        return;
+      }
+      const s=document.createElement('script');
+      s.src=src;
+      s.async=true;
+      s.dataset.yeorinAddon=key;
+      s.onload=function(){s.dataset.loaded='1';window[flag]=true;resolve();};
+      s.onerror=function(){reject(new Error('addon_load_failed:'+key));};
+      document.head.appendChild(s);
+    });
+  }
+
+  // 이 두 파일은 빌드 시 정적 파일로 함께 배포됩니다.
+  // daily-verse-local은 getDailyVerseForUser를 가로채므로 홈 진입 시 AI 호출이 발생하지 않습니다.
+  const dailyLocalReady=loadAddon('/daily-verse-local.js','daily-verse-local').catch(function(e){
+    console.warn('[daily verse addon]',e);
+    throw e;
+  });
+  loadAddon('/challenge-share.js','challenge-share').catch(function(e){console.warn('[challenge share addon]',e);});
 
   async function aiCall(fn,args,retried){
     const native=window.YeorinNative;
@@ -38,6 +68,15 @@
 
   const nativeGas=window.gas;
   window.gas=async function(fn,...args){
+    if(fn==='getDailyVerseForUser'){
+      await dailyLocalReady;
+      if(window.YeorinDailyLocal){
+        const hasRequest=args.length>1&&String(args[1]||'').trim();
+        return hasRequest?window.YeorinDailyLocal.another(args[0]):window.YeorinDailyLocal.today(args[0]);
+      }
+      throw new Error('daily_local_not_ready');
+    }
+    if(fn==='clearDailyVerseCache')return{success:true};
     if(AI_FUNCTIONS.has(fn))return aiCall(fn,args);
     return nativeGas(fn,...args);
   };
@@ -106,5 +145,5 @@
   };
 
   window.YeorinAI={call:aiCall};
-  console.log('[Yeorin] GAS-zero patch ready / core data recovery enabled');
+  console.log('[Yeorin] GAS-zero patch ready / daily verse local / core data recovery enabled');
 })();
