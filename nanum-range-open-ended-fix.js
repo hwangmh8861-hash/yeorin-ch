@@ -15,7 +15,7 @@
   }
   function fullEndOptions(max,start,selected){
     start=Number(start)||0;
-    if(!start)return '<option value="">끝 장</option>';
+    if(!start)return '<option value="">선택</option>';
     selected=Number(selected)||start;
     if(selected<start||selected>max)selected=start;
     var h='';
