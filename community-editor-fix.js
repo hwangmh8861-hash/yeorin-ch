@@ -140,9 +140,12 @@
     ed.dispatchEvent(new Event('input',{bubbles:true}));
   };
 
-  const observer=new MutationObserver(muts=>{
-    for(const m of muts)for(const n of m.addedNodes)scan(n);
-    scan(document);
+  // 변경이 몰려 들어와도 한 프레임에 한 번만 검사합니다.
+  let scanQueued=false;
+  const observer=new MutationObserver(()=>{
+    if(scanQueued)return;
+    scanQueued=true;
+    requestAnimationFrame(()=>{scanQueued=false;scan(document);});
   });
   observer.observe(document.documentElement,{childList:true,subtree:true});
   scan(document);
