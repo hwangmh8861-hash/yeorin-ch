@@ -1,4 +1,4 @@
-const CACHE='yeorin-shell-v9';
+const CACHE='yeorin-shell-v10';
 const APP_ICONS=['/icon-192.png','/icon-512.png','/icon-maskable-512.png','/apple-touch-icon.png','/favicon-32.png'];
 const SHELL=['/','/manifest.json',...APP_ICONS,'/icons/notification-badge.png'];
 
