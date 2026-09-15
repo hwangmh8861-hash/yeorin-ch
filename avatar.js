@@ -62,5 +62,9 @@ window.YeorinAvatar={
   clear:async function(){try{const r=await rpc('yeorin_set_avatar',{p_path:''});await removeFile(r&&r.previous);await refresh();document.getElementById('yaSheet')?.remove();showToast('기본 프로필로 돌아갔어요','success');repaint()}catch(e){console.error(e);showToast('변경 실패','error')}}
 };
 function patchProfileUi(){if(window.__YEORIN_AVATAR_PROFILE_PATCH__)return;window.__YEORIN_AVATAR_PROFILE_PATCH__=true;const oldEdit=window.editProfile;if(typeof oldEdit==='function')window.editProfile=function(){const r=oldEdit.apply(this,arguments);setTimeout(()=>{const popup=document.querySelector('#popupRoot .popup');if(!popup||popup.querySelector('.ya-profile-btn'))return;const btn=document.createElement('button');btn.className='ya-profile-btn';btn.textContent='📷 프로필 사진 바꾸기';btn.onclick=function(){try{if(typeof closePopup==='function')closePopup()}catch(e){}window.YeorinAvatar.open()};const h3=popup.querySelector('h3');if(h3)h3.insertAdjacentElement('afterend',btn);else popup.prepend(btn)},0);return r};const oldMy=window.renderMyPage;if(typeof oldMy==='function')window.renderMyPage=function(){const r=oldMy.apply(this,arguments);decorate();return r};const oldSwitch=window.switchTab;if(typeof oldSwitch==='function')window.switchTab=function(tab){const r=oldSwitch.apply(this,arguments);if(tab==='nanum'||tab==='mypage'||tab==='community')setTimeout(()=>refresh(),80);return r}}
-style();patchProfileUi();const mo=new MutationObserver(()=>decorate());mo.observe(document.documentElement,{childList:true,subtree:true});setTimeout(()=>refresh(),400);console.log('[Yeorin] avatar helper ready');
+style();patchProfileUi();
+// DOM 변경이 몰릴 때 한 프레임에 한 번만 decorate를 예약합니다.
+let decorateQueued=false;
+const mo=new MutationObserver(()=>{if(decorateQueued)return;decorateQueued=true;requestAnimationFrame(()=>{decorateQueued=false;decorate();});});
+mo.observe(document.documentElement,{childList:true,subtree:true});setTimeout(()=>refresh(),400);console.log('[Yeorin] avatar helper ready');
 })();
