@@ -346,6 +346,18 @@ window.socialComment=async function(kind,id){
 window.openSocialWrite=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysWrite';m.onclick=e=>{if(e.target===m)m.remove()};const common='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;flex:0 0 auto;color:var(--brand2)"';const close='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:22px;height:22px"><path d="M18 6 6 18M6 6l12 12"></path></svg>';const book='<svg '+common+'><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>';const heart='<svg '+common+'><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';const camera='<svg '+common+'><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysWrite.remove()" aria-label="닫기" style="display:flex;align-items:center;justify-content:center">'+close+'</button><h3>새로 작성하기</h3><button class="choice" onclick="socialLegacyWrite(\'qt\')" style="display:flex;align-items:center;gap:12px">'+book+'<span>나눔 작성</span></button><button class="choice" onclick="socialLegacyWrite(\'prayer\')" style="display:flex;align-items:center;gap:12px">'+heart+'<span>기도 작성</span></button><button class="choice" onclick="ysWrite.remove();openStoryUploader()" style="display:flex;align-items:center;gap:12px">'+camera+'<span>스토리</span></button></div>';document.body.appendChild(m)};
 
 /* ---------- 기존 나눔 작성 화면 연동 (유지) ---------- */
+// 소셜 피드가 보이는 동안에는 뒤에서 숨겨진 레거시 나눔/기도 목록까지 다시 그리지 않습니다.
+// 작성 화면으로 들어가면 state.active=false가 되므로 기존 렌더러가 그대로 동작합니다.
+const socialLegacyRenderQt=window.renderQt;
+if(typeof socialLegacyRenderQt==='function')window.renderQt=function(){
+  if(state.active&&typeof curTab!=='undefined'&&curTab==='nanum')return;
+  return socialLegacyRenderQt.apply(this,arguments)
+};
+const socialLegacyRenderPrayer=window.renderPrayer;
+if(typeof socialLegacyRenderPrayer==='function')window.renderPrayer=function(){
+  if(state.active&&typeof curTab!=='undefined'&&curTab==='nanum')return;
+  return socialLegacyRenderPrayer.apply(this,arguments)
+};
 const oldSwitchNanum=window.switchNanum;
 window.socialLegacyWrite=function(kind){document.getElementById('ysWrite')?.remove();state.active=false;if(io)io.disconnect();ensureRoot();root().style.display='none';document.getElementById('nanum-tabs').style.display='flex';try{if(kind==='qt')sqf=true;else spf=true}catch(e){}oldSwitchNanum(kind);if(kind==='qt'&&typeof renderQt==='function')renderQt();if(kind==='prayer'&&typeof renderPrayer==='function')renderPrayer()};
 window.returnSocialFeed=function(){state.active=true;const r=ensureRoot();r.style.display='block';load(true,{force:true,aux:false})};

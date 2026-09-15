@@ -50,7 +50,6 @@
     const t=today();
     try{nanumDate=t;}catch(e){}
     try{if(typeof setStripMonthOf==='function')setStripMonthOf(t);}catch(e){}
-    try{_loadedDate='';}catch(e){}
     return t;
   }
 
@@ -97,10 +96,8 @@
     try{entering=String(id)==='nanum'&&String(curTab||'')!=='nanum';}catch(e){entering=String(id)==='nanum';}
     const t=(entering&&!explicitNanumJump)?forceToday():null;
     const r=baseSwitchTab.apply(this,arguments);
-    if(t){
-      try{if(typeof renderHero==='function')renderHero();}catch(e){}
-      try{if(typeof loadDayPosts==='function')loadDayPosts(t,true);}catch(e){}
-    }
+    // 기본 switchTab이 이미 ensureDayPosts()와 renderAll()을 수행합니다.
+    // 여기서 다시 renderHero/loadDayPosts를 호출하면 같은 전환에서 중복 작업이 발생합니다.
     if(String(id)==='community')scheduleCommunitySync(true);
     return r;
   };
