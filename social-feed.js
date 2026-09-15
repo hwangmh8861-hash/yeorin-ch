@@ -6,7 +6,8 @@ const SB='https://putqauaiboychaalgyew.supabase.co',KEY='sb_publishable_u2DS4ojw
 let state={kind:'all',authors:[],date:'',page:0,posts:[],hasMore:false,stories:[],loading:false,active:true};
 let draft=null;
 let viewer={groups:[],g:0,idx:0,timer:null};
-let seen=new Set(),io=null;
+let seen=new Set(),io=null,feedLoadedAt=0,auxLoadedAt=0;
+const FEED_TTL=30*1000,AUX_TTL=5*60*1000;
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const rpc=(name,body)=>window.YeorinNative.directRpc(name,body||{});
 function token(){return window.YeorinNative&&window.YeorinNative.session&&window.YeorinNative.session.access_token||'';}
@@ -30,20 +31,48 @@ function root(){return document.getElementById('nanum-social-root')}
 function ensureRoot(){inject();const page=document.getElementById('page-nanum');if(!page)return null;let r=root();if(!r){r=document.createElement('div');r.id='nanum-social-root';page.insertBefore(r,page.firstChild)}document.getElementById('nanum-tabs').style.display=state.active?'none':'';document.getElementById('page-qt').style.display=state.active?'none':'block';document.getElementById('page-prayer').style.display='none';return r}
 
 /* ---------- 데이터 로딩 ---------- */
-async function load(reset){
+async function load(reset,opts){
+  opts=opts||{};
   if(state.loading)return;
-  if(reset){state.page=0}
+  const now=Date.now();
+
+  if(reset&&!opts.force&&feedLoadedAt&&now-feedLoadedAt<FEED_TTL){
+    const r=ensureRoot();
+    if(r){
+      r.style.display='block';
+      if(!r.querySelector('.ys-feed'))render();
+      else syncObserver();
+    }
+    return;
+  }
+
+  if(reset)state.page=0;
   state.loading=true;
   if(reset&&!root())ensureRoot();
-  if(reset)render();else busy(true);
+
+  const hasVisibleFeed=!!(reset&&state.posts.length&&root()&&root().querySelector('.ys-feed'));
+  if(reset&&!hasVisibleFeed)render();
+  else if(!reset)busy(true);
+
   try{
+    const wantAux=!!opts.aux||!auxLoadedAt||now-auxLoadedAt>=AUX_TTL;
     const tasks=[rpc('yeorin_social_feed',{p_kind:state.kind,p_author_ids:state.authors.length?state.authors:null,p_page:state.page,p_per_page:15,p_date:state.date||null})];
-    if(reset){tasks.push(rpc('yeorin_story_feed',{}));tasks.push(rpc('yeorin_avatars',{}).catch(()=>null))}
+    if(reset&&wantAux){
+      tasks.push(rpc('yeorin_story_feed',{}));
+      tasks.push(rpc('yeorin_avatars',{}).catch(()=>null));
+    }
+
     const res=await Promise.all(tasks),f=res[0]||{},incoming=f.posts||[];
-    if(reset){state.stories=res[1]||[];if(res[2]&&window.YeorinAvatar)YeorinAvatar.applyMap(res[2])}
+    if(reset&&wantAux){
+      state.stories=res[1]||[];
+      if(res[2]&&window.YeorinAvatar)YeorinAvatar.applyMap(res[2]);
+      auxLoadedAt=Date.now();
+    }
     state.hasMore=!!f.hasMore;
+
     if(reset){
       state.posts=incoming;
+      feedLoadedAt=Date.now();
       seen=new Set(incoming.map(pkey));
       render();
     }else{
@@ -56,8 +85,12 @@ async function load(reset){
   }catch(e){
     console.error('[social feed]',e);
     if(!reset)state.page=Math.max(0,state.page-1);
-    if(typeof showToast==='function')showToast('나눔 피드를 불러오지 못했어요','error')
-  }finally{state.loading=false;busy(false);syncObserver()}
+    if(typeof showToast==='function')showToast('나눔 피드를 불러오지 못했어요','error');
+  }finally{
+    state.loading=false;
+    busy(false);
+    syncObserver();
+  }
 }
 function busy(on){const s=document.getElementById('ysSentinel');if(s)s.classList.toggle('idle',!on)}
 
@@ -177,12 +210,12 @@ window.applySocialFilter=function(){
   document.getElementById('ysFilter')?.remove();
   const same=draft.kind===state.kind&&draft.date===state.date&&draft.authors.length===state.authors.length&&draft.authors.every(x=>state.authors.indexOf(x)>=0);
   state.kind=draft.kind;state.date=draft.date;state.authors=draft.authors.slice();
-  if(same){render();return}
-  load(true)
+  if(same){syncObserver();return}
+  load(true,{force:true,aux:false})
 };
 window.resetSocialFilter=function(){
   if(state.kind==='all'&&!state.date&&!state.authors.length)return;
-  state.kind='all';state.date='';state.authors=[];load(true)
+  state.kind='all';state.date='';state.authors=[];load(true,{force:true,aux:false})
 };
 function bodyText(p){
   if(p.kind!=='qt')return esc(p.situation||'').replace(/\n/g,'<br>');
@@ -275,19 +308,19 @@ function render(){
 }
 
 /* ---------- 필터 / 액션 ---------- */
-window.socialKind=k=>{if(state.kind===k)return;state.kind=k;load(true)};
-window.socialPerson=id=>{const a=id?[id]:[];if(a.length===state.authors.length&&a.every(x=>state.authors.indexOf(x)>=0))return;state.authors=a;load(true)};
-window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true)};
+window.socialKind=k=>{if(state.kind===k)return;state.kind=k;load(true,{force:true,aux:false})};
+window.socialPerson=id=>{const a=id?[id]:[];if(a.length===state.authors.length&&a.every(x=>state.authors.indexOf(x)>=0))return;state.authors=a;load(true,{force:true,aux:false})};
+window.socialDate=v=>{const d=v||'';if(state.date===d)return;state.date=d;load(true,{force:true,aux:false})};
 window.getUnifiedSocialFilter=()=>({kind:state.kind,date:state.date,authors:state.authors.slice()});
 window.applyUnifiedSocialFilter=function(next){
   const kind=next&&next.kind||'all',date=next&&next.date||'',authors=(next&&Array.isArray(next.authors)?next.authors.filter(Boolean):[]);
   const same=kind===state.kind&&date===state.date&&authors.length===state.authors.length&&authors.every(x=>state.authors.indexOf(x)>=0);
   state.kind=kind;state.date=date;state.authors=authors.slice();
-  if(same){render();return Promise.resolve()}
-  return load(true)
+  if(same){syncObserver();return Promise.resolve()}
+  return load(true,{force:true,aux:false})
 };
 window.loadMoreSocial=()=>{if(state.loading||!state.hasMore)return;state.page++;load(false)};
-window.refreshSocialFeed=()=>load(true);
+window.refreshSocialFeed=()=>load(true,{force:true,aux:true});
 window.socialReact=async function(kind,id){
   const p=state.posts.find(x=>x.kind===kind&&String(x.id)===String(id));if(!p)return;
   try{
@@ -315,10 +348,10 @@ window.openSocialWrite=function(){const m=document.createElement('div');m.classN
 /* ---------- 기존 나눔 작성 화면 연동 (유지) ---------- */
 const oldSwitchNanum=window.switchNanum;
 window.socialLegacyWrite=function(kind){document.getElementById('ysWrite')?.remove();state.active=false;if(io)io.disconnect();ensureRoot();root().style.display='none';document.getElementById('nanum-tabs').style.display='flex';try{if(kind==='qt')sqf=true;else spf=true}catch(e){}oldSwitchNanum(kind);if(kind==='qt'&&typeof renderQt==='function')renderQt();if(kind==='prayer'&&typeof renderPrayer==='function')renderPrayer()};
-window.returnSocialFeed=function(){state.active=true;const r=ensureRoot();r.style.display='block';load(true)};
+window.returnSocialFeed=function(){state.active=true;const r=ensureRoot();r.style.display='block';load(true,{force:true,aux:false})};
 const oldAddQT=window.addQT;if(typeof oldAddQT==='function')window.addQT=async function(){const r=await oldAddQT.apply(this,arguments);setTimeout(()=>window.returnSocialFeed(),250);return r};
 const oldAddPrayer=window.addPrayer;if(typeof oldAddPrayer==='function')window.addPrayer=async function(){const r=await oldAddPrayer.apply(this,arguments);setTimeout(()=>window.returnSocialFeed(),250);return r};
-const oldSwitchTab=window.switchTab;if(typeof oldSwitchTab==='function')window.switchTab=function(tab){const r=oldSwitchTab.apply(this,arguments);if(tab==='nanum'){state.active=true;setTimeout(()=>{ensureRoot();root().style.display='block';load(true)},0)}else if(io)io.disconnect();return r};
+const oldSwitchTab=window.switchTab;if(typeof oldSwitchTab==='function')window.switchTab=function(tab){const r=oldSwitchTab.apply(this,arguments);if(tab==='nanum'){state.active=true;const socialRoot=ensureRoot();if(socialRoot)socialRoot.style.display='block';setTimeout(()=>load(true,{force:false,aux:false}),0)}else if(io)io.disconnect();return r};
 
 /* ---------- 스토리 업로드 ---------- */
 window.openStoryUploader=function(){const m=document.createElement('div');m.className='ys-modal';m.id='ysUpload';m.onclick=e=>{if(e.target===m)m.remove()};m.innerHTML='<div class="ys-sheet"><button class="ys-close" onclick="ysUpload.remove()">×</button><h3>스토리 올리기</h3><div style="font-size:12px;color:var(--ink3)">사진 또는 30초 이하 영상 · 24시간 뒤 자동 삭제</div><input id="ysFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" style="margin:14px 0;width:100%"><input id="ysCaption" class="ys-caption" maxlength="500" placeholder="한 줄 남기기 (선택)"><button class="ys-primary" onclick="submitStory()">스토리 올리기</button></div>';document.body.appendChild(m)};
@@ -345,7 +378,7 @@ window.submitStory=async function(){
     await rpc('yeorin_story_create',{p_story_id:id,p_media_path:path,p_media_type:isVideo?'video':'image',p_caption:cap,p_duration_seconds:dur});
     document.getElementById('ysUpload')?.remove();
     showToast('스토리를 올렸어요','success');
-    await load(true)
+    await load(true,{force:true,aux:true})
   }catch(e){
     console.error(e);
     if(uploaded){await removeMedia(path);showToast('스토리 저장에 실패해서 올린 파일을 되돌렸어요','error')}
@@ -405,6 +438,6 @@ window.closeStory=function(){
   refreshStrip()
 };
 
-setTimeout(()=>{if(typeof curTab!=='undefined'&&curTab==='nanum'){ensureRoot();load(true)}},700);
+setTimeout(()=>{if(typeof curTab!=='undefined'&&curTab==='nanum'){ensureRoot();load(true,{force:false,aux:true})}},700);
 console.log('[Yeorin] social nanum feed + stories ready');
 })();
