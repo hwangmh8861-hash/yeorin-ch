@@ -4,21 +4,26 @@
 if(window.__YEORIN_PWA_UPDATE__)return;window.__YEORIN_PWA_UPDATE__=true;
 
 // 브라우저/홈 화면 추가 UI가 예전 favicon을 재사용하지 않도록
-// 최종 여린교회 아이콘을 루트 경로에서 명시적으로 연결합니다.
+// 기존 아이콘 링크를 보존하면서 필요한 32px/192px/apple-touch 아이콘만 보완합니다.
+function ensureIconLink(rel,sizes,href){
+  let link=[...document.querySelectorAll(`link[rel="${rel}"]`)].find(el=>el.sizes&&el.sizes.value===sizes);
+  if(!link){
+    link=document.createElement('link');
+    link.rel=rel;
+    if(sizes)link.sizes=sizes;
+    document.head.appendChild(link);
+  }
+  link.type='image/png';
+  link.href=href;
+  return link;
+}
+
 function ensureAppIcons(){
-  document.querySelectorAll('link[rel="icon"],link[rel="shortcut icon"]').forEach(el=>el.remove());
-
-  const fav=document.createElement('link');
-  fav.rel='icon';
-  fav.type='image/png';
-  fav.sizes='32x32';
-  fav.href='/favicon-32.png?v=20260915-final';
-  document.head.appendChild(fav);
-
-  let touch=document.querySelector('link[rel="apple-touch-icon"]');
-  if(!touch){touch=document.createElement('link');touch.rel='apple-touch-icon';document.head.appendChild(touch);}
-  touch.href='/apple-touch-icon.png?v=20260915-final';
-  touch.sizes='180x180';
+  // 기존 <link rel="icon"> 및 apple-touch-icon을 통째로 제거하지 않습니다.
+  // 설치형 PWA/홈 화면 추가 시 고해상도 아이콘 후보가 유지되도록 명시합니다.
+  ensureIconLink('icon','32x32','/favicon-32.png?v=20260915-pwa');
+  ensureIconLink('icon','192x192','/icon-192.png?v=20260915-pwa');
+  ensureIconLink('apple-touch-icon','180x180','/apple-touch-icon.png?v=20260915-pwa');
 }
 ensureAppIcons();
 
