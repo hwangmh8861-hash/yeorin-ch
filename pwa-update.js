@@ -19,8 +19,6 @@ function ensureIconLink(rel,sizes,href){
 }
 
 function ensureAppIcons(){
-  // 기존 <link rel="icon"> 및 apple-touch-icon을 통째로 제거하지 않습니다.
-  // 설치형 PWA/홈 화면 추가 시 고해상도 아이콘 후보가 유지되도록 명시합니다.
   ensureIconLink('icon','32x32','/favicon-32.png?v=20260915-pwa');
   ensureIconLink('icon','192x192','/icon-192.png?v=20260915-pwa');
   ensureIconLink('apple-touch-icon','180x180','/apple-touch-icon.png?v=20260915-pwa');
@@ -29,33 +27,58 @@ ensureAppIcons();
 
 if(!('serviceWorker' in navigator))return;
 
-let refreshing=false;
-let hadController=!!navigator.serviceWorker.controller;
+const UPDATE_INTERVAL=30*60*1000;
+const UPDATE_KEY='yeorinSwUpdateCheckedAt';
 let updateTimer=null;
+let updateRunning=false;
+let hadController=!!navigator.serviceWorker.controller;
 
-async function ensureUpdate(){
+function lastChecked(){
+  try{return Number(localStorage.getItem(UPDATE_KEY)||0)}catch(e){return 0}
+}
+function markChecked(){
+  try{localStorage.setItem(UPDATE_KEY,String(Date.now()))}catch(e){}
+}
+function runIdle(fn){
+  if('requestIdleCallback' in window)window.requestIdleCallback(fn,{timeout:2500});
+  else setTimeout(fn,0);
+}
+
+async function ensureUpdate(force){
+  if(updateRunning)return;
+  if(!force&&Date.now()-lastChecked()<UPDATE_INTERVAL)return;
+  updateRunning=true;
   try{
     const reg=await navigator.serviceWorker.register('/sw.js',{scope:'/',updateViaCache:'none'});
     try{await reg.update();}catch(e){}
-  }catch(e){console.error('[Yeorin] service worker update',e)}
+    markChecked();
+  }catch(e){
+    console.error('[Yeorin] service worker update',e);
+  }finally{
+    updateRunning=false;
+  }
 }
 
+// 업데이트가 발견돼도 사용 중인 화면을 즉시 reload 하지 않습니다.
+// 새 서비스워커는 다음 앱 진입/탐색부터 자연스럽게 적용됩니다.
 navigator.serviceWorker.addEventListener('controllerchange',function(){
   if(!hadController){hadController=true;return;}
-  if(refreshing)return;
-  refreshing=true;
-  location.reload();
+  hadController=true;
+  try{sessionStorage.setItem('yeorinSwChanged','1')}catch(e){}
 });
 
-function scheduleUpdate(delay){
+function scheduleUpdate(delay,force){
   clearTimeout(updateTimer);
-  updateTimer=setTimeout(ensureUpdate,delay||0);
+  updateTimer=setTimeout(()=>runIdle(()=>ensureUpdate(!!force)),delay||0);
 }
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>scheduleUpdate(100));
-else scheduleUpdate(100);
-window.addEventListener('pageshow',()=>scheduleUpdate(200));
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleUpdate(150)});
+// 앱 초기 렌더링과 로그인 복원을 먼저 끝낸 뒤 백그라운드에서 업데이트를 확인합니다.
+if(document.readyState==='complete')scheduleUpdate(1500,false);
+else window.addEventListener('load',()=>scheduleUpdate(1500,false),{once:true});
+
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&Date.now()-lastChecked()>=UPDATE_INTERVAL)scheduleUpdate(1200,false);
+});
 
 console.log('[Yeorin] PWA update checker ready');
 })();
