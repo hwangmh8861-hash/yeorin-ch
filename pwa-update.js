@@ -7,21 +7,21 @@ if(!('serviceWorker' in navigator))return;
 
 const UPDATE_INTERVAL=30*60*1000;
 const UPDATE_KEY='yeorinSwUpdateCheckedAt';
+const VERSION_KEY='yeorinSwHelperVersion';
+const HELPER_VERSION='cleanup-v12';
 let updateTimer=null;
 let updateRunning=false;
 
-function lastChecked(){
-  try{return Number(localStorage.getItem(UPDATE_KEY)||0)}catch(e){return 0}
-}
-function markChecked(){
-  try{localStorage.setItem(UPDATE_KEY,String(Date.now()))}catch(e){}
-}
+function num(key){try{return Number(localStorage.getItem(key)||0)}catch(e){return 0}}
+function str(key){try{return localStorage.getItem(key)||''}catch(e){return''}}
+function set(key,value){try{localStorage.setItem(key,String(value))}catch(e){}}
 function runIdle(fn){
   if('requestIdleCallback' in window)window.requestIdleCallback(fn,{timeout:2500});
   else setTimeout(fn,0);
 }
-async function ensureUpdate(){
-  if(updateRunning||Date.now()-lastChecked()<UPDATE_INTERVAL)return;
+async function ensureUpdate(force){
+  if(updateRunning)return;
+  if(!force&&Date.now()-num(UPDATE_KEY)<UPDATE_INTERVAL)return;
   updateRunning=true;
   try{
     const reg=await navigator.serviceWorker.getRegistration('/');
@@ -30,21 +30,23 @@ async function ensureUpdate(){
     }else{
       await navigator.serviceWorker.register('/sw.js',{scope:'/',updateViaCache:'none'});
     }
-    markChecked();
+    set(UPDATE_KEY,Date.now());
+    set(VERSION_KEY,HELPER_VERSION);
   }catch(e){
     console.warn('[Yeorin] service worker update',e);
   }finally{
     updateRunning=false;
   }
 }
-function scheduleUpdate(delay){
+function scheduleUpdate(delay,force){
   clearTimeout(updateTimer);
-  updateTimer=setTimeout(()=>runIdle(ensureUpdate),delay||0);
+  updateTimer=setTimeout(()=>runIdle(()=>ensureUpdate(!!force)),delay||0);
 }
 
-// 초기 UI와 세션 복원을 방해하지 않도록 로드 완료 뒤 한 번만 확인합니다.
-if(document.readyState==='complete')scheduleUpdate(1800);
-else window.addEventListener('load',()=>scheduleUpdate(1800),{once:true});
+// 이번 정리 버전은 한 번만 즉시 적용하고, 이후에는 30분 주기로만 확인합니다.
+const firstCleanupApply=str(VERSION_KEY)!==HELPER_VERSION;
+if(document.readyState==='complete')scheduleUpdate(1800,firstCleanupApply);
+else window.addEventListener('load',()=>scheduleUpdate(1800,firstCleanupApply),{once:true});
 
 console.log('[Yeorin] PWA update checker ready');
 })();
