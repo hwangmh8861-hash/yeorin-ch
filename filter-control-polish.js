@@ -104,8 +104,7 @@ function openUnified(){
 }
 
 function run(){inject();window.openDatePicker=openUnified}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-const mo=new MutationObserver(function(){inject();if(window.openDatePicker!==openUnified)window.openDatePicker=openUnified});mo.observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 
 console.log('[Yeorin] unified date/person filter ready');
 })();
