@@ -4,6 +4,12 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/pwa-runtime-check.yml'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'icon-192.png'
+      - 'icon-512.png'
+      - 'icon-maskable-512.png'
+      - 'apple-touch-icon.png'
   workflow_dispatch:
 
 jobs:
@@ -45,12 +51,14 @@ jobs:
             console.log('MAIN_STATUS',res && res.status());
             await new Promise(r=>setTimeout(r,5000));
             console.log('MANIFEST',JSON.stringify(await cdp.send('Page.getAppManifest'),null,2));
-            console.log('INSTALLABILITY_ERRORS',JSON.stringify(await cdp.send('Page.getInstallabilityErrors'),null,2));
+            const installability = await cdp.send('Page.getInstallabilityErrors');
+            console.log('INSTALLABILITY_ERRORS',JSON.stringify(installability,null,2));
             console.log('SW',JSON.stringify(await page.evaluate(async()=>{
               const reg=await navigator.serviceWorker.getRegistration('/');
               return {supported:'serviceWorker' in navigator,controller:!!navigator.serviceWorker.controller,controllerURL:navigator.serviceWorker.controller?.scriptURL||null,scope:reg?.scope||null,active:!!reg?.active,waiting:!!reg?.waiting,installing:!!reg?.installing};
             }),null,2));
             await browser.close();
+            if(installability.installabilityErrors?.length) process.exit(2);
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
           node check.cjs
