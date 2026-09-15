@@ -1,11 +1,7 @@
-const CACHE='yeorin-shell-v11';
-const APP_ICONS=['/icon-192.png','/icon-512.png','/icon-maskable-512.png','/apple-touch-icon.png','/favicon-32.png'];
-// 큰 index.html은 설치 단계에서 미리 내려받지 않습니다. 첫 정상 진입 때 캐시해 오프라인 fallback으로 사용합니다.
-const SHELL=['/manifest.json',...APP_ICONS,'/icons/notification-badge.png'];
+const CACHE='yeorin-shell-v12';
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).catch(()=>{}));
 });
 
 self.addEventListener('activate',event=>{
@@ -18,44 +14,23 @@ self.addEventListener('activate',event=>{
 
 self.addEventListener('fetch',event=>{
   const req=event.request;
-  if(req.method!=='GET')return;
+  if(req.method!=='GET'||req.mode!=='navigate')return;
   const url=new URL(req.url);
   if(url.origin!==self.location.origin)return;
 
-  if(req.mode==='navigate'){
-    const network=fetch(req).then(res=>{
+  event.respondWith((async()=>{
+    try{
+      const res=await fetch(req);
       if(res&&res.ok){
         const copy=res.clone();
         event.waitUntil(caches.open(CACHE).then(c=>c.put('/',copy)).catch(()=>{}));
       }
       return res;
-    });
-    event.respondWith(network.catch(()=>caches.match('/').then(r=>r||Response.error())));
-    return;
-  }
-
-  if(url.pathname==='/manifest.json'){
-    event.respondWith(
-      fetch(req,{cache:'no-cache'})
-        .then(res=>{
-          const copy=res.clone();
-          event.waitUntil(caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{}));
-          return res;
-        })
-        .catch(()=>caches.match(req))
-    );
-    return;
-  }
-
-  if(APP_ICONS.includes(url.pathname)||url.pathname.startsWith('/icons/')){
-    event.respondWith(
-      caches.match(req).then(cached=>cached||fetch(req).then(res=>{
-        const copy=res.clone();
-        event.waitUntil(caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{}));
-        return res;
-      }))
-    );
-  }
+    }catch(e){
+      const cached=await caches.match('/');
+      return cached||Response.error();
+    }
+  })());
 });
 
 self.addEventListener('push',event=>{
