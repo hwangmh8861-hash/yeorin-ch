@@ -1,0 +1,56 @@
+name: PWA runtime check
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pwa-runtime-check.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Wait for Vercel production deployment
+        run: sleep 30
+      - name: Check production resources
+        run: |
+          set -euxo pipefail
+          BASE='https://yeorin-ch.vercel.app'
+          for P in / /manifest.json /sw.js /icon-192.png /icon-512.png /icon-maskable-512.png /pwa-check; do
+            echo "===== $P ====="
+            curl -sSIL "$BASE$P" | sed -n '1,20p'
+          done
+          echo '===== manifest body ====='
+          curl -sS "$BASE/manifest.json"
+      - name: Install Chromium driver
+        run: |
+          mkdir -p /tmp/pwa-probe
+          cd /tmp/pwa-probe
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer@24 --no-audit --no-fund
+      - name: Ask Chrome for installability errors
+        run: |
+          cd /tmp/pwa-probe
+          cat > check.cjs <<'NODE'
+          const puppeteer = require('puppeteer');
+          (async()=>{
+            const browser = await puppeteer.launch({headless:true,args:['--no-sandbox','--disable-setuid-sandbox']});
+            const page = await browser.newPage();
+            const cdp = await page.createCDPSession();
+            page.on('console',m=>console.log('PAGE',m.type(),m.text()));
+            const res = await page.goto('https://yeorin-ch.vercel.app/',{waitUntil:'networkidle2',timeout:60000});
+            console.log('MAIN_STATUS',res && res.status());
+            await new Promise(r=>setTimeout(r,5000));
+            console.log('MANIFEST',JSON.stringify(await cdp.send('Page.getAppManifest'),null,2));
+            console.log('INSTALLABILITY_ERRORS',JSON.stringify(await cdp.send('Page.getInstallabilityErrors'),null,2));
+            console.log('SW',JSON.stringify(await page.evaluate(async()=>{
+              const reg=await navigator.serviceWorker.getRegistration('/');
+              return {supported:'serviceWorker' in navigator,controller:!!navigator.serviceWorker.controller,controllerURL:navigator.serviceWorker.controller?.scriptURL||null,scope:reg?.scope||null,active:!!reg?.active,waiting:!!reg?.waiting,installing:!!reg?.installing};
+            }),null,2));
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+          node check.cjs
