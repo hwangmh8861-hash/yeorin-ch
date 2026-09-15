@@ -2,6 +2,23 @@
 (function(){
 'use strict';
 if(window.__YEORIN_PWA_UPDATE__)return;window.__YEORIN_PWA_UPDATE__=true;
+
+// 브라우저/홈 화면 추가 UI가 오래된 favicon을 잡지 않도록
+// 실제 여린교회 앱 아이콘으로 즉시 교체합니다.
+function ensureAppIcons(){
+  const icon='/icons/yeorin-icon-192-v3.png';
+  let fav=document.querySelector('link[rel="icon"]');
+  if(!fav){fav=document.createElement('link');fav.rel='icon';document.head.appendChild(fav);}
+  fav.type='image/png';fav.href=icon;
+  fav.removeAttribute('sizes');
+
+  let touch=document.querySelector('link[rel="apple-touch-icon"]');
+  if(!touch){touch=document.createElement('link');touch.rel='apple-touch-icon';document.head.appendChild(touch);}
+  touch.href=icon;
+  touch.removeAttribute('sizes');
+}
+ensureAppIcons();
+
 if(!('serviceWorker' in navigator))return;
 
 let refreshing=false;
