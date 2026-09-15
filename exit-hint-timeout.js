@@ -5,49 +5,63 @@
   const EXIT_TEXT='한 번 더 누르면 앱을 종료해요';
   const VISIBLE_MS=2300;
   const FADE_MS=220;
-  const armed=new WeakSet();
 
-  function findHintNodes(){
-    return Array.from(document.querySelectorAll('body *')).filter(el=>{
-      if(armed.has(el))return false;
-      if(el.children&&el.children.length>0)return false;
-      return String(el.textContent||'').trim()===EXIT_TEXT;
-    });
+  let fadeTimer=null,hideTimer=null;
+
+  function clearTimers(){
+    if(fadeTimer){clearTimeout(fadeTimer);fadeTimer=null;}
+    if(hideTimer){clearTimeout(hideTimer);hideTimer=null;}
   }
 
-  function dismissHint(textNode){
-    if(!textNode||armed.has(textNode))return;
-    armed.add(textNode);
+  // 종료 안내 때문에 건드린 인라인 스타일을 원래대로 돌려놓습니다.
+  function resetStyle(card){
+    if(!card)return;
+    card.style.transition='';
+    card.style.transform='';
+    card.style.pointerEvents='';
+  }
 
-    // showToast 구현이 텍스트 span을 감싸는 구조여도 토스트 카드까지만 찾아갑니다.
-    let card=textNode;
-    const candidate=textNode.closest('.toast,.toast-msg,.toast-message,.snackbar,.notification,[role="status"],[aria-live]');
-    if(candidate)card=candidate;
+  function scheduleDismiss(){
+    const card=document.getElementById('toast');
+    if(!card)return;
+    clearTimers();
+    resetStyle(card);
 
-    setTimeout(()=>{
-      if(!card||!card.isConnected)return;
+    fadeTimer=setTimeout(function(){
+      if(!card.isConnected)return;
       card.style.transition='opacity '+FADE_MS+'ms ease, transform '+FADE_MS+'ms ease';
       card.style.opacity='0';
       card.style.transform='translateY(8px)';
       card.style.pointerEvents='none';
-      setTimeout(()=>{
-        if(!card||!card.isConnected)return;
-        // 전용 토스트 노드면 제거하고, 공용 컨테이너라면 내용만 비웁니다.
-        if(card===textNode||card.classList.contains('toast')||card.classList.contains('snackbar')||card.getAttribute('role')==='status')card.remove();
-        else textNode.remove();
+
+      hideTimer=setTimeout(function(){
+        if(!card.isConnected)return;
+        // 토스트는 앱 전체가 재사용하는 공용 노드이므로 제거하지 않고 숨기기만 합니다.
+        card.style.display='none';
+        resetStyle(card);
       },FADE_MS+40);
     },VISIBLE_MS);
   }
 
-  function scan(){findHintNodes().forEach(dismissHint);}
+  function install(){
+    if(window.__YEORIN_EXIT_HINT_PATCH__)return;
+    const base=window.showToast;
+    if(typeof base!=='function'){setTimeout(install,150);return;}
+    window.__YEORIN_EXIT_HINT_PATCH__=true;
 
-  const observer=new MutationObserver(scan);
-  const start=()=>{
-    if(!document.body)return;
-    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
-    scan();
-  };
+    window.showToast=function(msg,type){
+      const r=base.apply(this,arguments);
+      if(String(msg==null?'':msg).trim()===EXIT_TEXT){
+        scheduleDismiss();
+      }else{
+        // 다른 토스트가 올라오면 종료 안내용 타이머와 스타일을 즉시 정리합니다.
+        clearTimers();
+        resetStyle(document.getElementById('toast'));
+      }
+      return r;
+    };
+  }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
-  else start();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
 })();
