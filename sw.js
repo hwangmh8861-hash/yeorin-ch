@@ -1,5 +1,5 @@
-const CACHE='yeorin-shell-v7';
-const SHELL=['/','/manifest.json','/icons/icon-192.png','/icons/icon-512.png','/icons/notification-badge.png'];
+const CACHE='yeorin-shell-v8';
+const SHELL=['/','/manifest.json','/icons/yeorin-icon-192-v3.png','/icons/yeorin-icon-512-v3.png','/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -34,7 +34,7 @@ self.addEventListener('push',event=>{
   const title=p.title||'여린교회';
   const opts={
     body:p.body||'새로운 소식이 있어요',
-    icon:p.icon||'/icons/icon-192.png',
+    icon:p.icon||'/icons/yeorin-icon-192-v3.png',
     badge:p.badge||'/icons/notification-badge.png',
     tag:p.tag||undefined,
     renotify:false,
