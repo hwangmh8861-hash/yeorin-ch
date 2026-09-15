@@ -1,6 +1,7 @@
-const CACHE='yeorin-shell-v10';
+const CACHE='yeorin-shell-v11';
 const APP_ICONS=['/icon-192.png','/icon-512.png','/icon-maskable-512.png','/apple-touch-icon.png','/favicon-32.png'];
-const SHELL=['/','/manifest.json',...APP_ICONS,'/icons/notification-badge.png'];
+// 큰 index.html은 설치 단계에서 미리 내려받지 않습니다. 첫 정상 진입 때 캐시해 오프라인 fallback으로 사용합니다.
+const SHELL=['/manifest.json',...APP_ICONS,'/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -9,29 +10,57 @@ self.addEventListener('install',event=>{
 
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
-    const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
+    const keys=await caches.keys();
+    await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
     await self.clients.claim();
   })());
 });
 
 self.addEventListener('fetch',event=>{
-  const req=event.request;if(req.method!=='GET')return;
-  const url=new URL(req.url);if(url.origin!==self.location.origin)return;
+  const req=event.request;
+  if(req.method!=='GET')return;
+  const url=new URL(req.url);
+  if(url.origin!==self.location.origin)return;
+
   if(req.mode==='navigate'){
-    event.respondWith(fetch(req,{cache:'no-store'}).catch(()=>caches.match('/')));
+    const network=fetch(req).then(res=>{
+      if(res&&res.ok){
+        const copy=res.clone();
+        event.waitUntil(caches.open(CACHE).then(c=>c.put('/',copy)).catch(()=>{}));
+      }
+      return res;
+    });
+    event.respondWith(network.catch(()=>caches.match('/').then(r=>r||Response.error())));
     return;
   }
+
   if(url.pathname==='/manifest.json'){
-    event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});return res;}).catch(()=>caches.match(req)));
+    event.respondWith(
+      fetch(req,{cache:'no-cache'})
+        .then(res=>{
+          const copy=res.clone();
+          event.waitUntil(caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{}));
+          return res;
+        })
+        .catch(()=>caches.match(req))
+    );
     return;
   }
+
   if(APP_ICONS.includes(url.pathname)||url.pathname.startsWith('/icons/')){
-    event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});return res;}).catch(()=>caches.match(req)));
+    event.respondWith(
+      caches.match(req).then(cached=>cached||fetch(req).then(res=>{
+        const copy=res.clone();
+        event.waitUntil(caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{}));
+        return res;
+      }))
+    );
   }
 });
 
 self.addEventListener('push',event=>{
-  let p={};try{p=event.data?event.data.json():{};}catch(e){try{p={body:event.data.text()};}catch(_e){}}
+  let p={};
+  try{p=event.data?event.data.json():{}}catch(e){try{p={body:event.data.text()}}catch(_e){}}
   const title=p.title||'여린교회';
   const opts={
     body:p.body||'새로운 소식이 있어요',
@@ -58,12 +87,15 @@ function pushUrl(data){
 }
 
 self.addEventListener('notificationclick',event=>{
-  event.notification.close();const data=event.notification.data||{};
+  event.notification.close();
+  const data=event.notification.data||{};
   event.waitUntil((async()=>{
     const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of windows){
       if(new URL(client.url).origin===self.location.origin){
-        await client.focus();client.postMessage({type:'YEORIN_PUSH_NAV',data});return;
+        await client.focus();
+        client.postMessage({type:'YEORIN_PUSH_NAV',data});
+        return;
       }
     }
     await self.clients.openWindow(pushUrl(data));
