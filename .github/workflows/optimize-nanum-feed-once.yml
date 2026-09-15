@@ -17,6 +17,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          from textwrap import dedent
           p=Path('social-feed.js')
           s=p.read_text(encoding='utf-8')
 
@@ -27,68 +28,69 @@ jobs:
 
           start=s.index('async function load(reset){')
           end=s.index('function busy(on){',start)
-          new_load=r'''async function load(reset,opts){
-  opts=opts||{};
-  if(state.loading)return;
-  const now=Date.now();
+          new_load=dedent(r'''
+          async function load(reset,opts){
+            opts=opts||{};
+            if(state.loading)return;
+            const now=Date.now();
 
-  if(reset&&!opts.force&&feedLoadedAt&&now-feedLoadedAt<FEED_TTL){
-    const r=ensureRoot();
-    if(r){
-      r.style.display='block';
-      if(!r.querySelector('.ys-feed'))render();
-      else syncObserver();
-    }
-    return;
-  }
+            if(reset&&!opts.force&&feedLoadedAt&&now-feedLoadedAt<FEED_TTL){
+              const r=ensureRoot();
+              if(r){
+                r.style.display='block';
+                if(!r.querySelector('.ys-feed'))render();
+                else syncObserver();
+              }
+              return;
+            }
 
-  if(reset)state.page=0;
-  state.loading=true;
-  if(reset&&!root())ensureRoot();
+            if(reset)state.page=0;
+            state.loading=true;
+            if(reset&&!root())ensureRoot();
 
-  const hasVisibleFeed=!!(reset&&state.posts.length&&root()&&root().querySelector('.ys-feed'));
-  if(reset&&!hasVisibleFeed)render();
-  else if(!reset)busy(true);
+            const hasVisibleFeed=!!(reset&&state.posts.length&&root()&&root().querySelector('.ys-feed'));
+            if(reset&&!hasVisibleFeed)render();
+            else if(!reset)busy(true);
 
-  try{
-    const wantAux=!!opts.aux||!auxLoadedAt||now-auxLoadedAt>=AUX_TTL;
-    const tasks=[rpc('yeorin_social_feed',{p_kind:state.kind,p_author_ids:state.authors.length?state.authors:null,p_page:state.page,p_per_page:15,p_date:state.date||null})];
-    if(reset&&wantAux){
-      tasks.push(rpc('yeorin_story_feed',{}));
-      tasks.push(rpc('yeorin_avatars',{}).catch(()=>null));
-    }
+            try{
+              const wantAux=!!opts.aux||!auxLoadedAt||now-auxLoadedAt>=AUX_TTL;
+              const tasks=[rpc('yeorin_social_feed',{p_kind:state.kind,p_author_ids:state.authors.length?state.authors:null,p_page:state.page,p_per_page:15,p_date:state.date||null})];
+              if(reset&&wantAux){
+                tasks.push(rpc('yeorin_story_feed',{}));
+                tasks.push(rpc('yeorin_avatars',{}).catch(()=>null));
+              }
 
-    const res=await Promise.all(tasks),f=res[0]||{},incoming=f.posts||[];
-    if(reset&&wantAux){
-      state.stories=res[1]||[];
-      if(res[2]&&window.YeorinAvatar)YeorinAvatar.applyMap(res[2]);
-      auxLoadedAt=Date.now();
-    }
-    state.hasMore=!!f.hasMore;
+              const res=await Promise.all(tasks),f=res[0]||{},incoming=f.posts||[];
+              if(reset&&wantAux){
+                state.stories=res[1]||[];
+                if(res[2]&&window.YeorinAvatar)YeorinAvatar.applyMap(res[2]);
+                auxLoadedAt=Date.now();
+              }
+              state.hasMore=!!f.hasMore;
 
-    if(reset){
-      state.posts=incoming;
-      feedLoadedAt=Date.now();
-      seen=new Set(incoming.map(pkey));
-      render();
-    }else{
-      const fresh=incoming.filter(p=>!seen.has(pkey(p)));
-      fresh.forEach(p=>seen.add(pkey(p)));
-      state.posts=state.posts.concat(fresh);
-      appendPosts(fresh);
-      if(!fresh.length&&incoming.length)state.hasMore=false;
-    }
-  }catch(e){
-    console.error('[social feed]',e);
-    if(!reset)state.page=Math.max(0,state.page-1);
-    if(typeof showToast==='function')showToast('나눔 피드를 불러오지 못했어요','error');
-  }finally{
-    state.loading=false;
-    busy(false);
-    syncObserver();
-  }
-}
-'''
+              if(reset){
+                state.posts=incoming;
+                feedLoadedAt=Date.now();
+                seen=new Set(incoming.map(pkey));
+                render();
+              }else{
+                const fresh=incoming.filter(p=>!seen.has(pkey(p)));
+                fresh.forEach(p=>seen.add(pkey(p)));
+                state.posts=state.posts.concat(fresh);
+                appendPosts(fresh);
+                if(!fresh.length&&incoming.length)state.hasMore=false;
+              }
+            }catch(e){
+              console.error('[social feed]',e);
+              if(!reset)state.page=Math.max(0,state.page-1);
+              if(typeof showToast==='function')showToast('나눔 피드를 불러오지 못했어요','error');
+            }finally{
+              state.loading=false;
+              busy(false);
+              syncObserver();
+            }
+          }
+          ''').lstrip()
           s=s[:start]+new_load+s[end:]
 
           replacements={
