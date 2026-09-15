@@ -1,5 +1,6 @@
-const CACHE='yeorin-shell-v8';
-const SHELL=['/','/manifest.json','/icons/yeorin-icon-192-v3.png','/icons/yeorin-icon-512-v3.png','/icons/notification-badge.png'];
+const CACHE='yeorin-shell-v9';
+const APP_ICONS=['/icon-192.png','/icon-512.png','/icon-maskable-512.png','/apple-touch-icon.png','/favicon-32.png'];
+const SHELL=['/','/manifest.json',...APP_ICONS,'/icons/notification-badge.png'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -24,8 +25,8 @@ self.addEventListener('fetch',event=>{
     event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});return res;}).catch(()=>caches.match(req)));
     return;
   }
-  if(url.pathname.startsWith('/icons/')){
-    event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});return res;})));
+  if(APP_ICONS.includes(url.pathname)||url.pathname.startsWith('/icons/')){
+    event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(req,copy)).catch(()=>{});return res;}).catch(()=>caches.match(req)));
   }
 });
 
@@ -34,7 +35,7 @@ self.addEventListener('push',event=>{
   const title=p.title||'여린교회';
   const opts={
     body:p.body||'새로운 소식이 있어요',
-    icon:p.icon||'/icons/yeorin-icon-192-v3.png',
+    icon:p.icon||'/icon-192.png',
     badge:p.badge||'/icons/notification-badge.png',
     tag:p.tag||undefined,
     renotify:false,
