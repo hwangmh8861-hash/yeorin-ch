@@ -298,7 +298,65 @@ document.addEventListener('click',function(e){
 let clampTimer=null;
 window.addEventListener('resize',function(){clearTimeout(clampTimer);clampTimer=setTimeout(()=>syncVerseClamp(),180)});
 function reactions(p){const r=p.reactions||{},n=Object.values(r).reduce((a,x)=>a+(Array.isArray(x)?x.length:0),0),mine=Object.values(r).some(x=>Array.isArray(x)&&x.includes(uid()));return '<button class="ys-act" onclick="socialReact(\''+p.kind+'\',\''+p.id+'\')">'+(mine?'❤️':'♡')+' '+n+'</button><span class="ys-act">댓글 '+((p.comments||[]).length)+'</span>'}
-function postHtml(p){const cs=(p.comments||[]).slice(-3).map(c=>'<div class="ys-comment"><b>'+esc(c.author&&c.author.name||'')+'</b>'+esc(c.text)+'</div>').join('');return '<article class="ys-post" id="social-'+p.kind+'-'+p.id+'"><div class="ys-author"><button class="ys-av" style="border:0" onclick="socialPerson(\''+esc(p.authorId)+'\')">'+face(p.author)+'</button><div class="ys-meta"><div class="ys-user">'+esc(p.author&&p.author.name||'')+'</div><div class="ys-time">'+rel(p.createdAt||p.date)+'</div></div><span class="ys-type">'+(p.kind==='qt'?'나눔':'기도')+'</span></div>'+verseCard(p)+(bodyText(p)?'<div class="ys-body">'+bodyText(p)+'</div>':'')+'<div class="ys-actions">'+reactions(p)+'</div><div>'+cs+'</div><div class="ys-commentbox"><input id="sc-'+p.kind+'-'+p.id+'" placeholder="댓글 남기기"><button class="ys-send" onclick="socialComment(\''+p.kind+'\',\''+p.id+'\')">등록</button></div></article>'}
+// Edit only text fields here: preserve the original Bible range and selectedRefs.
+function ownPost(p){return !!uid()&&String(p.authorId)===String(uid())}
+function editButton(p){return ownPost(p)?'<button type="button" class="ys-act" aria-label="게시물 수정" data-social-edit="'+esc(p.id)+'" data-kind="'+esc(p.kind)+'">수정</button>':''}
+let editingPost=null;
+window.closeSocialEdit=function(){
+  if(editingPost&&editingPost.saving)return;
+  document.getElementById('ysEdit')?.remove();editingPost=null;
+};
+document.addEventListener('click',function(e){
+  const b=e.target&&e.target.closest?e.target.closest('[data-social-edit]'):null;
+  if(b)window.openSocialEdit(b.dataset.kind,b.dataset.socialEdit);
+});
+window.openSocialEdit=function(kind,id){
+  if(editingPost&&editingPost.saving)return;
+  const p=state.posts.find(x=>x.kind===kind&&String(x.id)===String(id));
+  if(!p||!ownPost(p))return;
+  window.closeSocialEdit();
+  editingPost={post:p,owner:String(uid()),saving:false};
+  const fields=kind==='qt'?[['bestVerse','인상 깊은 구절'],['applyContent','적용할 점'],['shareContent','나누고 싶은 내용'],['question','궁금한 점']]:[['situation',p.postType==='thanks'?'감사 내용':'기도 내용']];
+  const m=document.createElement('div');m.id='ysEdit';m.className='ys-modal';
+  m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','ysEditTitle');
+  m.innerHTML='<form class="ys-sheet ys-fsheet"><button type="button" class="ys-close" aria-label="닫기">×</button><h3 id="ysEditTitle">'+(kind==='qt'?'나눔 수정':'기도·감사 수정')+'</h3>'+fields.map(([key,label])=>'<label style="display:block;font-size:13px;font-weight:700" for="ysEdit-'+key+'">'+label+'</label><textarea class="ys-caption" rows="3" id="ysEdit-'+key+'" name="'+key+'">'+esc(p[key]||'')+'</textarea>').join('')+'<p id="ysEditError" role="alert" style="color:#a33;font-size:13px"></p><button type="submit" class="ys-primary">저장</button><button type="button" class="ys-fghost" style="width:100%;margin-top:8px" data-cancel>취소</button></form>';
+  m.onclick=e=>{if(e.target===m)window.closeSocialEdit()};
+  m.querySelector('.ys-close').onclick=window.closeSocialEdit;
+  m.querySelector('[data-cancel]').onclick=window.closeSocialEdit;
+  m.querySelector('form').onsubmit=e=>{e.preventDefault();window.saveSocialEdit()};
+  m.onkeydown=e=>{if(e.key==='Escape')window.closeSocialEdit()};
+  document.body.appendChild(m);m.querySelector('textarea').focus();
+};
+window.saveSocialEdit=async function(){
+  const edit=editingPost,m=document.getElementById('ysEdit');
+  if(!edit||!m||edit.saving)return;
+  const p=edit.post,err=m.querySelector('#ysEditError');
+  if(!ownPost(p)||String(uid())!==edit.owner){err.textContent='본인이 작성한 글만 수정할 수 있어요.';return}
+  const patch={};m.querySelectorAll('textarea').forEach(el=>{patch[el.name]=el.value.trim()});
+  if(!Object.values(patch).some(Boolean)){err.textContent='내용을 입력해 주세요.';return}
+  edit.saving=true;err.textContent='';
+  m.querySelectorAll('button,textarea').forEach(el=>el.disabled=true);
+  const btn=m.querySelector('[type="submit"]');btn.textContent='저장 중…';
+  try{
+    const original=key=>Object.prototype.hasOwnProperty.call(p,'read'+key[0].toUpperCase()+key.slice(1))?p['read'+key[0].toUpperCase()+key.slice(1)]:p[key];
+    const result=p.kind==='qt'
+      ?await gas('updateQTPost',p.id,uid(),original('book'),original('chFrom'),original('chTo'),original('vsFrom'),original('vsTo'),patch.bestVerse,patch.applyContent,patch.shareContent,patch.question)
+      :await gas('updatePrayerPost',p.id,uid(),p.postType,p.prayerType,p.customType,patch.situation);
+    if(!result||result.success!==true)throw new Error('save_rejected');
+    Object.assign(p,patch);
+    const current=state.posts.find(x=>pkey(x)===pkey(p));if(current)Object.assign(current,patch);
+    // Keep home/legacy views and subsequent reloads consistent with the saved text.
+    (p.kind==='qt'?[typeof qtPosts!=='undefined'?qtPosts:[],typeof recentQt!=='undefined'?recentQt:[]]:[typeof prPosts!=='undefined'?prPosts:[],typeof recentPr!=='undefined'?recentPr:[]]).forEach(list=>list.forEach(x=>{if(String(x.id)===String(p.id)&&String(x.authorId)===String(p.authorId))Object.assign(x,patch)}));
+    if(window.YeorinNative&&YeorinNative.clearCaches)YeorinNative.clearCaches();
+    feedLoadedAt=0;edit.saving=false;window.closeSocialEdit();replacePost(current||p);
+    showToast('수정한 내용을 저장했어요','success');
+  }catch(e){
+    console.error('[social edit]',e);edit.saving=false;
+    m.querySelectorAll('button,textarea').forEach(el=>el.disabled=false);btn.textContent='다시 저장';
+    err.textContent='저장하지 못했어요. 입력한 내용은 유지됩니다. 다시 시도해 주세요.';
+  }
+};
+function postHtml(p){const cs=(p.comments||[]).slice(-3).map(c=>'<div class="ys-comment"><b>'+esc(c.author&&c.author.name||'')+'</b>'+esc(c.text)+'</div>').join('');return '<article class="ys-post" id="social-'+p.kind+'-'+p.id+'"><div class="ys-author"><button class="ys-av" style="border:0" onclick="socialPerson(\''+esc(p.authorId)+'\')">'+face(p.author)+'</button><div class="ys-meta"><div class="ys-user">'+esc(p.author&&p.author.name||'')+'</div><div class="ys-time">'+rel(p.createdAt||p.date)+'</div></div><span class="ys-type">'+(p.kind==='qt'?'나눔':'기도')+'</span>'+editButton(p)+'</div>'+verseCard(p)+(bodyText(p)?'<div class="ys-body">'+bodyText(p)+'</div>':'')+'<div class="ys-actions">'+reactions(p)+'</div><div>'+cs+'</div><div class="ys-commentbox"><input id="sc-'+p.kind+'-'+p.id+'" placeholder="댓글 남기기"><button class="ys-send" onclick="socialComment(\''+p.kind+'\',\''+p.id+'\')">등록</button></div></article>'}
 function render(){
   const r=ensureRoot();if(!r)return;
   const posts=state.posts.length?state.posts.map(postHtml).join(''):'<div class="ys-empty" style="padding:55px 20px;text-align:center;color:var(--ink3);font-size:13px">아직 표시할 글이 없어요.</div>';
