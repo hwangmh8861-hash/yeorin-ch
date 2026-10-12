@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-const code=html.slice(html.indexOf('function challengeToday('),html.indexOf('// 📦 Phase 5:'));
+const code=html.slice(html.indexOf('function detailNavigation('),html.indexOf('// 📦 Phase 5:'));
 const calls=[],toasts=[];
 const today='2026-10-13';
 class FixedDate extends Date {

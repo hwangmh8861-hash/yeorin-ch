@@ -109,6 +109,7 @@
   }
 
   function popupOpen(){
+    if(extraPopup())return true;
     const light=document.getElementById('communityLightbox');if(light)return true;
     const comp=document.getElementById('communityComposeRoot');if(comp)return true;
     const side=document.getElementById('sideMenu');if(side&&side.classList.contains('open'))return true;
@@ -116,6 +117,12 @@
     return !!document.querySelector('.overlay.open,.modal.open,[role="dialog"][aria-modal="true"]');
   }
   function closeTopPopup(){
+    const extra=extraPopup();
+    if(extra){
+      const close=extra.querySelector('.ys-close,.push-sheet-close,.yn-unified-close,.cr-close');
+      if(close)close.click();else extra.remove();
+      return true;
+    }
     const light=document.getElementById('communityLightbox');if(light){light.remove();return true;}
     const comp=document.getElementById('communityComposeRoot');
     if(comp){
@@ -135,11 +142,50 @@
     return false;
   }
 
+  function extraPopup(){
+    return document.querySelector('#ysEdit,#ysWrite,#ysFilter,#ynUnifiedFilter,#challengeReminderModal,#yeorinPushModal');
+  }
+
+  function currentRoute(){
+    const tab=currentTab();
+    if(tab==='bible')return {bsub:bsub,selBook:selBook,viewChId:viewChId,chFilter:chFilter};
+    if(tab==='addressbook')return {selContactId:selContactId,abSearch:abSearch,abRoleFilter:abRoleFilter};
+    if(tab==='calendar')return {cy:cy,cm:cm,cef:cef};
+    return {};
+  }
+  function listRoute(tab,route){
+    const r=Object.assign({},route||{});
+    if(tab==='bible'){r.selBook=null;r.viewChId=null;}
+    if(tab==='addressbook')r.selContactId=null;
+    return r;
+  }
+  function routeKey(tab,route){
+    const r=route||{};
+    if(tab==='bible')return JSON.stringify([r.bsub||'reading',r.chFilter||'active',r.selBook??null,r.viewChId||null]);
+    if(tab==='addressbook')return JSON.stringify([r.selContactId||null]);
+    return tab;
+  }
+  function isDetail(tab,route){
+    return tab==='bible'&&(route.viewChId||route.selBook!=null)||tab==='addressbook'&&route.selContactId;
+  }
+  function restoreRoute(tab,route){
+    const r=route||{};
+    if(tab==='bible'){
+      bsub=r.bsub||'reading';selBook=r.selBook??null;viewChId=r.viewChId||null;chFilter=r.chFilter||'active';
+      renderBible();
+    }else if(tab==='addressbook'){
+      selContactId=r.selContactId||null;abSearch=r.abSearch||'';abRoleFilter=r.abRoleFilter||'all';
+      renderAddressBook();
+    }else if(tab==='calendar'&&Number.isInteger(r.cy)&&Number.isInteger(r.cm)){
+      cy=r.cy;cm=r.cm;cef=r.cef||'all';renderCalendar();
+    }
+  }
   function saveCurrentEntry(){
     if(!historyReady||historyNavigating)return;
     const st=Object.assign({},history.state||{});
     if(!st.yeorin)return;
     st.tab=currentTab();
+    st.route=currentRoute();
     st.scrollY=Math.max(0,window.scrollY||0);
     history.replaceState(st,'',location.href);
   }
@@ -149,7 +195,11 @@
     const tab=currentTab();
     history.replaceState({yeorin:true,tab:'main',scrollY:0,root:true},'',location.href);
     history.pushState({yeorin:true,tab:'main',scrollY:0,guard:true},'',location.href);
-    if(tab!=='main')history.pushState({yeorin:true,tab,scrollY:Math.max(0,window.scrollY||0)},'',location.href);
+    if(tab!=='main'){
+      const route=currentRoute();
+      if(isDetail(tab,route))history.pushState({yeorin:true,tab,route:listRoute(tab,route),scrollY:0},'',location.href);
+      history.pushState({yeorin:true,tab,route,scrollY:Math.max(0,window.scrollY||0)},'',location.href);
+    }
     historyReady=true;
   }
 
@@ -166,12 +216,50 @@
       if(historyReady&&!historyNavigating)saveCurrentEntry();
       const r=nativeSwitch.apply(this,arguments);
       if(historyReady&&!historyNavigating&&String(id)!==String(from)){
-        history.pushState({yeorin:true,tab:String(id),scrollY:0},'',location.href);
+        history.pushState({yeorin:true,tab:String(id),route:currentRoute(),scrollY:0},'',location.href);
         restoreScroll(0);
       }
       return r;
     };
   }
+
+  // 같은 탭 안의 목록/상세 이동도 기록합니다. 데이터 새로고침은 새 기록을 만들지 않습니다.
+  function syncRoute(){
+    if(historyNavigating||!inApp())return;
+    ensureHistory();
+    const tab=currentTab(),st=history.state||{},route=currentRoute();
+    if(!st.yeorin||st.tab!==tab||st.root||st.guard)return;
+    if(routeKey(tab,st.route)===routeKey(tab,route)){saveCurrentEntry();return;}
+    const previousRoute=isDetail(tab,route)&&!isDetail(tab,st.route||{})?listRoute(tab,route):st.route;
+    history.replaceState(Object.assign({},st,{route:previousRoute,scrollY:Math.max(0,window.scrollY||0)}),'',location.href);
+    history.pushState({yeorin:true,tab,route,scrollY:0},'',location.href);
+    restoreScroll(0);
+  }
+  ['renderBible','renderAddressBook'].forEach(function(name){
+    const original=window[name];
+    if(typeof original==='function')window[name]=function(){
+      const r=original.apply(this,arguments);
+      if((name==='renderBible'&&currentTab()==='bible')||(name==='renderAddressBook'&&currentTab()==='addressbook'))syncRoute();
+      return r;
+    };
+  });
+  const nativeMyPage=window.showMyPage;
+  if(typeof nativeMyPage==='function')window.showMyPage=function(){
+    ensureHistory();saveCurrentEntry();
+    const from=currentTab(),r=nativeMyPage.apply(this,arguments);
+    if(historyReady&&!historyNavigating&&from!=='mypage'){
+      history.pushState({yeorin:true,tab:'mypage',route:{},scrollY:0},'',location.href);
+      restoreScroll(0);
+    }
+    return r;
+  };
+  window.goBackInApp=function(){
+    const st=history.state||{};
+    if(historyReady&&st.yeorin&&!st.root&&!st.guard){history.back();return;}
+    const tab=currentTab(),route=currentRoute();
+    if(isDetail(tab,route)){restoreRoute(tab,listRoute(tab,route));return;}
+    window.switchTab('main');
+  };
 
   window.addEventListener('popstate',function(ev){
     if(!historyReady||!inApp())return;
@@ -206,6 +294,7 @@
     historyNavigating=true;
     try{
       if(typeof nativeSwitch==='function'&&String(currentTab())!==String(st.tab))nativeSwitch.call(window,st.tab||'main');
+      restoreRoute(st.tab,st.route);
     }finally{
       historyNavigating=false;
       restoreScroll(st.scrollY);

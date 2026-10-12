@@ -119,10 +119,10 @@
         clearInterval(timer);
         try{
           bsub='challenge';
-          viewChId=id;
           if(typeof selBook!=='undefined')selBook=null;
           if(typeof switchTab==='function')switchTab('bible');
-          else if(typeof renderBible==='function')renderBible();
+          viewChId=id;
+          if(typeof renderBible==='function')renderBible();
         }catch(e){console.warn('[challenge share route]',e);}
         return;
       }

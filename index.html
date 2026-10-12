@@ -232,6 +232,9 @@ input,textarea,select{font-family:inherit;}
 .q-label{font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:7px;display:block;letter-spacing:-.2px;}
 
 .back-btn{background:none;border:none;color:var(--brand2);font-size:14px;font-weight:700;margin-bottom:14px;padding:6px 0;cursor:pointer;}
+.detail-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:90;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg);padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--line2);}
+.detail-nav .back-btn{margin:0;min-height:42px;padding:8px 12px;border-radius:12px;background:#fff;box-shadow:var(--shadow-sm);flex-shrink:0;}
+.detail-nav-label{font-size:12px;color:var(--ink2);font-weight:700;text-align:right;overflow-wrap:anywhere;}
 
 .sub-tabs{display:flex;background:var(--line);border-radius:16px;padding:4px;margin-bottom:16px;}
 .sub-tab{flex:1;padding:11px 6px;border:none;border-radius:13px;background:0;font-size:13.5px;font-weight:700;color:var(--ink3);transition:.2s;text-align:center;letter-spacing:-.2px;position:relative;}
@@ -1331,11 +1334,7 @@ document.addEventListener('click',function(e){
   }
 });
 
-window.addEventListener('popstate',function(){
-  // 상세 화면이 열려 있으면 목록으로 되돌리기
-  if(curTab==='addressbook'&&selContactId){selContactId=null;renderAddressBook();}
-  else if(curTab==='bible'&&(selBook!==null||viewChId)){selBook=null;viewChId=null;renderBible();}
-});
+// 탭과 상세 화면의 뒤로가기는 app-ux-fix.js에서 한 번만 처리합니다.
 
 window.addEventListener('beforeunload',function(e){
   if(Object.keys(savingChapters).length>0){
@@ -2119,7 +2118,8 @@ function renderBible(){
     +'<span style="font-size:14px;display:inline-block;transform:rotate('+(groupOpen?180:0)+'deg);transition:.2s">▼</span></div>'
     +'<div class="accordion-body'+(groupOpen?' open':'')+'">'+rows+'</div></div>';
 
-  el.innerHTML=myCard+subTabs+statCard+body+acc;
+  const detail=(bsub==='reading'&&selBook!==null)||(bsub==='challenge'&&viewChId);
+  el.innerHTML=(detail?body:myCard+subTabs+statCard+body)+acc;
 }
 
 // ============================================================
@@ -2223,7 +2223,7 @@ function renderReading(bpSet){
     }
     const rp=Math.round(readChs.length/bk.c*100);
 
-    return '<button class="back-btn" onclick="selBook=null;renderBible()">← 목록</button>'
+    return detailNavigation('읽기표로',bk.n+' 읽기 기록')
       +'<div class="card">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
       +'<div style="font-size:18px;font-weight:900;letter-spacing:-.5px">'+bk.n+'</div>'
@@ -2379,6 +2379,9 @@ function showReadDetail(uid){
 }
 
 // 챌린지 종료일은 한국 시간의 해당 날짜까지 포함합니다.
+function detailNavigation(label,locationLabel){
+  return '<nav class="detail-nav" aria-label="상세 화면 탐색"><button class="back-btn" onclick="goBackInApp()">← '+escapeHtml(label)+'</button><span class="detail-nav-label">'+escapeHtml(locationLabel)+'</span></nav>';
+}
 function challengeToday(now){
   const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now||new Date());
   const value={};parts.forEach(function(p){value[p.type]=p.value;});
@@ -2471,7 +2474,7 @@ function renderChallenges(){
 
 function renderChDetail(cid){
   const ch=AD.challenges.find(function(c){return c.id===cid;});
-  if(!ch)return'<button class="back-btn" onclick="viewChId=null;renderBible()">← 목록</button>';
+  if(!ch)return detailNavigation('챌린지 목록으로','챌린지');
 
   const certs=AD.challengeCerts.filter(function(c){return c.challengeId===cid;});
   const days=Math.max(Math.ceil((new Date(ch.endDate)-new Date(ch.startDate))/864e5)+1,1);
@@ -2507,7 +2510,7 @@ function renderChDetail(cid){
 
   const op=ch.memberIds.length*days>0?Math.round(certs.length/(ch.memberIds.length*days)*100):0;
 
-  return '<button class="back-btn" onclick="viewChId=null;renderBible()">← 목록</button>'
+  return detailNavigation(done?'완료 목록으로':'진행 중 목록으로',done?'챌린지 · 완료 기록':'챌린지 · 진행 중')
     +'<div class="card">'
     +(done?'<div class="ch-completion-banner"><div class="ch-completion-icon">'+ico('check',22,'#fff')+'</div><div><div class="ch-completion-title">챌린지 완료</div><div class="ch-completion-desc">'+(ch.endDate<today?'기간이 종료되었어요 · '+ch.endDate.replace(/-/g,'.')+' 종료':'완료 처리된 챌린지예요')+'<br>함께한 읽기 기록을 확인해 보세요.</div></div></div>':challengeBadge(ch,today))
     +'<div class="ch-card-title" style="font-size:19px">'+escapeHtml(ch.title)+'</div>'
@@ -3218,7 +3221,7 @@ function renderMyPage(){
   const myQT=(postDates.qtMine||0);
   const myPr=(postDates.prayerMine||0);
 
-  el.innerHTML='<button class="back-btn" onclick="switchTab(\'main\')">← 닫기</button>'
+  el.innerHTML=detailNavigation('이전 화면으로','마이페이지')
     +'<div class="my-header">'
     +'<div class="my-avatar">'+CU.emoji+'</div>'
     +'<div class="my-name">'+escapeHtml(CU.name)+'</div>'
@@ -3784,7 +3787,7 @@ function renderContactDetail(){
   const bdLabel=c.birthdayType==='lunar'?'음력':'양력';
   const bdDisplay=c.birthday?(c.birthday+' ('+bdLabel+')'):'';
 
-  let html='<button class="back-btn" onclick="closeContact()">← 주소록</button>'
+  let html=detailNavigation('주소록으로','교인 정보')
     +'<div class="ab-detail-hero">'
     +'<div class="ab-detail-avatar">'+escapeHtml(initial)+'</div>'
     +'<div class="ab-detail-name">'+escapeHtml(c.name||'')+'</div>'

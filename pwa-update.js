@@ -8,7 +8,7 @@ if(!('serviceWorker' in navigator))return;
 const UPDATE_INTERVAL=30*60*1000;
 const UPDATE_KEY='yeorinSwUpdateCheckedAt';
 const VERSION_KEY='yeorinSwHelperVersion';
-const HELPER_VERSION='cleanup-v13';
+const HELPER_VERSION='cleanup-v14';
 let updateTimer=null;
 let updateRunning=false;
 
