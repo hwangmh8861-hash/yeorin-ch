@@ -351,6 +351,28 @@ input,textarea,select{font-family:inherit;}
 
 /* ===== 챌린지 ===== */
 .ch-card{background:var(--card);border-radius:20px;padding:19px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;}
+.ch-card.ch-completed{background:#F0F5F1;border:1px solid #CCDCD0;box-shadow:none;}
+.ch-card:focus-visible{outline:3px solid var(--brand3);outline-offset:3px;}
+.ch-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.ch-card-main{flex:1;min-width:0;}
+.ch-card-title{font-size:16px;font-weight:800;overflow-wrap:anywhere;margin:7px 0 3px;}
+.ch-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:#FFF3D8;color:#795B1B;font-size:12px;font-weight:800;}
+.ch-status.is-completed{background:var(--brand);color:#fff;}
+.ch-status.is-upcoming{background:#E9EEF8;color:#385D94;}
+.ch-complete-note{font-size:12px;color:#496452;font-weight:700;margin:2px 0 10px;}
+.ch-participation{font-size:11px;color:var(--brand);font-weight:700;white-space:nowrap;margin-top:5px;}
+.ch-filter-tabs{display:flex;gap:5px;padding:5px;background:#E8EDE8;border-radius:16px;margin:16px 0;}
+.ch-filter-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:45px;padding:9px 8px;border:0;border-radius:12px;background:transparent;color:#59685D;font-size:14px;font-weight:800;}
+.ch-filter-tab.active{background:var(--brand);color:#fff;box-shadow:var(--shadow-sm);}
+.ch-filter-count{padding:0 7px;min-width:22px;border-radius:999px;background:rgba(255,255,255,.5);font-size:12px;}
+.ch-filter-tab.active .ch-filter-count{background:rgba(255,255,255,.18);}
+.ch-section-title{font-size:17px;font-weight:850;margin-bottom:2px;}
+.ch-section-desc{font-size:12px;color:var(--ink2);margin-bottom:14px;}
+.ch-completion-banner{display:flex;align-items:center;gap:11px;background:var(--brand-soft);border:1px solid #CCDCD0;border-radius:16px;padding:15px;margin-bottom:15px;}
+.ch-completion-icon{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;}
+.ch-completion-title{font-size:16px;font-weight:850;color:var(--brand);}
+.ch-completion-desc{font-size:12px;color:#496452;line-height:1.6;margin-top:2px;}
+.ch-empty{text-align:center;padding:28px 16px;border:1px dashed var(--line2);border-radius:18px;color:var(--ink2);font-size:13px;}
 .ch-meta{font-size:12.5px;color:var(--ink3);margin-bottom:7px;font-weight:600;}
 .ch-members{display:flex;align-items:center;margin-bottom:8px;}
 .ch-member-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid #fff;margin-left:-6px;background:var(--brand-soft);}
@@ -2356,18 +2378,43 @@ function showReadDetail(uid){
     +'<div class="sec-title" style="margin-bottom:10px">읽은 성경</div>'+bl);
 }
 
+// 챌린지 종료일은 한국 시간의 해당 날짜까지 포함합니다.
+function challengeToday(now){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now||new Date());
+  const value={};parts.forEach(function(p){value[p.type]=p.value;});
+  return value.year+'-'+value.month+'-'+value.day;
+}
+function challengeStatus(ch,today){
+  if(ch.status==='completed')return 'completed';
+  if(ch.status==='active'&&ch.endDate&&ch.endDate<(today||challengeToday()))return 'completed';
+  return ch.status;
+}
+function challengeBadge(ch,today){
+  if(challengeStatus(ch,today)==='completed')return '<span class="ch-status is-completed">'+ico('check',13,'#fff')+' 완료</span>';
+  if(ch.startDate>(today||challengeToday()))return '<span class="ch-status is-upcoming">시작 예정</span>';
+  return '<span class="ch-status">'+ico('trophy',13)+' 진행 중</span>';
+}
 function renderChallenges(){
   if(!AD)return'';
   const chs=AD.challenges,certs=AD.challengeCerts;
 
-  const fTabs='<div class="filter-tabs">'
-    +'<button class="filter-tab'+(chFilter==='active'?' active':'')+'" onclick="chFilter=\'active\';renderBible()">진행 중</button>'
-    +'<button class="filter-tab'+(chFilter==='completed'?' active':'')+'" onclick="chFilter=\'completed\';renderBible()">완료됨</button>'
+  const today=challengeToday();
+  if(viewChId){
+    const selected=chs.find(function(c){return c.id===viewChId;});
+    if(selected)chFilter=challengeStatus(selected,today)==='completed'?'completed':'active';
+    return renderChDetail(viewChId);
+  }
+  const active=chs.filter(function(c){return challengeStatus(c,today)==='active';});
+  const completed=chs.filter(function(c){return challengeStatus(c,today)==='completed';});
+  const isCompleted=chFilter==='completed';
+  const fTabs='<div class="ch-filter-tabs" role="group" aria-label="챌린지 상태별 보기">'
+    +'<button class="ch-filter-tab'+(!isCompleted?' active':'')+'" aria-pressed="'+(!isCompleted)+'" onclick="chFilter=\'active\';renderBible()">진행 중 <span class="ch-filter-count">'+active.length+'</span></button>'
+    +'<button class="ch-filter-tab'+(isCompleted?' active':'')+'" aria-pressed="'+isCompleted+'" onclick="chFilter=\'completed\';renderBible()">'+ico('check',14)+' 완료 <span class="ch-filter-count">'+completed.length+'</span></button>'
     +'</div>';
 
-  const filtered=chs.filter(function(c){return c.status===(chFilter==='completed'?'completed':'active');});
-
-  if(viewChId)return renderChDetail(viewChId);
+  const filtered=(isCompleted?completed:active).slice().sort(function(a,b){return isCompleted?String(b.endDate).localeCompare(String(a.endDate)):String(a.endDate).localeCompare(String(b.endDate));});
+  const section='<h2 class="ch-section-title">'+(isCompleted?'완료된 챌린지':'진행 중인 챌린지')+'</h2>'
+    +'<div class="ch-section-desc">'+(isCompleted?'함께 읽었던 말씀과 인증 기록을 다시 확인해 보세요.':'함께 말씀을 읽고, 오늘의 읽기를 인증해 보세요.')+'</div>';
 
   let list=filtered.map(function(ch){
     const days=Math.max(Math.ceil((new Date(ch.endDate)-new Date(ch.startDate))/864e5)+1,1);
@@ -2386,14 +2433,16 @@ function renderChallenges(){
     const mc=ac.filter(function(c){return c.userId===CU.id;}).length;
     const mp=Math.round(mc/days*100);
 
-    return '<div class="ch-card" onclick="viewChId=\''+ch.id+'\';renderBible()">'
-      +'<div style="display:flex;justify-content:space-between">'
-      +'<div><div style="font-size:15px;font-weight:700">'+escapeHtml(ch.title)+(ch.status==='completed'?' <span style="font-size:12px;color:var(--brand2);font-weight:700">완료</span>':'')+'</div>'
-      +'<div class="ch-meta">'+escapeHtml(ch.book)+' · '+ch.startDate.slice(5)+'~'+ch.endDate.slice(5)+' · 전체 '+op+'%</div>'
+    const done=challengeStatus(ch,today)==='completed';
+    return '<div class="ch-card'+(done?' ch-completed':'')+'" role="button" tabindex="0" aria-label="'+escapeHtml(ch.title)+' '+(done?'완료 기록 보기':'자세히 보기')+'" onclick="viewChId=\''+ch.id+'\';renderBible()" onkeydown="if(event.target===this&&(event.key===\'Enter\'||event.key===\' \')){event.preventDefault();this.click()}">'
+      +'<div class="ch-card-head">'
+      +'<div class="ch-card-main">'+challengeBadge(ch,today)+'<div class="ch-card-title">'+escapeHtml(ch.title)+'</div>'
+      +'<div class="ch-meta">'+escapeHtml(ch.book)+' · '+ch.startDate.slice(5)+'~'+ch.endDate.slice(5)+' · '+(done?'최종 달성률':'전체')+' '+op+'%</div>'
+      +(done?'<div class="ch-complete-note">'+(ch.endDate<today?ch.endDate.replace(/-/g,'.')+' 종료':'완료 처리됨')+' · 기록을 볼 수 있어요</div>':'')
       +(top?'<div style="font-size:12px;color:var(--gold)">'+top+'</div>':'')
       +'</div>'
       +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'
-      +(!isMem&&ch.status==='active'?'<button class="btn-sm" onclick="event.stopPropagation();joinCh(\''+ch.id+'\')" style="background:var(--gold);color:#fff">참여</button>':isMem?'<span style="font-size:11px;color:var(--green);font-weight:600">참여중</span>':'')
+      +(!isMem&&!done?'<button class="btn-sm" onclick="event.stopPropagation();joinCh(\''+ch.id+'\')" style="background:var(--gold);color:#fff">참여</button>':isMem?'<span class="ch-participation">'+(done?'참여 완료':'참여 중')+'</span>':'')
       +'</div></div>'
       +'<div class="ch-members">'+ch.memberIds.map(function(u){return '<div class="ch-member-av">'+gm(u).emoji+'</div>';}).join('')
       +'<span style="font-size:11px;color:var(--b5);margin-left:4px">'+ch.memberIds.length+'명</span></div>'
@@ -2404,7 +2453,7 @@ function renderChallenges(){
   }).join('');
 
   if(!list){
-    list='<div style="text-align:center;padding:20px;color:var(--b5)">'+(chFilter==='completed'?'완료된 챌린지가 없어요':'진행 중인 챌린지가 없어요')+'</div>';
+    list='<div class="ch-empty">'+(isCompleted?'완료된 챌린지가 아직 없어요.':'진행 중인 챌린지가 없어요.<br>새 챌린지를 만들어 함께 시작해 보세요.')+'</div>';
   }
 
   const newForm=schf?'<div class="card">'
@@ -2417,7 +2466,7 @@ function renderChallenges(){
     +'<button class="btn-primary" id="chCreateBtn" onclick="createCh()">만들기</button>'
     +'</div>':'';
 
-  return '<button class="btn-dashed" onclick="schf=!schf;renderBible()">'+(schf?'닫기':'새 챌린지 만들기')+'</button>'+newForm+fTabs+list;
+  return '<button class="btn-dashed" onclick="schf=!schf;renderBible()">'+(schf?'닫기':'새 챌린지 만들기')+'</button>'+newForm+fTabs+section+list;
 }
 
 function renderChDetail(cid){
@@ -2428,7 +2477,10 @@ function renderChDetail(cid){
   const days=Math.max(Math.ceil((new Date(ch.endDate)-new Date(ch.startDate))/864e5)+1,1);
   const isMem=ch.memberIds.includes(CU.id);
   const isCr=ch.creatorId===CU.id;
-  const todayCerted=certs.some(function(c){return c.userId===CU.id&&c.date===td();});
+  const today=challengeToday();
+  const done=challengeStatus(ch,today)==='completed';
+  const started=ch.startDate<=today;
+  const todayCerted=certs.some(function(c){return c.userId===CU.id&&c.date===today;});
 
   const memberStats=ch.memberIds.map(function(uid){
     const cnt=certs.filter(function(c){return c.userId===uid;}).length;
@@ -2446,40 +2498,47 @@ function renderChDetail(cid){
   const st=new Date(ch.startDate);
   let dots='';
   for(let i=0;i<Math.min(days,42);i++){
-    const d=new Date(st);d.setDate(d.getDate()+i);
+    const d=new Date(st);d.setUTCDate(d.getUTCDate()+i);
     const ds=d.toISOString().split('T')[0];
     const done=myCerts.has(ds);
-    const past=ds<=td();
-    dots+='<div class="cert-dot" style="background:'+(done?'var(--gold)':past?'#E8D4D4':'var(--b1)')+';color:'+(done?'#fff':'var(--b5)')+'">'+d.getDate()+'</div>';
+    const past=ds<=today;
+    dots+='<div class="cert-dot" style="background:'+(done?'var(--gold)':past?'#E8D4D4':'var(--b1)')+';color:'+(done?'#fff':'var(--b5)')+'">'+d.getUTCDate()+'</div>';
   }
 
   const op=ch.memberIds.length*days>0?Math.round(certs.length/(ch.memberIds.length*days)*100):0;
 
   return '<button class="back-btn" onclick="viewChId=null;renderBible()">← 목록</button>'
     +'<div class="card">'
-    +'<div style="font-size:17px;font-weight:700;margin-bottom:2px">'+escapeHtml(ch.title)+(ch.status==='completed'?' <span style="font-size:12px;color:var(--brand2);font-weight:700">완료</span>':'')+'</div>'
-    +'<div class="ch-meta">'+escapeHtml(ch.book)+' · '+ch.startDate+'~'+ch.endDate+' · '+ch.memberIds.length+'명 · 전체 '+op+'%</div>'
-    +(isMem&&ch.status==='active'&&!todayCerted?'<button class="btn-full" onclick="certToday(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:12px 0">'+ico('check',17,'#fff')+' 오늘 읽었어요!</button>':'')
-    +(isMem&&todayCerted?'<div style="text-align:center;padding:12px;background:var(--brand-soft);border-radius:14px;margin:12px 0;font-size:14px;font-weight:700;color:var(--brand2)">'+ico('check',16)+' 오늘 인증 완료!</div>':'')
-    +(!isMem&&ch.status==='active'?'<button class="btn-full" onclick="joinCh(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:12px 0">참여하기</button>':'')
+    +(done?'<div class="ch-completion-banner"><div class="ch-completion-icon">'+ico('check',22,'#fff')+'</div><div><div class="ch-completion-title">챌린지 완료</div><div class="ch-completion-desc">'+(ch.endDate<today?'기간이 종료되었어요 · '+ch.endDate.replace(/-/g,'.')+' 종료':'완료 처리된 챌린지예요')+'<br>함께한 읽기 기록을 확인해 보세요.</div></div></div>':challengeBadge(ch,today))
+    +'<div class="ch-card-title" style="font-size:19px">'+escapeHtml(ch.title)+'</div>'
+    +'<div class="ch-meta">'+escapeHtml(ch.book)+' · '+ch.startDate+'~'+ch.endDate+' · '+ch.memberIds.length+'명 · '+(done?'최종 달성률':'전체')+' '+op+'%</div>'
+    +(isMem&&!done&&started&&!todayCerted?'<button class="btn-full" onclick="certToday(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:12px 0">'+ico('check',17,'#fff')+' 오늘 읽었어요!</button>':'')
+    +(isMem&&!done&&todayCerted?'<div style="text-align:center;padding:12px;background:var(--brand-soft);border-radius:14px;margin:12px 0;font-size:14px;font-weight:700;color:var(--brand2)">'+ico('check',16)+' 오늘 인증 완료!</div>':'')
+    +(!done&&!started?'<div class="ch-section-desc">'+ch.startDate+'부터 읽기 인증을 할 수 있어요.</div>':'')
+    +(!isMem&&!done?'<button class="btn-full" onclick="joinCh(\''+cid+'\')" style="background:var(--gold);color:#fff;margin:12px 0">참여하기</button>':'')
     +'</div>'
-    +'<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px">참여자 현황</div>'+mp+'</div>'
+    +'<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px">참여자 현황</div>'+(done?'<div class="ch-section-desc">챌린지 종료 시점의 최종 인증 기록이에요.</div>':'')+mp+'</div>'
     +(isMem?'<div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:6px">인증 기록</div><div class="cert-log">'+dots+'</div><div style="font-size:10.5px;color:var(--ink3);margin-top:8px;font-weight:600">인증한 날은 노란색, 놓친 날은 분홍색으로 표시돼요</div></div>':'')
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'
-    +(isCr&&ch.status==='active'?'<button class="btn-sm" onclick="completeCh(\''+cid+'\')" style="background:var(--brand2);color:#fff">'+ico('check',14,'#fff')+' 완료</button>':'')
+    +(isCr&&!done?'<button class="btn-sm" onclick="completeCh(\''+cid+'\')" style="background:var(--brand2);color:#fff">'+ico('check',14,'#fff')+' 완료</button>':'')
     +(isCr?'<button class="btn-sm" onclick="deleteCh(\''+cid+'\')" style="background:#F7E4E2;color:#8E3229">'+ico('trash',14)+' 삭제</button>':'')
     +'</div>';
 }
 
 async function certToday(cid){
-  AD.challengeCerts.push({challengeId:cid,userId:CU.id,date:td()});
+  const ch=AD.challenges.find(function(c){return c.id===cid;});
+  const today=challengeToday();
+  if(!ch||challengeStatus(ch,today)!=='active'){renderBible();showToast('완료된 챌린지는 인증할 수 없어요');return;}
+  if(ch.startDate>today){showToast('시작일부터 인증할 수 있어요');return;}
+  if(!ch.memberIds.includes(CU.id)||AD.challengeCerts.some(function(c){return c.challengeId===cid&&c.userId===CU.id&&c.date===today;}))return;
+  AD.challengeCerts.push({challengeId:cid,userId:CU.id,date:today});
   renderBible();
   showToast('인증 중...');
   try{
-    await gas('certChallenge',cid,CU.id,td());
+    await gas('certChallenge',cid,CU.id,today);
     showToast('인증 완료','success');
   }catch(e){
-    AD.challengeCerts=AD.challengeCerts.filter(function(c){return !(c.challengeId===cid&&c.userId===CU.id&&c.date===td());});
+    AD.challengeCerts=AD.challengeCerts.filter(function(c){return !(c.challengeId===cid&&c.userId===CU.id&&c.date===today);});
     renderBible();
     showToast('인증 실패','error');
   }
@@ -2493,6 +2552,7 @@ async function createCh(){
 
   if(!t){showToast('이름을 입력해주세요','error');return;}
   if(!s||!e){showToast('시작/종료일을 선택해주세요','error');return;}
+  if(e<s){showToast('종료일은 시작일 이후로 선택해주세요','error');return;}
 
   const btn=document.getElementById('chCreateBtn');
   if(btn){btn.disabled=true;btn.textContent='생성 중...';}
@@ -2506,6 +2566,7 @@ async function createCh(){
       });
     }
     schf=false;
+    chFilter=e<challengeToday()?'completed':'active';
     showToast('챌린지 생성 완료','success');
     renderBible();
   }catch(err){
@@ -2516,6 +2577,8 @@ async function createCh(){
 
 async function joinCh(id){
   const ch=AD.challenges.find(function(c){return c.id===id;});
+  if(!ch||challengeStatus(ch)!=='active'){renderBible();showToast('완료된 챌린지는 참여할 수 없어요');return;}
+  if(ch.memberIds.includes(CU.id))return;
   if(ch&&!ch.memberIds.includes(CU.id))ch.memberIds.push(CU.id);
   renderBible();
   showToast('참여 중...');
@@ -3022,7 +3085,7 @@ function renderHome(){
   const myBP=AD.myBibleProgress||[];
   const rcnt=new Set(myBP).size;
   const rpct=Math.round(rcnt/TC*100);
-  const myChs=(AD.challenges||[]).filter(function(c){return c.status==='active'&&c.memberIds.includes(CU.id);});
+  const myChs=(AD.challenges||[]).filter(function(c){return challengeStatus(c)==='active'&&c.memberIds.includes(CU.id);});
 
   const statCards='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
     +'<div class="card" style="margin:0;padding:18px;cursor:pointer" onclick="switchTab(\'bible\')">'

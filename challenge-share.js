@@ -27,16 +27,17 @@
 
   function inviteText(ch){
     const members=Array.isArray(ch.memberIds)?ch.memberIds.length:0;
+    const done=typeof challengeStatus==='function'&&challengeStatus(ch)==='completed';
     return [
-      '우리 같이 말씀 읽어요!',
-      '여린교회 챌린지에 초대합니다.',
+      done?'함께 읽은 말씀을 돌아봐요!':'우리 같이 말씀 읽어요!',
+      done?'여린교회 완료된 챌린지 기록입니다.':'여린교회 챌린지에 초대합니다.',
       '',
       '챌린지: '+(ch.title||'말씀읽기 챌린지'),
       '본문: '+(ch.book||''),
       '기간: '+(ch.startDate||'')+' ~ '+(ch.endDate||''),
       '함께하는 사람: '+members+'명',
       '',
-      '같이 읽고 함께 인증해요 🌿'
+      done?'완료된 챌린지의 읽기 기록을 확인해 보세요 🌿':'같이 읽고 함께 인증해요 🌿'
     ].join('\n');
   }
 
